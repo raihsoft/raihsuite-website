@@ -1,0 +1,16 @@
+{
+  "name": "Raisuite Web Starter",
+  "dockerFile": "Dockerfile",
+  "postCreateCommand": "corepack enable && pnpm install && pnpm run typecheck",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+  "remoteUser": "node"
+}
