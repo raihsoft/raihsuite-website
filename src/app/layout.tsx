@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "RaihSuite ERP - Streamline Your Business Operations",
+  title: "Raihsuite ERP - Streamline Your Business Operations",
   description:
     "Comprehensive Enterprise Resource Planning solution to manage inventory, finance, HR, and more. Boost productivity and efficiency with RaihSuite ERP.",
 };
@@ -19,7 +19,7 @@ export default function RootLayout({
         {/* NAVBAR */}
         <header className="fixed top-0 left-0 w-full z-50">
           <div className="max-w-7xl mx-auto px-6 pt-6">
-            <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between">
+            <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl px-6 py-4 flex items-center justify-between shadow-lg">
 
               {/* Logo */}
               <div className="flex items-center gap-1">

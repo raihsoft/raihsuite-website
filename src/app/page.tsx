@@ -14,7 +14,7 @@ export default function HomePage() {
           <div className="animate-slide-in-left">
             <span className="inline-flex items-center gap-2 bg-white/10 border border-white/10 px-4 py-2 rounded-full text-sm backdrop-blur animate-float">
               <span className="bg-purple-600 text-xs px-2 py-1 rounded-full animate-pulse-glow">New</span>
-              RaihSuite Release v1.0
+              Raihsuite Release 
             </span>
 
             <h1 className="mt-8 text-5xl lg:text-6xl font-bold leading-tight animate-slide-up animate-stagger-1">
