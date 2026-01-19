@@ -68,7 +68,7 @@ export default function ContactPage() {
           </h1>
 
           <p className="mt-6 text-lg text-white/70 max-w-2xl mx-auto animate-slide-up animate-stagger-2">
-            Have questions about Raihsuite ERP? We're here to help you streamline your business operations.
+            Have questions about Raihsuite ERP? We&apos;re here to help you streamline your business operations.
           </p>
         </div>
       </section>

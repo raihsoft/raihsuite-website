@@ -1,5 +1,3 @@
-import Button from "@/components/ui/Button";
-
 export default function HomePage() {
   return (
     <div className="bg-[#0b061a] text-white">
@@ -119,6 +117,7 @@ export default function HomePage() {
           <div className="animate-slide-in-right">
             <img
               src="https://media.raihsuite.com/RS0001/web/original-7d8eb6bcb45c0d53f109bddc510ff04e.webp"
+              alt="Raihsuite ERP dashboard interface showing business analytics and management tools"
               className="rounded-3xl shadow-2xl border border-white/10 hover:shadow-purple-500/25 transition-all duration-500 hover:scale-105 animate-float"
             />
           </div>
