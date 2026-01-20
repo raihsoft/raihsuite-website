@@ -65,33 +65,113 @@ export default function HomePage() {
       </section>
 
       {/* FEATURES */}
-      <section className="bg-white text-black py-24 animate-fade-in">
+      <section className="bg-gradient-to-b from-white to-gray-50 text-black py-32 animate-fade-in">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16 animate-slide-up">
-            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm animate-scale-in">
-              Features
+          <div className="text-center mb-20 animate-slide-up">
+            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold animate-scale-in">
+              ✨ Features
             </span>
-            <h2 className="mt-6 text-4xl font-bold animate-slide-up animate-stagger-1">
+            <h2 className="mt-6 text-5xl font-bold animate-slide-up animate-stagger-1">
               Everything You Need to Work Smarter
             </h2>
+            <p className="mt-4 text-gray-600 text-lg max-w-2xl mx-auto animate-slide-up animate-stagger-2">
+              Comprehensive tools designed to streamline your business operations and drive growth.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-10">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              "Inventory Management",
-              "Finance & Accounting",
-              "Human Resources",
-            ].map((title, index) => (
+              {
+                title: "Inventory Management",
+                description: "Real-time stock tracking, automated reordering, and multi-warehouse support.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m0 0l8 4m-8-4v10l8 4m0-10l8 4m-8-4v10M7 15l-3 1.5" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Finance & Accounting",
+                description: "Complete accounting suite with invoicing, expense tracking, and financial reports.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Human Resources",
+                description: "Employee management, payroll processing, and performance tracking tools.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10h.01M13 16H3v-2a6 6 0 0112 0v2zm0-12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Sales & CRM",
+                description: "Manage leads, customers, and sales pipelines with advanced analytics.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Purchase Orders",
+                description: "Streamline procurement with automated purchase orders and vendor management.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Advanced Analytics",
+                description: "Real-time dashboards and insights to make data-driven business decisions.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                ),
+              },
+            ].map((feature, index) => (
               <div
-                key={title}
-                className={`p-8 rounded-3xl border border-gray-200 hover:shadow-xl hover:shadow-purple-100/50 transition-all duration-500 hover:scale-105 hover:border-purple-200 animate-scale-in`}
-                style={{ animationDelay: `${(index + 1) * 0.2}s` }}
+                key={feature.title}
+                className={`group relative p-8 rounded-2xl border border-gray-200 bg-white hover:shadow-2xl hover:shadow-purple-200/30 transition-all duration-500 hover:scale-105 hover:border-purple-300 animate-scale-in overflow-hidden`}
+                style={{ animationDelay: `${(index + 1) * 0.1}s` }}
               >
-                <div className="w-12 h-12 bg-purple-600 rounded-xl mb-6 animate-float" />
-                <h3 className="text-xl font-semibold mb-3">{title}</h3>
-                <p className="text-gray-600">
-                  Powerful tools designed to simplify complex operations and improve performance.
-                </p>
+                {/* Gradient background on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
+                
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-purple-100 rounded-xl mb-6 flex items-center justify-center text-purple-600 group-hover:bg-purple-200 group-hover:shadow-lg group-hover:shadow-purple-300/50 transition-all duration-500 group-hover:scale-110">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 group-hover:text-purple-700 transition-colors">{feature.title}</h3>
+                  <p className="text-gray-600 group-hover:text-gray-700 transition-colors leading-relaxed">
+                    {feature.description}
+                  </p>
+                  
+                  <div className="mt-4 inline-flex items-center gap-2 text-purple-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Learn more <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Feature Highlights */}
+          <div className="mt-20 grid md:grid-cols-4 gap-6 animate-slide-up animate-stagger-3">
+            {[
+              { label: "Real-time Sync", value: "100%" },
+              { label: "Uptime Guarantee", value: "99.9%" },
+              { label: "API Integrations", value: "500+" },
+              { label: "Global Users", value: "10K+" },
+            ].map((stat, i) => (
+              <div key={i} className="text-center p-6 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors">
+                <p className="text-3xl font-bold text-purple-600">{stat.value}</p>
+                <p className="text-gray-700 mt-2">{stat.label}</p>
               </div>
             ))}
           </div>
