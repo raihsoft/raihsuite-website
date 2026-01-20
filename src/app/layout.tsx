@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import Navbar from "@/components/navbar/navbar";
 
 export const metadata: Metadata = {
   title: "Raihsuite ERP - Streamline Your Business Operations",
@@ -17,9 +18,9 @@ export default function RootLayout({
       <body className="bg-[#0b061a] text-white">
 
         {/* NAVBAR */}
-        <header className="fixed top-0 left-0 w-full z-50">
-          <div className="max-w-7xl mx-auto px-6 pt-6">
-            <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl px-6 py-4 flex items-center justify-between shadow-lg">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-[#0b061a]/80 backdrop-blur-xl border-b border-white/5">
+          <div className="w-full flex justify-center px-4 sm:px-6 py-6">
+            <div className="w-full max-w-7xl bg-white/5 border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between shadow-xl backdrop-blur-xl">
 
               {/* Logo */}
               <div className="flex items-center gap-1">
@@ -28,30 +29,26 @@ export default function RootLayout({
                   alt="RaihSuite Logo"
                   className="h-12 w-auto"
                 />
-                <span className="text-xl font-semibold tracking-wide">Raihsuite</span>
+                <span className="text-xl font-semibold tracking-wide">
+                  Raihsuite
+                </span>
               </div>
 
               {/* Nav links */}
-              <nav className="hidden md:flex items-center gap-8 text-sm text-white/80">
-                <a href="#features" className="hover:text-white transition">Features</a>
-                <a href="#about" className="hover:text-white transition">About</a>
-                <a href="/contact" className="hover:text-white transition">Contact</a>
-              </nav>
+              <Navbar />
 
               {/* CTA */}
-              <div className="flex items-center gap-4">
-                <button className="hidden sm:block bg-white text-black px-6 py-2 rounded-full text-sm hover:bg-gray-200 transition">
+              <div className="hidden sm:flex items-center gap-4">
+                <button className="bg-white text-black px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition">
                   Book a Demo
                 </button>
-
-                <button className="sm:hidden text-2xl">☰</button>
               </div>
             </div>
           </div>
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="pt-32">{children}</main>
+        <main className="pt-36">{children}</main>
 
         {/* FOOTER */}
         <footer className="border-t border-white/10 mt-24">
@@ -64,10 +61,13 @@ export default function RootLayout({
                   alt="RaihSuite Logo"
                   className="h-8 w-auto"
                 />
-                <span className="text-white font-semibold text-lg">Raihsuite</span>
+                <span className="text-white font-semibold text-lg">
+                  Raihsuite
+                </span>
               </div>
               <p className="text-sm leading-relaxed">
-                Powerful ERP platform to manage your business operations with modern design and efficiency.
+                Powerful ERP platform to manage your business operations with
+                modern design and efficiency.
               </p>
             </div>
 

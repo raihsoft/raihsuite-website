@@ -20,26 +20,26 @@ body {
   @apply bg-white text-gray-900 antialiased;
 }
 
+/* ✅ FIXED: Do NOT force link color globally */
 a {
-  @apply text-brand-dark underline-offset-2 hover:underline;
+  @apply underline-offset-2 transition-colors duration-200;
 }
 
 input, textarea {
-  @apply rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-light focus:border-brand-light;
+  @apply rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
 }
 
 .container-base {
   @apply mx-auto max-w-5xl px-4;
 }
 
+/* ========================= */
 /* Custom Animations */
+/* ========================= */
+
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
@@ -87,12 +87,8 @@ input, textarea {
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
 @keyframes pulseGlow {
@@ -104,6 +100,7 @@ input, textarea {
   }
 }
 
+/* Animation utility classes */
 .animate-fade-in {
   animation: fadeIn 0.8s ease-out forwards;
 }
@@ -139,3 +136,6 @@ input, textarea {
 .animate-stagger-4 { animation-delay: 0.4s; }
 .animate-stagger-5 { animation-delay: 0.5s; }
 .animate-stagger-6 { animation-delay: 0.6s; }
+
+
+
