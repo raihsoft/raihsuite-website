@@ -79,7 +79,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {
                 title: "Inventory Management",
@@ -138,22 +138,22 @@ export default function HomePage() {
             ].map((feature, index) => (
               <div
                 key={feature.title}
-                className={`group relative p-8 rounded-2xl border border-gray-200 bg-white hover:shadow-2xl hover:shadow-purple-200/30 transition-all duration-500 hover:scale-105 hover:border-purple-300 animate-scale-in overflow-hidden`}
+                className={`group relative p-4 rounded-lg border border-gray-200 bg-white hover:shadow-lg hover:shadow-purple-200/30 transition-all duration-500 hover:scale-105 hover:border-purple-300 animate-scale-in overflow-hidden`}
                 style={{ animationDelay: `${(index + 1) * 0.1}s` }}
               >
                 {/* Gradient background on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
                 
-                <div className="relative z-10">
-                  <div className="w-16 h-16 bg-purple-100 rounded-xl mb-6 flex items-center justify-center text-purple-600 group-hover:bg-purple-200 group-hover:shadow-lg group-hover:shadow-purple-300/50 transition-all duration-500 group-hover:scale-110">
+                <div className="relative z-10 text-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-md mb-3 flex items-center justify-center text-purple-600 group-hover:bg-purple-200 group-hover:shadow-lg group-hover:shadow-purple-300/50 transition-all duration-500 group-hover:scale-110 mx-auto">
                     {feature.icon}
                   </div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-purple-700 transition-colors">{feature.title}</h3>
-                  <p className="text-gray-600 group-hover:text-gray-700 transition-colors leading-relaxed">
+                  <h3 className="text-sm font-bold mb-1 group-hover:text-purple-700 transition-colors">{feature.title}</h3>
+                  <p className="text-xs text-gray-600 group-hover:text-gray-700 transition-colors leading-relaxed">
                     {feature.description}
                   </p>
                   
-                  <div className="mt-4 inline-flex items-center gap-2 text-purple-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="mt-2 inline-flex items-center gap-1 text-purple-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs">
                     Learn more <span className="group-hover:translate-x-1 transition-transform">→</span>
                   </div>
                 </div>
