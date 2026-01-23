@@ -7,8 +7,8 @@ const config: Config = {
       colors: {
         brand: {
           DEFAULT: 'hsl(var(--color-brand) / <alpha-value>)',
-          light: '#5ab0ff',
-          dark: '#004a7f'
+          light: '#a855f7',
+          dark: '#581c87'
         }
       },
       spacing: {
