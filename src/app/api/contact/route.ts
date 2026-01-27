@@ -3,8 +3,6 @@ import { rateLimitCheck } from '@/lib/rateLimit';
 import { getEnv } from '@/lib/env';
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge';
-
 const ContactSchema = z.object({
   name: z.string().min(2).max(200),
   email: z.string().email(),
