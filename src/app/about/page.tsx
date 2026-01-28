@@ -21,7 +21,7 @@ export default function AboutPage() {
                 At RaihSuite, we believe that every business deserves access to world-class enterprise resource planning (ERP) solutions. Our mission is to empower organizations of all sizes with intelligent, integrated business management tools that drive growth, improve efficiency, and enable data-driven decision-making.
               </p>
               <p className="text-lg text-gray-700">
-                We're committed to simplifying complex business operations and making powerful enterprise software accessible to everyone.
+                We&apos;re committed to simplifying complex business operations and making powerful enterprise software accessible to everyone.
               </p>
             </div>
             <div className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg p-12 text-center">
@@ -71,12 +71,12 @@ export default function AboutPage() {
               },
               {
                 title: "Customer Focus",
-                description: "Our customers' success is our success. We're dedicated to delivering exceptional value.",
+                description: "Our customers&apos; success is our success. We&apos;re dedicated to delivering exceptional value.",
                 icon: "👥",
               },
               {
                 title: "Excellence",
-                description: "We're committed to excellence in every aspect of our product, service, and support.",
+                description: "We&apos;re committed to excellence in every aspect of our product, service, and support.",
                 icon: "⭐",
               },
               {
@@ -96,11 +96,14 @@ export default function AboutPage() {
               },
               {
                 title: "Continuous Improvement",
-                description: "We're always improving, learning, and adapting to serve you better.",
+                description: "We&apos;re always improving, learning, and adapting to serve you better.",
                 icon: "🚀",
               },
             ].map((value) => (
-              <div key={value.title} className="p-6 rounded-lg bg-gray-50 border border-gray-200 hover:shadow-lg transition-all duration-300">
+              <div
+                key={value.title}
+                className="p-6 rounded-lg bg-gray-50 border border-gray-200 hover:shadow-lg transition-all duration-300"
+              >
                 <div className="text-4xl mb-4">{value.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{value.title}</h3>
                 <p className="text-gray-600">{value.description}</p>
@@ -128,7 +131,7 @@ export default function AboutPage() {
               {
                 title: "User-Friendly Design",
                 points: [
-                  "Intuitive interface that's easy to learn",
+                  "Intuitive interface that&apos;s easy to learn",
                   "Minimal training required",
                   "Mobile-responsive design",
                   "Accessible from anywhere",
@@ -153,7 +156,10 @@ export default function AboutPage() {
                 ],
               },
             ].map((item) => (
-              <div key={item.title} className="p-8 bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300">
+              <div
+                key={item.title}
+                className="p-8 bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300"
+              >
                 <h3 className="text-2xl font-bold mb-6 text-purple-600">{item.title}</h3>
                 <ul className="space-y-3">
                   {item.points.map((point) => (
