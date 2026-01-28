@@ -129,7 +129,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 p-8 rounded-2xl border border-purple-500/20 backdrop-blur-sm">
+              {/* <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 p-8 rounded-2xl border border-purple-500/20 backdrop-blur-sm">
                 <h3 className="font-semibold text-purple-300 mb-4 text-xl">Why Choose Raihsuite?</h3>
                 <ul className="space-y-3">
                   <li className="flex items-center">
@@ -151,7 +151,7 @@ export default function ContactPage() {
                     <span className="text-white/80">30-day free trial</span>
                   </li>
                 </ul>
-              </div>
+              </div> */}
             </div>
 
             {/* Contact Form */}

@@ -176,14 +176,12 @@ export default function HomePage() {
           {/* Feature Highlights */}
           <div className="mt-20 grid md:grid-cols-4 gap-6 animate-slide-up animate-stagger-3">
             {[
-              { label: "Improve productivity", value: "✓" },
-              { label: "Reduce manual work", value: "✓" },
-              { label: "Get real-time insights", value: "✓" },
-              { label: "Scale faster", value: "✓" },
+              { label: "Improve productivity" },
+              { label: "Reduce manual work"},
+              { label: "Get real-time insights"},
+              { label: "Scale faster"}
             ].map((stat, i) => (
-              <div key={i} className="text-center p-6 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors">
-                <p className="text-3xl font-bold text-purple-600">{stat.value}</p>
-                <p className="text-gray-700 mt-2">{stat.label}</p>
+              <div key={i} className="text-center p-6 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors">                <p className="text-gray-700 mt-2">{stat.label}</p>
               </div>
             ))}
           </div>
