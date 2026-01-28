@@ -82,26 +82,8 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {
-                title: "Inventory Management",
-                description: "Real-time stock tracking, automated reordering, and multi-warehouse support.",
-                icon: (
-                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m0 0l8 4m-8-4v10l8 4m0-10l8 4m-8-4v10M7 15l-3 1.5" />
-                  </svg>
-                ),
-              },
-              {
-                title: "Finance & Accounting",
-                description: "Complete accounting suite with invoicing, expense tracking, and financial reports.",
-                icon: (
-                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-              },
-              {
-                title: "Human Resources",
-                description: "Employee management, payroll processing, and performance tracking tools.",
+                title: "HRMS",
+                description: "Manage your workforce efficiently with centralized employee records, attendance tracking, and HR operations.",
                 icon: (
                   <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10h.01M13 16H3v-2a6 6 0 0112 0v2zm0-12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -109,8 +91,8 @@ export default function HomePage() {
                 ),
               },
               {
-                title: "Sales & CRM",
-                description: "Manage leads, customers, and sales pipelines with advanced analytics.",
+                title: "CRM",
+                description: "Strengthen customer relationships and manage leads effectively.",
                 icon: (
                   <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -118,8 +100,17 @@ export default function HomePage() {
                 ),
               },
               {
-                title: "Purchase Orders",
-                description: "Streamline procurement with automated purchase orders and vendor management.",
+                title: "Assets Management",
+                description: "Track and control all company assets with complete visibility.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m0 0l8 4m-8-4v10l8 4m0-10l8 4m-8-4v10M7 15l-3 1.5" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Order Management",
+                description: "Simplify your order workflow from creation to fulfillment.",
                 icon: (
                   <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -127,47 +118,68 @@ export default function HomePage() {
                 ),
               },
               {
-                title: "Advanced Analytics",
-                description: "Real-time dashboards and insights to make data-driven business decisions.",
+                title: "Event Management",
+                description: "Organize, manage, and monitor events with ease.",
+                icon: (
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                ),
+              },
+              {
+                title: "Performance & Analytics",
+                description: "Get real-time insights and data-driven decisions to scale faster.",
                 icon: (
                   <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 ),
               },
-            ].map((feature, index) => (
-              <div
-                key={feature.title}
-                className={`group relative p-4 rounded-lg border border-gray-200 bg-white hover:shadow-lg hover:shadow-purple-200/30 transition-all duration-500 hover:scale-105 hover:border-purple-300 animate-scale-in overflow-hidden`}
-                style={{ animationDelay: `${(index + 1) * 0.1}s` }}
-              >
-                {/* Gradient background on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
-                
-                <div className="relative z-10 text-center">
-                  <div className="w-10 h-10 bg-purple-100 rounded-md mb-3 flex items-center justify-center text-purple-600 group-hover:bg-purple-200 group-hover:shadow-lg group-hover:shadow-purple-300/50 transition-all duration-500 group-hover:scale-110 mx-auto">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-sm font-bold mb-1 group-hover:text-purple-700 transition-colors">{feature.title}</h3>
-                  <p className="text-xs text-gray-600 group-hover:text-gray-700 transition-colors leading-relaxed">
-                    {feature.description}
-                  </p>
+            ].map((feature, index) => {
+              const featureRoutes: Record<string, string> = {
+                "HRMS": "/features/hrms",
+                "CRM": "/features/crm",
+                "Assets Management": "/features/assets-management",
+                "Order Management": "/features/order-management",
+                "Event Management": "/features/event-management",
+                "Performance & Analytics": "/features/analytics",
+              };
+
+              return (
+                <a
+                  key={feature.title}
+                  href={featureRoutes[feature.title]}
+                  className={`group relative p-4 rounded-lg border border-gray-200 bg-white hover:shadow-lg hover:shadow-purple-200/30 transition-all duration-500 hover:scale-105 hover:border-purple-300 animate-scale-in overflow-hidden cursor-pointer block`}
+                  style={{ animationDelay: `${(index + 1) * 0.1}s` }}
+                >
+                  {/* Gradient background on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
                   
-                  <div className="mt-2 inline-flex items-center gap-1 text-purple-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs">
-                    Learn more <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  <div className="relative z-10 text-center">
+                    <div className="w-10 h-10 bg-purple-100 rounded-md mb-3 flex items-center justify-center text-purple-600 group-hover:bg-purple-200 group-hover:shadow-lg group-hover:shadow-purple-300/50 transition-all duration-500 group-hover:scale-110 mx-auto">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-sm font-bold mb-1 group-hover:text-purple-700 transition-colors">{feature.title}</h3>
+                    <p className="text-xs text-gray-600 group-hover:text-gray-700 transition-colors leading-relaxed">
+                      {feature.description}
+                    </p>
+                    
+                    <div className="mt-2 inline-flex items-center gap-1 text-purple-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs">
+                      Learn more <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </a>
+              );
+            })}
           </div>
 
           {/* Feature Highlights */}
           <div className="mt-20 grid md:grid-cols-4 gap-6 animate-slide-up animate-stagger-3">
             {[
-              { label: "Real-time Sync", value: "100%" },
-              { label: "Uptime Guarantee", value: "99.9%" },
-              { label: "API Integrations", value: "500+" },
-              { label: "Global Users", value: "10K+" },
+              { label: "Improve productivity", value: "✓" },
+              { label: "Reduce manual work", value: "✓" },
+              { label: "Get real-time insights", value: "✓" },
+              { label: "Scale faster", value: "✓" },
             ].map((stat, i) => (
               <div key={i} className="text-center p-6 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors">
                 <p className="text-3xl font-bold text-purple-600">{stat.value}</p>
