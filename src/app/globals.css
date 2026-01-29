@@ -12,12 +12,18 @@
   }
 }
 
-html, body {
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
   height: 100%;
 }
 
 body {
   @apply bg-white text-gray-900 antialiased;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
 /* ✅ FIXED: Do NOT force link color globally */
@@ -25,7 +31,8 @@ a {
   @apply underline-offset-2 transition-colors duration-200;
 }
 
-input, textarea {
+input,
+textarea {
   @apply rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
 }
 
@@ -38,8 +45,13 @@ input, textarea {
 /* ========================= */
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -47,6 +59,7 @@ input, textarea {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -58,6 +71,7 @@ input, textarea {
     opacity: 0;
     transform: translateX(-50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -69,6 +83,7 @@ input, textarea {
     opacity: 0;
     transform: translateX(50px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -80,6 +95,7 @@ input, textarea {
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -87,14 +103,24 @@ input, textarea {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes pulseGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(147, 51, 234, 0.6);
   }
@@ -130,12 +156,56 @@ input, textarea {
 }
 
 /* Stagger animations */
-.animate-stagger-1 { animation-delay: 0.1s; }
-.animate-stagger-2 { animation-delay: 0.2s; }
-.animate-stagger-3 { animation-delay: 0.3s; }
-.animate-stagger-4 { animation-delay: 0.4s; }
-.animate-stagger-5 { animation-delay: 0.5s; }
-.animate-stagger-6 { animation-delay: 0.6s; }
+.animate-stagger-1 {
+  animation-delay: 0.1s;
+}
 
+.animate-stagger-2 {
+  animation-delay: 0.2s;
+}
 
+.animate-stagger-3 {
+  animation-delay: 0.3s;
+}
 
+.animate-stagger-4 {
+  animation-delay: 0.4s;
+}
+
+.animate-stagger-5 {
+  animation-delay: 0.5s;
+}
+
+.animate-stagger-6 {
+  animation-delay: 0.6s;
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
