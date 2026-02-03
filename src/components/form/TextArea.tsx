@@ -5,9 +5,10 @@ type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   error?: string;
   variant?: 'light' | 'dark';
+  hint?: string;
 };
 
-const TextArea = forwardRef<HTMLTextAreaElement, Props>(({ label, error, className, id, variant = 'light', ...rest }, ref) => {
+const TextArea = forwardRef<HTMLTextAreaElement, Props>(({ label, error, hint, className, id, variant = 'light', ...rest }, ref) => {
   const fieldId = id || rest.name;
 
   const variants = {
@@ -27,7 +28,9 @@ const TextArea = forwardRef<HTMLTextAreaElement, Props>(({ label, error, classNa
     <div className="space-y-1.5">
       <label htmlFor={fieldId} className={clsx("block text-sm font-semibold", styles.label)}>
         {label}
+        {rest.required && <span className="text-red-500 ml-1">*</span>}
       </label>
+      {hint && <p className={clsx("text-xs mb-1", variant === 'dark' ? "text-white/60" : "text-gray-500")}>{hint}</p>}
       <textarea
         id={fieldId}
         ref={ref}

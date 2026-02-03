@@ -12,8 +12,8 @@ import { useState } from 'react';
 const ContactSchema = z.object({
   name: z.string().min(2, 'Name is too short'),
   email: z.string().email('Invalid email'),
-  message: z.string().min(10, 'Message must be at least 10 characters'),
-  subject: z.string().optional(),
+  mobile: z.string().min(10, 'Mobile must be at least 10 digits'),
+  message: z.string().min(1, 'Message is required'),
 });
 
 type ContactValues = z.infer<typeof ContactSchema>;
@@ -24,17 +24,17 @@ export default function ContactPage() {
 
   const form = useForm<ContactValues>({
     resolver: zodResolver(ContactSchema),
-    defaultValues: { name: '', email: '', message: '', subject: '' }
+    defaultValues: { name: '', email: '', mobile: '', message: '' }
   });
 
   async function onSubmit(values: ContactValues) {
     setStatus('idle');
     setErrorMessage(null);
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('https://staging-api.raihsuite.com/v1/crm/enquiries/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values)
+        body: JSON.stringify({ ...values, phone: values.mobile, tenant: 3 })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -105,8 +105,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-lg">Email Us</h3>
-                    <p className="text-gray-400 mb-1">We usually reply within 24 hours.</p>
-                    <a href="mailto:support@raihsuite.com" className="text-brand-light font-medium hover:text-white transition-colors text-lg">support@raihsuite.com</a>
+                    {/* <p className="text-gray-400 mb-1">We usually reply within 24 hours.</p> */}
+                    <a href="mailto:contact@raihsoft.com" className="text-brand-light font-medium hover:text-white transition-colors text-lg">contact@raihsoft.com</a>
                   </div>
                 </div>
 
@@ -117,8 +117,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-lg">Phone</h3>
-                    <p className="text-gray-400 mb-1">Mon-Fri from 8am to 5pm.</p>
-                    <a href="tel:+15550000000" className="text-brand-light font-medium hover:text-white transition-colors text-lg">+1 (555) 000-0000</a>
+                    {/* <p className="text-gray-400 mb-1">Mon-Fri from 8am to 5pm.</p> */}
+                    <a href="tel:+91 9847 991 099" className="text-brand-light font-medium hover:text-white transition-colors text-lg">+91 9847 991 099</a>
                   </div>
                 </div>
 
@@ -129,8 +129,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-lg">Office</h3>
-                    <p className="text-gray-400 mb-1">Come say hello at our HQ.</p>
-                    <p className="text-white font-medium">123 Business Ave, Suite 100<br />New York, NY 10001</p>
+                    {/* <p className="text-gray-400 mb-1">Come say hello at our HQ.</p> */}
+                    <p className="text-white font-medium">1st Floor, Al Irshad Plaza, <br />Karaya, Pandikkad, Kerala, 676521</p>
                   </div>
                 </div>
               </div>
@@ -144,7 +144,7 @@ export default function ContactPage() {
 
                 {status === 'success' && (
                   <div className="mb-6">
-                    <Alert type="success" message="Message sent! We'll get back to you shortly." />
+                    <Alert type="success" message="Message sent successfully ! We’ll contact you shortly." />
                   </div>
                 )}
                 {status === 'error' && (
@@ -157,33 +157,38 @@ export default function ContactPage() {
                   <div className="grid md:grid-cols-2 gap-6">
                     <TextField
                       label="Full Name"
-                      placeholder="Jane Doe"
+                      placeholder="Enter your name"
                       variant="dark"
+                      required
                       {...form.register('name')}
                       error={form.formState.errors.name?.message}
                     />
                     <TextField
                       label="Email Address"
                       type="email"
-                      placeholder="jane@company.com"
+                      placeholder="Enter your email"
                       variant="dark"
+                      required
                       {...form.register('email')}
                       error={form.formState.errors.email?.message}
                     />
                   </div>
 
                   <TextField
-                    label="Subject (Optional)"
-                    placeholder="How can we help?"
+                    label="Mobile Number"
+                    placeholder="Enter your mobile number"
                     variant="dark"
-                    {...form.register('subject')}
+                    required
+                    {...form.register('mobile')}
+                    error={form.formState.errors.mobile?.message}
                   />
 
                   <TextArea
                     label="Message"
                     rows={6}
-                    placeholder="Tell us about your project..."
+                    placeholder="Enter your message"
                     variant="dark"
+                    required
                     {...form.register('message')}
                     error={form.formState.errors.message?.message}
                   />
@@ -200,7 +205,6 @@ export default function ContactPage() {
                 </form>
               </div>
             </div>
-
           </div>
         </div>
       </section>
