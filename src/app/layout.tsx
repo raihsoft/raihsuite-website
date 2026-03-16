@@ -85,6 +85,7 @@ export default function RootLayout({
                 <h4 className="text-white font-medium mb-6">Product</h4>
                 <ul className="space-y-4 text-sm">
                   <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
+                  <li><Link href="/events/book-tickets" className="hover:text-white transition-colors">Events</Link></li>
                   <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                   <li><Link href="/integrations" className="hover:text-white transition-colors">Integrations</Link></li>
                   <li><Link href="/updates" className="hover:text-white transition-colors">Updates</Link></li>

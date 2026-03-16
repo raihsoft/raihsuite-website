@@ -57,13 +57,13 @@ export default function ContactPage() {
       {/* 
         HERO SECTION 
       */}
-      <section className="relative overflow-hidden pt-24 sm:pt-32 lg:py-40">
+      <section className="relative overflow-hidden min-h-[60vh] flex flex-col justify-center py-24 sm:py-32 lg:py-40">
         {/* Background glow effects */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a0b3d] to-[#0b061a]" />
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 sm:w-96 h-64 sm:h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob" />
         <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-56 sm:w-80 h-56 sm:h-80 bg-indigo-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
 
-        <div className="relative container-base px-6 text-center z-10">
+        <div className="relative container-base px-6 text-center z-10 flex flex-col items-center">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-brand-light text-sm font-medium border border-white/10 backdrop-blur mb-8 animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
             We're assisting you
@@ -89,7 +89,7 @@ export default function ContactPage() {
                   LEFT COLUMN: Contact Info
                 */}
             <div className="lg:col-span-5 space-y-12 animate-slide-in-left">
-              <div>
+              <div className="hidden lg:block">
                 <h2 className="text-3xl font-bold text-white mb-6">Let's start the conversation</h2>
                 <p className="text-lg text-gray-400 leading-relaxed">
                   Whether you need a demo, support, or just want to say hello, we're here.
