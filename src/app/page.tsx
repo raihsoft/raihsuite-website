@@ -28,6 +28,9 @@ export default function HomePage() {
               <a href="/contact" className="bg-white text-black px-8 py-4 rounded-full hover:bg-gray-200 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-block text-center font-bold">
                 Book a Demo
               </a>
+              <a href="/events/book-tickets" className="bg-transparent border border-white/20 text-white px-8 py-4 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-block text-center font-bold">
+                Book Tickets
+              </a>
             </div>
           </div>
 
@@ -44,29 +47,53 @@ export default function HomePage() {
       </section>
 
       {/* TRUSTED BY */}
-      <section className="bg-white text-black py-12 sm:py-16 animate-fade-in">
-        <div className="text-center text-gray-500 mb-10 animate-slide-up">
-          Trusted by 10,000+ founders & business owners.
+      <section className="bg-white text-black py-12 sm:py-16 animate-fade-in overflow-hidden">
+        <p className="text-center text-gray-500 mb-10 animate-slide-up text-sm sm:text-base font-medium tracking-wide">
+          Trusted founders &amp; business owners.
+        </p>
+
+        {/* Marquee wrapper with edge fade masks */}
+        <div
+          className="relative w-full"
+          style={{
+            maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+          }}
+        >
+          <div
+            className="flex items-center gap-16 w-max"
+            style={{
+              animation: "marquee-logos 22s linear infinite",
+            }}
+          >
+            {/* Render logos TWICE so the strip loops seamlessly */}
+            {[...Array(2)].flatMap((_, pass) =>
+              [
+                "https://media.raihsuite.com/RS0001/web/logos/ikigai-logoo.png",
+                "https://media.raihsuite.com/RS0001/web/logos/logo-irshadiyya.png",
+                "https://media.raihsuite.com/RS0001/web/logos/logo-paneuro.png",
+                "https://media.raihsuite.com/RS0001/web/logos/logo-santhwanam.png",
+                "https://media.raihsuite.com/RS0001/web/logos/vts-logo.jpg",
+                "https://media.raihsuite.com/RS0001/web/logos/tarmeez-logo.png",
+              ].map((logo, i) => (
+                <img
+                  key={`${pass}-${i}`}
+                  src={logo}
+                  alt="Client Logo"
+                  className="h-10 sm:h-12 w-auto object-contain opacity-100 transition-all duration-300 hover:scale-110 flex-shrink-0"
+                />
+              ))
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-wrap justify-center items-center gap-12">
-          {[
-            "https://media.raihsuite.com/RS0001/web/logos/ikigai-logoo.png",
-            "https://media.raihsuite.com/RS0001/web/logos/logo-irshadiyya.png",
-            "https://media.raihsuite.com/RS0001/web/logos/logo-paneuro.png",
-            "https://media.raihsuite.com/RS0001/web/logos/logo-santhwanam.png",
-            "https://media.raihsuite.com/RS0001/web/logos/vts-logo.jpg",
-            "https://media.raihsuite.com/RS0001/web/logos/tarmeez-logo.png"
-          ].map((logo, i) => (
-            <img
-              key={i}
-              src={logo}
-              alt="Client Logo"
-              className="h-12 w-auto object-contain transition-transform duration-300 hover:scale-110 animate-scale-in"
-              style={{ animationDelay: `${i * 0.1}s` }}
-            />
-          ))}
-        </div>
+        {/* Keyframe definition */}
+        <style>{`
+          @keyframes marquee-logos {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
       </section>
 
       {/* FEATURES */}
@@ -203,9 +230,14 @@ export default function HomePage() {
             <p className="text-white/70 text-lg sm:text-xl mb-8 animate-slide-up animate-stagger-1 max-w-xl">
               Connect with our team to see how Raihsuite can transform your business.
             </p>
-            <a href="/contact" className="bg-white text-black px-10 py-5 rounded-full hover:bg-gray-200 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-pulse-glow inline-block text-center font-bold">
-              Book a Demo
-            </a>
+            <div className="flex flex-col sm:flex-row gap-4 animate-slide-up animate-stagger-2">
+              <a href="/contact" className="bg-white text-black px-10 py-5 rounded-full hover:bg-gray-200 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-pulse-glow inline-block text-center font-bold">
+                Book a Demo
+              </a>
+              <a href="/events/book-tickets" className="bg-transparent border border-white/20 text-white px-10 py-5 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-block text-center font-bold">
+                Book Tickets
+              </a>
+            </div>
           </div>
 
           <div className="animate-slide-in-right flex justify-center">
