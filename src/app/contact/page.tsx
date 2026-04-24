@@ -142,9 +142,27 @@ export default function ContactPage() {
             <div className="lg:col-span-7 lg:col-start-6 animate-slide-in-right mt-12 lg:mt-0">
               <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 lg:p-10 border border-white/10">
 
+                {/* Success Modal */}
                 {status === 'success' && (
-                  <div className="mb-6">
-                    <Alert type="success" message="Message sent successfully ! We’ll contact you shortly." />
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0b061a]/80 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white/5 border border-white/10 p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl max-w-sm sm:max-w-md w-full shadow-2xl relative text-center animate-slide-up mx-auto">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500/20 border border-green-500/50 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 text-green-400 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                        <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">Message Sent!</h3>
+                      <p className="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8 leading-relaxed">
+                        We've received your message and will contact you shortly.
+                      </p>
+                      <button 
+                        onClick={() => setStatus('idle')}
+                        className="w-full bg-brand-light text-white py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-brand-dark transition-colors shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 group"
+                      >
+                        <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        Back
+                      </button>
+                    </div>
                   </div>
                 )}
                 {status === 'error' && (

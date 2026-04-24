@@ -28,7 +28,7 @@ export default function HomePage() {
               <a href="/contact" className="bg-white text-black px-8 py-4 rounded-full hover:bg-gray-200 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-block text-center font-bold">
                 Book a Demo
               </a>
-              <a href="/events/book-tickets" className="bg-transparent border border-white/20 text-white px-8 py-4 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-block text-center font-bold">
+              <a href="/events/book-tickets" className="hidden bg-transparent border border-white/20 text-white px-8 py-4 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg text-center font-bold">
                 Book Tickets
               </a>
             </div>
@@ -234,7 +234,7 @@ export default function HomePage() {
               <a href="/contact" className="bg-white text-black px-10 py-5 rounded-full hover:bg-gray-200 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-pulse-glow inline-block text-center font-bold">
                 Book a Demo
               </a>
-              <a href="/events/book-tickets" className="bg-transparent border border-white/20 text-white px-10 py-5 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-block text-center font-bold">
+              <a href="/events/book-tickets" className="hidden bg-transparent border border-white/20 text-white px-10 py-5 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg text-center font-bold">
                 Book Tickets
               </a>
             </div>
