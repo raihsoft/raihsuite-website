@@ -144,7 +144,7 @@ export default function CRMPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 sm:mb-20">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Sales Teams Choose RaihSuite</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Sales Teams Choose Raihsuite</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
@@ -177,7 +177,7 @@ export default function CRMPage() {
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-gray-900">Ready to Boost Your Sales?</h2>
           <p className="text-lg sm:text-xl text-gray-500 mb-10">
-            Join thousands of sales teams winning with RaihSuite CRM.
+            Join thousands of sales teams winning with Raihsuite CRM.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

@@ -143,7 +143,7 @@ export default function HRMSPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 sm:mb-20">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why HR Teams Love RaihSuite</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why HR Teams Love Raihsuite</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
@@ -176,7 +176,7 @@ export default function HRMSPage() {
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-4xl font-bold mb-6 text-gray-900">Ready to Transform Your HR?</h2>
           <p className="text-xl text-gray-500 mb-10">
-            Join thousands of companies building better workplaces with RaihSuite HRMS.
+            Join thousands of companies building better workplaces with Raihsuite HRMS.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

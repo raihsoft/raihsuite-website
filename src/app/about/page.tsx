@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { type ReactNode } from "react";
+
 import Button from "@/components/ui/Button";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/about",
+  },
+};
 
 export default function AboutPage() {
   return (
@@ -79,7 +87,7 @@ export default function AboutPage() {
               <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-brand-light rounded-full opacity-20 blur-xl"></div>
               <h3 className="text-2xl font-bold mb-4 text-brand-dark">The Future is Integrated</h3>
               <p className="text-gray-600 mb-6">
-                "RaihSuite isn't just software; it's the engine that powers modern enterprises."
+                "Raihsuite isn't just software; it's the engine that powers modern enterprises."
               </p>
               <blockquote className="border-l-4 border-brand-light pl-4 py-2 italic text-gray-500">
                 — CEO & Founder
@@ -112,7 +120,7 @@ export default function AboutPage() {
               </h2>
               <p className="text-lg text-gray-600 leading-relaxed">
                 We envision a future where businesses of any size can leverage cutting-edge enterprise technology without complexity.
-                RaihSuite creates integrated solutions that act as the central nervous system of your organization.
+                Raihsuite creates integrated solutions that act as the central nervous system of your organization.
               </p>
             </div>
           </div>
@@ -245,7 +253,7 @@ export default function AboutPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Industry Leaders Choose RaihSuite</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Industry Leaders Choose Raihsuite</h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
@@ -295,7 +303,7 @@ export default function AboutPage() {
             Ready to transform your business?
           </h2>
           <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
-            Join thousands of businesses that trust RaihSuite for their daily operations.
+            Join thousands of businesses that trust Raihsuite for their daily operations.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -311,3 +319,4 @@ export default function AboutPage() {
     </main>
   );
 }
+
