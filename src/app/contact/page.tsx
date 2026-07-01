@@ -31,10 +31,10 @@ export default function ContactPage() {
     setStatus('idle');
     setErrorMessage(null);
     try {
-      const res = await fetch('https://staging-api.raihsuite.com/v1/crm/enquiries/', {
+      const res = await fetch('https://api.raihsuite.com/v1/crm/enquiries/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, phone: values.mobile, tenant: 3 })
+        body: JSON.stringify({ ...values, phone: values.mobile, tenant: 1 })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

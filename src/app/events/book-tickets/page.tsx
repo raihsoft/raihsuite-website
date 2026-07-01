@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import QRCode from "react-qr-code";
 import TextField from "@/components/form/TextField";
+import TicketForm from "@/components/ticket/TicketForm";
+import GeneratedTicketDisplay from "@/components/ticket/GeneratedTicketDisplay";
+import { fetchEvents, fetchParticipants, generateTicket, Ticket, Event, Participant } from "@/lib/ticketService";
 
 // Mock Data
 const EVENT_DATA = {
@@ -68,6 +71,7 @@ const EVENT_DATA = {
     ],
 };
 
+type Mode = "booking" | "generate";
 type Step = "selection" | "tickets" | "attendees" | "payment" | "ticket";
 type TicketSelection = { typeId: string; qty: number };
 
@@ -107,13 +111,89 @@ const accentClasses: Record<string, { border: string; glow: string; badge: strin
 };
 
 export default function BookTicketsPage() {
+    const [mode, setMode] = useState<Mode>("booking");
     const [currentStep, setCurrentStep] = useState<Step>("selection");
     const [selectedShow, setSelectedShow] = useState(EVENT_DATA.shows[0]);
     const [ticketSelections, setTicketSelections] = useState<TicketSelection[]>([]);
     const [attendees, setAttendees] = useState<Record<string, { name: string; email: string }>>({});
     const [isProcessing, setIsProcessing] = useState(false);
 
+    // Ticket Generation state
+    const [events, setEvents] = useState<Event[]>([]);
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [generatedTicket, setGeneratedTicket] = useState<Ticket | null>(null);
+    const [selectedEventForTicket, setSelectedEventForTicket] = useState<Event | null>(null);
+    const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+    const [isLoadingParticipants, setIsLoadingParticipants] = useState(false);
+    const [isGeneratingTicket, setIsGeneratingTicket] = useState(false);
+    const [ticketError, setTicketError] = useState<string | null>(null);
+
     const ticketRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+    // Load events on component mount or when generating mode is active
+    useEffect(() => {
+      if (mode === "generate" && events.length === 0) {
+        loadEvents();
+      }
+    }, [mode]);
+
+    const loadEvents = async () => {
+      setIsLoadingEvents(true);
+      setTicketError(null);
+      try {
+        const data = await fetchEvents();
+        setEvents(data);
+      } catch (error) {
+        setTicketError(error instanceof Error ? error.message : "Failed to load events");
+        console.error("Error loading events:", error);
+      } finally {
+        setIsLoadingEvents(false);
+      }
+    };
+
+    const handleEventChange = async (eventId: string) => {
+      setParticipants([]);
+      setIsDefaultParticipants(false);
+      if (!eventId) return;
+
+      const selected = events.find(e => e.id === eventId);
+      setSelectedEventForTicket(selected || null);
+      
+      setIsLoadingParticipants(true);
+      setTicketError(null);
+      try {
+        const data = await fetchParticipants(eventId);
+        setParticipants(data);
+      } catch (error) {
+        setTicketError(error instanceof Error ? error.message : "Failed to load participants");
+        console.error("Error loading participants:", error);
+      } finally {
+        setIsLoadingParticipants(false);
+      }
+    };
+
+    const [isDefaultParticipants, setIsDefaultParticipants] = useState(false);
+
+    const handleGenerateTicket = async (eventId: string, participantId: string) => {
+      setIsGeneratingTicket(true);
+      setTicketError(null);
+      try {
+        const ticket = await generateTicket(eventId, participantId);
+        setGeneratedTicket(ticket);
+      } catch (error) {
+        setTicketError(error instanceof Error ? error.message : "Failed to generate ticket");
+        console.error("Error generating ticket:", error);
+      } finally {
+        setIsGeneratingTicket(false);
+      }
+    };
+
+    const resetTicketGeneration = () => {
+      setGeneratedTicket(null);
+      setSelectedEventForTicket(null);
+      setParticipants([]);
+      setTicketError(null);
+    };
 
     const handleDownload = async (seatId: string) => {
         const el = ticketRefs.current[seatId];
@@ -216,18 +296,94 @@ export default function BookTicketsPage() {
             </div>
 
             <div className="relative container-base mx-auto px-6">
-                {/* Header Section */}
-                <div className="pt-24 lg:pt-32 mb-16 text-center animate-fade-in">
-                    <span className="bg-white/10 border border-white/10 px-4 py-2 rounded-full text-xs font-semibold tracking-widest uppercase text-purple-400 mb-6 inline-block">
-                        {EVENT_DATA.type} Booking
-                    </span>
-                    <h1 className="text-5xl lg:text-7xl font-bold mb-6">{EVENT_DATA.name}</h1>
-                    <p className="text-xl text-white/60 flex items-center justify-center gap-4">
-                        <span>{EVENT_DATA.artist}</span>
-                        <span className="w-1.5 h-1.5 bg-white/20 rounded-full" />
-                        <span>{EVENT_DATA.venue}</span>
-                    </p>
+                {/* Mode Toggle */}
+                <div className="pt-24 flex justify-center mb-12">
+                    <div className="inline-flex bg-white/5 border border-white/10 rounded-full p-1">
+                        <button
+                            onClick={() => { setMode("booking"); setGeneratedTicket(null); }}
+                            className={`px-8 py-3 rounded-full font-bold transition-all ${
+                                mode === "booking"
+                                    ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
+                                    : "text-white/60 hover:text-white"
+                            }`}
+                        >
+                            Book Tickets
+                        </button>
+                        <button
+                            onClick={() => { setMode("generate"); if (events.length === 0) loadEvents(); }}
+                            className={`px-8 py-3 rounded-full font-bold transition-all ${
+                                mode === "generate"
+                                    ? "bg-cyan-600 text-white shadow-lg shadow-cyan-600/30"
+                                    : "text-white/60 hover:text-white"
+                            }`}
+                        >
+                            Generate Ticket
+                        </button>
+                    </div>
                 </div>
+
+                {/* Generate Ticket Mode */}
+                {mode === "generate" && (
+                    <div className="mb-20">
+                        <div className="text-center mb-12">
+                            <h1 className="text-5xl lg:text-7xl font-bold mb-6">Generate Event Ticket</h1>
+                            <p className="text-xl text-white/60">Select an event and participant to generate an admission ticket with QR code</p>
+                        </div>
+
+                        {/* Error Message */}
+                        {ticketError && (
+                            <div className="max-w-md mx-auto mb-8 bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+                                <p className="text-red-300 text-sm">{ticketError}</p>
+                            </div>
+                        )}
+
+                        {/* Generated Ticket Display */}
+                        {generatedTicket && selectedEventForTicket && (
+                            <div className="mb-8">
+                                <GeneratedTicketDisplay
+                                    ticket={generatedTicket}
+                                    eventName={selectedEventForTicket.name}
+                                />
+                                <div className="text-center mt-8">
+                                    <button
+                                        onClick={resetTicketGeneration}
+                                        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition-all"
+                                    >
+                                        Generate Another Ticket
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Ticket Form */}
+                        {!generatedTicket && (
+                            <TicketForm
+                                events={events}
+                                participants={participants}
+                                onSubmit={handleGenerateTicket}
+                                isLoading={isLoadingParticipants || isLoadingEvents}
+                                isGenerating={isGeneratingTicket}
+                                onEventChange={handleEventChange}
+                            />
+                        )}
+                    </div>
+                )}
+
+                {/* Booking Mode (Original) */}
+                {mode === "booking" && (
+                    <>
+                        {/* Header Section */}
+                        <div className="pt-12 lg:pt-16 mb-16 text-center animate-fade-in">
+                            <span className="bg-white/10 border border-white/10 px-4 py-2 rounded-full text-xs font-semibold tracking-widest uppercase text-purple-400 mb-6 inline-block">
+                                {EVENT_DATA.type} Booking
+                            </span>
+                            <h1 className="text-5xl lg:text-7xl font-bold mb-6">{EVENT_DATA.name}</h1>
+                            <p className="text-xl text-white/60 flex items-center justify-center gap-4">
+                                <span>{EVENT_DATA.artist}</span>
+                                <span className="w-1.5 h-1.5 bg-white/20 rounded-full" />
+                                <span>{EVENT_DATA.venue}</span>
+                            </p>
+                        </div>
 
                 {renderStepIndicator()}
 
@@ -679,69 +835,73 @@ export default function BookTicketsPage() {
                         </div>
                     </div>
                 )}
-            </div>
 
-            {/* Admin/Staff Validation Simulation */}
-            <div className="mt-32 pt-20 border-t border-white/5 container-base mx-auto px-6">
-                <div className="bg-purple-900/10 border border-purple-500/20 rounded-3xl p-8 lg:p-12 relative overflow-hidden">
-                    <div className="relative z-10">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                            <div>
-                                <h2 className="text-2xl font-bold mb-2">Staff Terminal (Admin Mode)</h2>
-                                <p className="text-white/40 text-sm max-w-md">
-                                    Simulate entry point validation. Scan tickets to check validity and prevent duplicate entry.
-                                </p>
-                            </div>
-                            <div className="flex gap-4">
-                                <a
-                                    href="/events/admin"
-                                    className="bg-purple-600 text-white px-8 py-4 rounded-xl text-sm font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-lg shadow-purple-600/20"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                    </svg>
-                                    Launch Digital Terminal
-                                </a>
-                            </div>
-                        </div>
-
-                        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-black/40 border border-white/5 p-6 rounded-2xl">
-                                <p className="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Validation Logic</p>
-                                <ul className="space-y-3 text-sm">
-                                    <li className="flex items-center gap-2 text-green-400">
-                                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                                        One-time scan only
-                                    </li>
-                                    <li className="flex items-center gap-2 text-white/60">
-                                        <div className="w-1.5 h-1.5 bg-white/20 rounded-full" />
-                                        Auto-timestamp entry
-                                    </li>
-                                    <li className="flex items-center gap-2 text-white/60">
-                                        <div className="w-1.5 h-1.5 bg-white/20 rounded-full" />
-                                        Manual override enabled
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="md:col-span-2 bg-black/40 border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="relative z-10 flex items-center justify-between h-full">
-                                    <div className="space-y-2">
-                                        <p className="text-xs font-bold text-white/40 uppercase tracking-wider">Terminal Preview</p>
-                                        <h3 className="text-xl font-bold">Real-time Entry Monitor</h3>
-                                        <p className="text-white/40 text-sm italic">Simulated data: 182 entries validated today.</p>
+                {/* Admin/Staff Validation Simulation - Only in Booking Mode */}
+                {mode === "booking" && (
+                    <div className="mt-32 pt-20 border-t border-white/5">
+                        <div className="bg-purple-900/10 border border-purple-500/20 rounded-3xl p-8 lg:p-12 relative overflow-hidden">
+                            <div className="relative z-10">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                                    <div>
+                                        <h2 className="text-2xl font-bold mb-2">Staff Terminal (Admin Mode)</h2>
+                                        <p className="text-white/40 text-sm max-w-md">
+                                            Simulate entry point validation. Scan tickets to check validity and prevent duplicate entry.
+                                        </p>
                                     </div>
-                                    <div className="hidden sm:block">
-                                        <div className="w-24 h-24 border-4 border-dashed border-white/10 rounded-full flex items-center justify-center animate-spin-slow">
-                                            <div className="w-12 h-12 bg-white/5 rounded-full" />
+                                    <div className="flex gap-4">
+                                        <a
+                                            href="/events/admin"
+                                            className="bg-purple-600 text-white px-8 py-4 rounded-xl text-sm font-bold hover:bg-purple-700 transition-all flex items-center gap-2 shadow-lg shadow-purple-600/20"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                            </svg>
+                                            Launch Digital Terminal
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-black/40 border border-white/5 p-6 rounded-2xl">
+                                        <p className="text-xs font-bold text-white/40 uppercase mb-4 tracking-wider">Validation Logic</p>
+                                        <ul className="space-y-3 text-sm">
+                                            <li className="flex items-center gap-2 text-green-400">
+                                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                                                One-time scan only
+                                            </li>
+                                            <li className="flex items-center gap-2 text-white/60">
+                                                <div className="w-1.5 h-1.5 bg-white/20 rounded-full" />
+                                                Auto-timestamp entry
+                                            </li>
+                                            <li className="flex items-center gap-2 text-white/60">
+                                                <div className="w-1.5 h-1.5 bg-white/20 rounded-full" />
+                                                Manual override enabled
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div className="md:col-span-2 bg-black/40 border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="relative z-10 flex items-center justify-between h-full">
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-bold text-white/40 uppercase tracking-wider">Terminal Preview</p>
+                                                <h3 className="text-xl font-bold">Real-time Entry Monitor</h3>
+                                                <p className="text-white/40 text-sm italic">Simulated data: 182 entries validated today.</p>
+                                            </div>
+                                            <div className="hidden sm:block">
+                                                <div className="w-24 h-24 border-4 border-dashed border-white/10 rounded-full flex items-center justify-center animate-spin-slow">
+                                                    <div className="w-12 h-12 bg-white/5 rounded-full" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 blur-[100px] -mr-32 -mt-32" />
                         </div>
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 blur-[100px] -mr-32 -mt-32" />
-                </div>
+                )}
+                    </>
+                )}
             </div>
         </div>
     );

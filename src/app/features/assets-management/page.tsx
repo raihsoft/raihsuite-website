@@ -145,7 +145,7 @@ export default function AssetsManagementPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 sm:mb-20">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Choose RaihSuite Assets?</h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Choose Raihsuite Assets?</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
@@ -178,7 +178,7 @@ export default function AssetsManagementPage() {
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-gray-900">Take Control of Your Assets</h2>
           <p className="text-lg sm:text-xl text-gray-500 mb-10">
-            Join thousands of businesses optimizing their assets with RaihSuite.
+            Join thousands of businesses optimizing their assets with Raihsuite.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
