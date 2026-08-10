@@ -244,7 +244,7 @@ export default function RootLayout({
               </div>
 
               <div className="text-center sm:text-left">
-                <h4 className="text-white font-medium mb-6">Modules</h4>
+                <h3 className="text-white font-medium mb-6">Modules</h3>
                 <ul className="space-y-4 text-sm">
                   <li><Link href="/#modules" className="hover:text-white transition-colors">HRMS</Link></li>
                   <li><Link href="/#modules" className="hover:text-white transition-colors">CRM</Link></li>
@@ -256,7 +256,7 @@ export default function RootLayout({
               </div>
 
               <div className="text-center sm:text-left">
-                <h4 className="text-white font-medium mb-6">Company</h4>
+                <h3 className="text-white font-medium mb-6">Company</h3>
                 <ul className="space-y-4 text-sm">
                   <li><Link href="/about" className="hover:text-white transition-colors">About Raihsoft</Link></li>
                   <li><Link href="/technology-strategy" className="hover:text-white transition-colors">Technology Strategy</Link></li>
@@ -266,7 +266,7 @@ export default function RootLayout({
               </div>
 
               <div className="text-center sm:text-left">
-                <h4 className="text-white font-medium mb-6">Legal</h4>
+                <h3 className="text-white font-medium mb-6">Legal</h3>
                 <ul className="space-y-4 text-sm">
                   <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                   <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>

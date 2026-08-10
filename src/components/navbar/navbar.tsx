@@ -45,7 +45,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile menu */}
-      <nav className={`fixed inset-x-0 top-[72px] sm:top-[88px] mx-4 sm:mx-6 md:hidden bg-[#05030f]/95 backdrop-blur-2xl border border-white/10 rounded-2xl transition-all duration-300 origin-top overflow-hidden z-50 ${isOpen ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-0 opacity-0 -translate-y-4 pointer-events-none"
+      <nav aria-hidden="true" className={`fixed inset-x-0 top-[72px] sm:top-[88px] mx-4 sm:mx-6 md:hidden bg-[#05030f]/95 backdrop-blur-2xl border border-white/10 rounded-2xl transition-all duration-300 origin-top overflow-hidden z-50 ${isOpen ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-0 opacity-0 -translate-y-4 pointer-events-none"
         }`}>
         <div className="p-6 flex flex-col gap-4">
           {navLinks.map((link) => {

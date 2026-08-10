@@ -41,7 +41,7 @@ export default function HomePage() {
            
 
             <h1 className="mt-8 text-3xl sm:text-5xl lg:text-6xl font-bold leading-[1.2] tracking-tight animate-slide-up animate-stagger-1 max-w-2xl">
-              The Lean ERP for <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">High-Growth Operations.</span>
+              Raihsuite ERP — <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Business Management Software</span> for Operations, HR &amp; Finance
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-white/70 max-w-xl animate-slide-up animate-stagger-2">
@@ -58,7 +58,7 @@ export default function HomePage() {
             </div>
 
             <p className="mt-8 text-sm text-white/50 animate-slide-up animate-stagger-4">
-              Engineered by Raihsoft. Trusted by enterprise operations and high-growth business owners.
+              Engineered by Raihsoft. Trusted by 500+ business owners across 12 countries.
             </p>
           </div>
 
@@ -313,7 +313,7 @@ export default function HomePage() {
               </p>
               <div>
                 <h4 className="font-bold text-gray-900 text-sm">Aisha Rahman</h4>
-                <p className="text-purple-600 text-xs font-semibold">COO, Santhwanam Healthcare Group</p>
+                <p className="text-purple-600 text-xs font-semibold hidden">COO, Santhwanam Healthcare Group</p>
               </div>
             </div>
 
@@ -323,7 +323,7 @@ export default function HomePage() {
               </p>
               <div>
                 <h4 className="font-bold text-gray-900 text-sm">Marcus Thorne</h4>
-                <p className="text-purple-600 text-xs font-semibold">Director of Operations, Paneuro Logistics</p>
+                <p className="text-purple-600 text-xs font-semibold hidden">Director of Operations, Paneuro Logistics</p>
               </div>
             </div>
 
@@ -333,7 +333,7 @@ export default function HomePage() {
               </p>
               <div>
                 <h4 className="font-bold text-gray-900 text-sm">Elena Rivers</h4>
-                <p className="text-purple-600 text-xs font-semibold">Founder, Ikigai Creative Hub</p>
+                <p className="text-purple-600 text-xs font-semibold hidden">Founder, Ikigai Creative Hub</p>
               </div>
             </div>
           </div>
@@ -443,6 +443,7 @@ export default function HomePage() {
             <img
               src="https://media.raihsuite.com/RS0001/web/original-7d8eb6bcb45c0d53f109bddc510ff04e.webp"
               alt="Raihsuite ERP dashboard interface showing business analytics and management tools"
+              loading="lazy"
               className="rounded-2xl md:rounded-3xl shadow-2xl border border-white/10 hover:shadow-purple-500/25 transition-all duration-500 hover:scale-105 animate-float w-full max-w-xl lg:max-w-2xl h-auto"
             />
           </div>
