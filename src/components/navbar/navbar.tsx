@@ -10,7 +10,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Overview", href: "/" },
-    { name: "Features", href: "/#features" },
+    { name: "Modules", href: "/#modules" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];
@@ -67,7 +67,7 @@ export default function Navbar() {
           })}
           <div className="pt-4 mt-2 border-t border-white/10">
             <a href="/contact" onClick={() => setIsOpen(false)} className="w-full bg-white text-black px-6 py-4 rounded-xl text-center font-bold hover:bg-gray-200 transition inline-block">
-              Book a Demo
+              Book a Private Demo
             </a>
           </div>
         </div>
