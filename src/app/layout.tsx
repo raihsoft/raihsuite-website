@@ -159,7 +159,7 @@ export default function RootLayout({
               {/* CTA */}
               <div className="hidden sm:flex items-center gap-4">
                 <a href="/contact" className="bg-white text-black px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition inline-block">
-                  Book a Demo
+                  Book a Private Demo
                 </a>
               </div>
             </div>
@@ -189,8 +189,7 @@ export default function RootLayout({
                   </span>
                 </div>
                 <p className="text-sm leading-relaxed max-w-xs text-center sm:text-left">
-                  Powerful ERP platform to manage your business operations with
-                  modern design and efficiency.
+                  A powerful, unified ERP platform engineered to manage modern business operations with maximum efficiency and elegant design.
                 </p>
                 <div className="text-xs text-white/50 space-y-1 text-center sm:text-left pt-1">
                   <p>Email: <a href="mailto:contact@raihsoft.com" className="hover:text-white transition-colors">contact@raihsoft.com</a></p>
@@ -245,23 +244,24 @@ export default function RootLayout({
               </div>
 
               <div className="text-center sm:text-left">
-                <h4 className="text-white font-medium mb-6">Product</h4>
+                <h4 className="text-white font-medium mb-6">Modules</h4>
                 <ul className="space-y-4 text-sm">
-                  <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
-                  <li><Link href="/events/book-tickets" className="hover:text-white transition-colors">Events</Link></li>
-                  <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                  <li><Link href="/integrations" className="hover:text-white transition-colors">Integrations</Link></li>
-                  <li><Link href="/updates" className="hover:text-white transition-colors">Updates</Link></li>
+                  <li><Link href="/#modules" className="hover:text-white transition-colors">HRMS</Link></li>
+                  <li><Link href="/#modules" className="hover:text-white transition-colors">CRM</Link></li>
+                  <li><Link href="/#modules" className="hover:text-white transition-colors">Asset Management</Link></li>
+                  <li><Link href="/#modules" className="hover:text-white transition-colors">Order Management</Link></li>
+                  <li><Link href="/#modules" className="hover:text-white transition-colors">Event Management</Link></li>
+                  <li><Link href="/#modules" className="hover:text-white transition-colors">Business Intelligence</Link></li>
                 </ul>
               </div>
 
               <div className="text-center sm:text-left">
                 <h4 className="text-white font-medium mb-6">Company</h4>
                 <ul className="space-y-4 text-sm">
-                  <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                  <li><Link href="/careers" className="hover:text-white transition-colors">Careers</Link></li>
-                  <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-                  <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                  <li><Link href="/about" className="hover:text-white transition-colors">About Raihsoft</Link></li>
+                  <li><Link href="/technology-strategy" className="hover:text-white transition-colors">Technology Strategy</Link></li>
+                  <li><Link href="/blog" className="hover:text-white transition-colors">Technical Blog</Link></li>
+                  <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
                 </ul>
               </div>
 
@@ -270,8 +270,7 @@ export default function RootLayout({
                 <ul className="space-y-4 text-sm">
                   <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                   <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                  <li><Link href="/cookies" className="hover:text-white transition-colors">Cookies Settings</Link></li>
-                  <li><Link href="/sitemap" className="hover:text-white transition-colors">Sitemap</Link></li>
+                  <li><Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link></li>
                 </ul>
               </div>
             </div>
