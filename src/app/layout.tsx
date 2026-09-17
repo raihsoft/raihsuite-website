@@ -197,6 +197,17 @@ export default function RootLayout({
                 </div>
                 <div className="flex items-center gap-4 pt-2">
                   <a
+                    href="https://www.linkedin.com/company/raihsoft/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/50 hover:text-white transition-colors"
+                    aria-label="Raihsoft LinkedIn"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.75a1.48 1.48 0 1 0 0 2.96 1.48 1.48 0 0 0 0-2.96z"/>
+                    </svg>
+                  </a>
+                  <a
                     href="https://x.com/raihsoft"
                     target="_blank"
                     rel="noopener noreferrer"
