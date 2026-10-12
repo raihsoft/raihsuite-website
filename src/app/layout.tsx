@@ -1,10 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import type { Metadata } from "next";
 
-import Navbar from "@/components/navbar/navbar";
-import PageTransition from "@/components/layout/PageTransition";
 import ProgressBar from "@/components/layout/ProgressBar";
+import ConditionalShell from "@/components/layout/ConditionalShell";
 
 import "./globals.css";
 
@@ -307,3 +305,4 @@ export default function RootLayout({
     </html>
   );
 }
+
