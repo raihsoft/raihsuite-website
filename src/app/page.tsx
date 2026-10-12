@@ -41,7 +41,7 @@ export default function HomePage() {
            
 
             <h1 className="mt-8 text-3xl sm:text-5xl lg:text-6xl font-bold leading-[1.2] tracking-tight animate-slide-up animate-stagger-1 max-w-2xl">
-              Raihsuite ERP — <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Business Management Software</span> for Operations, HR &amp; Finance
+              The Lean ERP for High-Growth Operations.
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-white/70 max-w-xl animate-slide-up animate-stagger-2">
@@ -58,7 +58,7 @@ export default function HomePage() {
             </div>
 
             <p className="mt-8 text-sm text-white/50 animate-slide-up animate-stagger-4">
-              Engineered by Raihsoft. Trusted by 500+ business owners across 12 countries.
+              Engineered by Raihsoft. Trusted by enterprise operations and high-growth business owners.
             </p>
           </div>
 
@@ -115,7 +115,7 @@ export default function HomePage() {
                 link: "/features/crm"
               },
               {
-                title: "Capital & Infrastructure",
+                title: "Capital & Infrastructure (Asset Management)",
                 description: "Gain full lifecycle visibility over company infrastructure, hardware, and physical assets. Minimize loss, schedule preventive maintenance, and track depreciation accurately.",
                 keyValue: "Protect your bottom line with total capital asset accountability.",
                 icon: (
@@ -126,7 +126,7 @@ export default function HomePage() {
                 link: "/features/assets-management"
               },
               {
-                title: "Supply Chain & Fulfillment",
+                title: "Supply Chain & Fulfillment (Order Management)",
                 description: "Streamline the entire order lifecycle from initial invoice generation to final fulfillment. Eliminate communication gaps between sales and logistics.",
                 keyValue: "Elevate fulfillment accuracy and eliminate manual order processing errors.",
                 icon: (
@@ -137,7 +137,7 @@ export default function HomePage() {
                 link: "/features/order-management"
               },
               {
-                title: "Corporate Operations",
+                title: "Corporate Operations (Event Management)",
                 description: "Orchestrate major corporate events, stakeholder conferences, and operational rollouts. Track schedules, resource allocations, and execution milestones.",
                 keyValue: "Keep complex organizational timelines synchronized and on track.",
                 icon: (
@@ -148,7 +148,7 @@ export default function HomePage() {
                 link: "/features/event-management"
               },
               {
-                title: "Intelligence & Strategy",
+                title: "Intelligence & Strategy (Performance Analytics)",
                 description: "Ditch the guesswork. Consolidate cross-department data into clean, actionable, real-time dashboards for data-driven executive decisions.",
                 keyValue: "Identify operational bottlenecks before they impact your quarterly profit margins.",
                 icon: (
