@@ -164,7 +164,7 @@ export default function IluOrderPageClient() {
 
     const secValidation = validateSecurityCode(securityCode);
     if (!secValidation.isValid || !secValidation.code) {
-      setValidationError(secValidation.error || 'ദയവായി 6 അക്ക സുരക്ഷാ കോഡ് നൽകുക.');
+      setValidationError(secValidation.error || 'ദയവായി 6 അക്ക സെക്യൂരിറ്റി കോഡ് നൽകുക.');
       return;
     }
 
@@ -457,7 +457,7 @@ export default function IluOrderPageClient() {
                 {/* Field 3: Club Security Code */}
                 <div className="space-y-1.5 sm:space-y-2 md:col-span-1">
                   <label htmlFor="security-code" className="block text-xs sm:text-sm font-bold text-slate-800">
-                    ക്ലബ്ബ് സുരക്ഷാ കോഡ് (6 അക്കങ്ങൾ) <span className="text-rose-500">*</span>
+                    ക്ലബ് സെക്യൂരിറ്റി കോഡ് (6 അക്കങ്ങൾ) <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -471,14 +471,14 @@ export default function IluOrderPageClient() {
                       inputMode="numeric"
                       value={securityCode}
                       onChange={handleSecurityCodeChange}
-                      placeholder="6 അക്ക സുരക്ഷാ കോഡ് നൽകുക"
+                      placeholder="6 അക്ക സെക്യൂരിറ്റി കോഡ് നൽകുക"
                       className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-10 sm:pr-11 py-2.5 sm:py-3.5 text-xs sm:text-sm font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-xs sm:placeholder:text-sm placeholder:text-slate-400 font-bold focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition"
                     />
                     <button
                       type="button"
                       onClick={() => setShowSecurityCode((prev) => !prev)}
                       className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1"
-                      title={showSecurityCode ? 'സുരക്ഷാ കോഡ് മറയ്ക്കുക' : 'സുരക്ഷാ കോഡ് കാണുക'}
+                      title={showSecurityCode ? 'സെക്യൂരിറ്റി കോഡ് മറയ്ക്കുക' : 'സെക്യൂരിറ്റി കോഡ് കാണുക'}
                     >
                       {showSecurityCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
