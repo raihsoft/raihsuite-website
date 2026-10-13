@@ -1,105 +1,61 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardList, ArrowLeft, ArrowRight, Menu, X } from 'lucide-react';
+import { ClipboardList, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function IluHeader() {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const isStatusPage = pathname === '/ilu/order-status';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#030a1c]/85 backdrop-blur-xl border-b border-blue-900/30 text-white shadow-xl">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm text-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo Section - Shifted Slightly Right */}
-          <div className="flex items-center gap-3 pl-2 sm:pl-6 lg:pl-10">
+          {/* Logo Section */}
+          <div className="flex items-center gap-3">
             <Link
               href="/ilu"
-              className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-lg p-1 transition"
+              className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-[#f3631f] rounded-lg p-1 transition"
               aria-label="ILU Foundation Home"
             >
               <img
-                src="https://media.raihsuite.com/RS0001/web/ilu/ilu-white-logo.png"
+                src="https://media.raihsuite.com/RS0001/web/ilu/ilu-logo-dark.png"
                 alt="ILU Foundation Logo"
-                className="h-11 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
               />
             </Link>
           </div>
 
-
-
-          {/* Right Top Pill Button */}
-          <div className="hidden md:flex items-center gap-3 pr-2 sm:pr-6 lg:pr-10">
+          {/* Right Action Pill Button with vibrant gradient */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {isStatusPage ? (
               <Link
                 href="/ilu"
-                className="flex items-center gap-2 px-5 py-2 bg-[#0066ff] hover:bg-blue-600 text-white font-semibold text-sm rounded-full shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
               >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Order Page</span>
+                <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="hidden xs:inline sm:inline">Back to Order Page</span>
+                <span className="xs:hidden sm:hidden">Order Page</span>
               </Link>
             ) : (
               <Link
                 href="/ilu/order-status"
-                className="flex items-center gap-2 px-5 py-2 bg-[#0066ff] hover:bg-blue-600 text-white font-semibold text-sm rounded-full shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
               >
-                <ClipboardList className="w-4 h-4" />
-                <span>Check Order Status</span>
-                <ArrowRight className="w-4 h-4" />
+                <ClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
+                <span className="hidden xs:inline sm:inline">Check Order Status</span>
+                <span className="xs:hidden sm:hidden">Order Status</span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline" />
               </Link>
             )}
-          </div>
-
-          {/* Mobile Toggle Button */}
-          <div className="md:hidden flex items-center gap-2">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-blue-900/40 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-[#030a1c]/98 border-b border-blue-900/40 px-4 pt-3 pb-6 space-y-3 animate-fade-in">
-          <Link
-            href="/ilu/order-status"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-2.5 rounded-xl font-medium text-sm text-slate-200 hover:bg-blue-900/40"
-          >
-            Order Status
-          </Link>
-          <div className="pt-2">
-            {isStatusPage ? (
-              <Link
-                href="/ilu"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#0066ff] text-white font-bold rounded-full text-center text-sm shadow-md"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Order Page</span>
-              </Link>
-            ) : (
-              <Link
-                href="/ilu/order-status"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#0066ff] text-white font-bold rounded-full text-center text-sm shadow-md"
-              >
-                <ClipboardList className="w-4 h-4" />
-                <span>Check Order Status →</span>
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Thin brand gradient line under navbar */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c]" />
     </header>
   );
 }
