@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   BarChart3,
   X,
+  Trophy,
+  Medal,
 } from 'lucide-react';
 import { OrderStatusResponse, fetchOrderStatusApi } from '@/lib/iluService';
 
@@ -43,24 +45,29 @@ export default function IluOrderStatusPageClient() {
     loadOrderStatus();
   }, []);
 
-  const filteredSummaries = useMemo(() => {
+  const rankedSummaries = useMemo(() => {
     if (!data?.summaries) return [];
     const list = [...data.summaries];
 
     // Strictly sort in descending order of total_count from the API
     list.sort((a, b) => (b.totalQuantityLiters || 0) - (a.totalQuantityLiters || 0));
 
-    if (!searchQuery.trim()) return list;
+    return list.map((item, index) => ({
+      ...item,
+      rank: index + 1,
+    }));
+  }, [data]);
+
+  const filteredSummaries = useMemo(() => {
+    if (!searchQuery.trim()) return rankedSummaries;
 
     const q = searchQuery.toLowerCase().trim();
-    return list.filter(
+    return rankedSummaries.filter(
       (s) =>
         s.clubName.toLowerCase().includes(q) ||
-        (s.location && s.location.toLowerCase().includes(q)) ||
-        (s.contactPerson && s.contactPerson.toLowerCase().includes(q)) ||
-        (s.mobileNumber && s.mobileNumber.toLowerCase().includes(q))
+        (s.location && s.location.toLowerCase().includes(q))
     );
-  }, [data, searchQuery]);
+  }, [rankedSummaries, searchQuery]);
 
   // Max liters for progress bar proportion calculation
   const maxLiters = useMemo(() => {
@@ -146,12 +153,9 @@ export default function IluOrderStatusPageClient() {
               <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#ea183c]/10 via-[#f3631f]/10 to-[#faa70c]/10 text-[#ea183c] shrink-0 border border-[#ea183c]/15 shadow-sm">
                 <Droplet className="w-8 h-8 sm:w-10 sm:h-10 fill-[#ea183c]/30" />
               </div>
-              <div className="space-y-0.5 sm:space-y-1">
+              <div>
                 <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
                   Total Quantity Ordered
-                </p>
-                <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                  ക്ലബ്ബ് ഓർഡറുകളുടെ ആകെ പായസം അളവ്
                 </p>
               </div>
             </div>
@@ -177,7 +181,7 @@ export default function IluOrderStatusPageClient() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by club name or contact person..."
+                placeholder="Search by club name or location..."
                 className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl pl-10 pr-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium transition"
               />
               {searchQuery && (
@@ -204,29 +208,24 @@ export default function IluOrderStatusPageClient() {
           </div>
         </section>
 
-        {/* ORDER SUMMARY TABLE */}
+        {/* ORDER SUMMARY TABLE & MOBILE LEADERBOARD */}
         <section>
           <div className="rounded-3xl bg-white border border-slate-200/90 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
+            {/* Desktop Table View (md and up) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-800">
                 <thead className="bg-[#f8fafc] border-b border-slate-200 text-xs font-bold text-slate-700">
                   <tr>
-                    <th scope="col" className="py-4 px-4 text-center w-12 text-slate-500">
+                    <th scope="col" className="py-4 px-4 text-center w-16 text-slate-500">
                       #
                     </th>
                     <th scope="col" className="py-4 px-6 font-bold">
                       Club / Organization
                     </th>
-                    <th scope="col" className="py-4 px-6 font-bold">
-                      Contact Person
-                    </th>
-                    <th scope="col" className="py-4 px-6 font-bold">
-                      Mobile Number
-                    </th>
                     <th scope="col" className="py-4 px-6 font-bold text-right">
                       Total Quantity
                     </th>
-                    <th scope="col" className="py-4 px-6 w-52 font-bold">
+                    <th scope="col" className="py-4 px-6 w-48 sm:w-60 font-bold">
                       Progress
                     </th>
                   </tr>
@@ -235,19 +234,13 @@ export default function IluOrderStatusPageClient() {
                 <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     // Skeleton Rows
-                    [1, 2, 3, 4, 5, 6, 7, 8].map((idx) => (
+                    [1, 2, 3, 4, 5, 6].map((idx) => (
                       <tr key={idx} className="animate-pulse">
                         <td className="py-4 px-4 text-center">
-                          <div className="h-4 bg-slate-100 rounded-full w-5 mx-auto" />
+                          <div className="h-6 w-6 bg-slate-100 rounded-full mx-auto" />
                         </td>
                         <td className="py-4 px-6">
-                          <div className="h-4 bg-slate-100 rounded w-36" />
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="h-4 bg-slate-100 rounded w-28" />
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="h-4 bg-slate-100 rounded w-24" />
+                          <div className="h-4 bg-slate-100 rounded w-40" />
                         </td>
                         <td className="py-4 px-6 text-right">
                           <div className="h-4 bg-amber-100 rounded w-16 ml-auto" />
@@ -259,33 +252,87 @@ export default function IluOrderStatusPageClient() {
                     ))
                   ) : filteredSummaries.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-500 font-medium">
+                      <td colSpan={4} className="py-12 text-center text-slate-500 font-medium">
                         {searchQuery
                           ? `No clubs found matching "${searchQuery}"`
                           : 'No orders recorded yet.'}
                       </td>
                     </tr>
                   ) : (
-                    filteredSummaries.map((summary, idx) => {
+                    filteredSummaries.map((summary) => {
                       const percent = Math.min(
                         100,
                         Math.max(4, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
                       );
 
+                      const isFirst = summary.rank === 1;
+                      const isSecond = summary.rank === 2;
+                      const isThird = summary.rank === 3;
+
                       return (
                         <tr
                           key={summary.clubId}
-                          className="hover:bg-amber-50/40 transition-colors"
+                          className={`transition-colors ${
+                            isFirst
+                              ? 'bg-gradient-to-r from-amber-500/15 via-amber-100/30 to-amber-50/10 border-l-4 border-l-amber-500 hover:bg-amber-100/40'
+                              : isSecond
+                              ? 'bg-gradient-to-r from-slate-200/50 via-slate-100/30 to-slate-50/10 border-l-4 border-l-slate-400 hover:bg-slate-100/60'
+                              : isThird
+                              ? 'bg-gradient-to-r from-orange-200/40 via-orange-100/20 to-orange-50/10 border-l-4 border-l-orange-500 hover:bg-orange-100/40'
+                              : 'hover:bg-amber-50/30'
+                          }`}
                         >
-                          {/* # */}
-                          <td className="py-4 px-4 text-center font-bold text-xs text-slate-500">
-                            {idx + 1}
+                          {/* # Rank */}
+                          <td className="py-4 px-4 text-center">
+                            {isFirst ? (
+                              <div
+                                className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 mx-auto"
+                                title="1st Position"
+                              >
+                                <Trophy className="w-4 h-4 text-amber-950 fill-amber-950/20" />
+                              </div>
+                            ) : isSecond ? (
+                              <div
+                                className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs sm:text-sm flex items-center justify-center shadow-sm border border-slate-200 mx-auto"
+                                title="2nd Position"
+                              >
+                                <Medal className="w-4 h-4 text-slate-800" />
+                              </div>
+                            ) : isThird ? (
+                              <div
+                                className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-sm border border-orange-300 mx-auto"
+                                title="3rd Position"
+                              >
+                                <Medal className="w-4 h-4 text-amber-100" />
+                              </div>
+                            ) : (
+                              <span className="font-bold text-xs sm:text-sm text-slate-500">
+                                {summary.rank}
+                              </span>
+                            )}
                           </td>
 
                           {/* Club Name */}
                           <td className="py-4 px-6 font-bold text-slate-900">
-                            <div className="flex items-center gap-2">
-                              <span>{summary.clubName}</span>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`text-sm sm:text-base ${isFirst ? 'font-black text-amber-950' : 'font-bold'}`}>
+                                {summary.clubName}
+                              </span>
+                              {isFirst && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 border border-amber-400 shadow-xs">
+                                  1st Place
+                                </span>
+                              )}
+                              {isSecond && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200/90 text-slate-800 border border-slate-300 shadow-xs">
+                                  2nd Place
+                                </span>
+                              )}
+                              {isThird && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-200/90 text-orange-950 border border-orange-300 shadow-xs">
+                                  3rd Place
+                                </span>
+                              )}
                               {summary.location && (
                                 <span className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded font-normal">
                                   {summary.location}
@@ -294,19 +341,9 @@ export default function IluOrderStatusPageClient() {
                             </div>
                           </td>
 
-                          {/* Contact Person */}
-                          <td className="py-4 px-6 text-slate-600 font-medium text-xs sm:text-sm">
-                            {summary.contactPerson || '—'}
-                          </td>
-
-                          {/* Mobile */}
-                          <td className="py-4 px-6 text-slate-600 font-mono text-xs sm:text-sm">
-                            {summary.mobileNumber || '—'}
-                          </td>
-
                           {/* Quantity */}
                           <td className="py-4 px-6 text-right">
-                            <span className="font-black text-slate-900 text-sm sm:text-base">
+                            <span className={`font-black text-sm sm:text-base ${isFirst ? 'text-amber-950' : 'text-slate-900'}`}>
                               {summary.totalQuantityLiters} L
                             </span>
                           </td>
@@ -328,24 +365,158 @@ export default function IluOrderStatusPageClient() {
               </table>
             </div>
 
+            {/* Mobile Leaderboard Cards View (screens < md) */}
+            <div className="block md:hidden p-3 sm:p-4 space-y-2.5">
+              {loading ? (
+                // Mobile Skeletons
+                [1, 2, 3, 4].map((idx) => (
+                  <div key={idx} className="p-3.5 rounded-2xl border border-slate-100 bg-white animate-pulse space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-slate-100" />
+                        <div className="h-4 w-28 bg-slate-100 rounded" />
+                      </div>
+                      <div className="h-5 w-12 bg-amber-100 rounded" />
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 rounded-full" />
+                  </div>
+                ))
+              ) : filteredSummaries.length === 0 ? (
+                <div className="py-10 text-center text-slate-500 text-xs font-medium">
+                  {searchQuery
+                    ? `No clubs found matching "${searchQuery}"`
+                    : 'No orders recorded yet.'}
+                </div>
+              ) : (
+                filteredSummaries.map((summary) => {
+                  const percent = Math.min(
+                    100,
+                    Math.max(4, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
+                  );
+
+                  const isFirst = summary.rank === 1;
+                  const isSecond = summary.rank === 2;
+                  const isThird = summary.rank === 3;
+
+                  return (
+                    <div
+                      key={summary.clubId}
+                      className={`p-3.5 rounded-2xl border transition-all ${
+                        isFirst
+                          ? 'bg-gradient-to-br from-amber-500/10 via-amber-50/70 to-white border-amber-300/90 shadow-md shadow-amber-500/10 ring-1 ring-amber-400/30'
+                          : isSecond
+                          ? 'bg-gradient-to-br from-slate-100/90 via-slate-50/60 to-white border-slate-300 shadow-sm'
+                          : isThird
+                          ? 'bg-gradient-to-br from-orange-100/60 via-orange-50/40 to-white border-orange-300 shadow-sm'
+                          : 'bg-white border-slate-200/90 shadow-xs hover:border-slate-300'
+                      }`}
+                    >
+                      {/* Top Header: Rank + Club Name + Quantity */}
+                      <div className="flex items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {/* Rank Badge */}
+                          {isFirst ? (
+                            <div
+                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 shrink-0"
+                              title="1st Position"
+                            >
+                              <Trophy className="w-4 h-4 text-amber-950 fill-amber-950/20" />
+                            </div>
+                          ) : isSecond ? (
+                            <div
+                              className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs flex items-center justify-center shadow-sm border border-slate-200 shrink-0"
+                              title="2nd Position"
+                            >
+                              <Medal className="w-4 h-4 text-slate-800" />
+                            </div>
+                          ) : isThird ? (
+                            <div
+                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs flex items-center justify-center shadow-sm border border-orange-300 shrink-0"
+                              title="3rd Position"
+                            >
+                              <Medal className="w-4 h-4 text-amber-100" />
+                            </div>
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/70">
+                              #{summary.rank}
+                            </div>
+                          )}
+
+                          {/* Club Info */}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`text-xs sm:text-sm truncate ${isFirst ? 'font-black text-amber-950' : 'font-bold text-slate-900'}`}>
+                                {summary.clubName}
+                              </span>
+                              {isFirst && (
+                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300 shrink-0">
+                                  1st
+                                </span>
+                              )}
+                              {isSecond && (
+                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 shrink-0">
+                                  2nd
+                                </span>
+                              )}
+                              {isThird && (
+                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-orange-200 text-orange-950 border border-orange-300 shrink-0">
+                                  3rd
+                                </span>
+                              )}
+                            </div>
+                            {summary.location && (
+                              <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+                                {summary.location}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Quantity Liters on Right */}
+                        <div className="text-right shrink-0">
+                          <span className={`text-sm sm:text-base font-black ${isFirst ? 'text-amber-950' : 'text-slate-900'}`}>
+                            {summary.totalQuantityLiters} L
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar with Percent */}
+                      <div className="mt-2.5 flex items-center gap-2">
+                        <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] h-full rounded-full transition-all duration-500"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 shrink-0">
+                          {percent}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
             {/* Total Row */}
             {!loading && (
-              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-5 px-6 sm:px-8 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-4 sm:p-5 px-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm">
-                    <BarChart3 className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm shrink-0">
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <span className="font-extrabold text-base sm:text-lg text-slate-900 block">
+                    <span className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 block">
                       Total Quantity Ordered
                     </span>
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
                       Organization Total
                     </span>
                   </div>
                 </div>
 
-                <div>
+                <div className="text-right sm:text-right flex items-center justify-between sm:block">
+                  <span className="text-xs sm:hidden text-slate-500 font-bold">Total:</span>
                   <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
                     {data?.organizationTotalLiters ?? 0} L
                   </span>
