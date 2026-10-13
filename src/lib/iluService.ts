@@ -172,7 +172,7 @@ export function normalizeApiError(errorData: unknown, fallbackMessage = 'Failed 
 
     // Specifically handle backend security_code errors
     if (errObj.security_code) {
-      return 'നൽകിയ സുരക്ഷാ കോഡ് തെറ്റാണ്. ദയവായി ശരിയായ 6 അക്ക സുരക്ഷാ കോഡ് നൽകുക.';
+      return 'നൽകിയ സെക്യൂരിറ്റി കോഡ് തെറ്റാണ്. ദയവായി ശരിയായ 6 അക്ക സെക്യൂരിറ്റി കോഡ് നൽകുക.';
     }
 
     if (typeof errObj.message === 'string') return errObj.message;
@@ -184,13 +184,13 @@ export function normalizeApiError(errorData: unknown, fallbackMessage = 'Failed 
     for (const [field, errors] of Object.entries(errObj)) {
       if (Array.isArray(errors)) {
         if (field === 'security_code') {
-          return 'നൽകിയ സുരക്ഷാ കോഡ് തെറ്റാണ്. ദയവായി ശരിയായ 6 അക്ക സുരക്ഷാ കോഡ് നൽകുക.';
+          return 'നൽകിയ സെക്യൂരിറ്റി കോഡ് തെറ്റാണ്. ദയവായി ശരിയായ 6 അക്ക സെക്യൂരിറ്റി കോഡ് നൽകുക.';
         }
         const fieldLabel = field === 'non_field_errors' ? '' : `${field}: `;
         messages.push(`${fieldLabel}${errors.join(' ')}`);
       } else if (typeof errors === 'string') {
         if (field === 'security_code') {
-          return 'നൽകിയ സുരക്ഷാ കോഡ് തെറ്റാണ്. ദയവായി ശരിയായ 6 അക്ക സുരക്ഷാ കോഡ് നൽകുക.';
+          return 'നൽകിയ സെക്യൂരിറ്റി കോഡ് തെറ്റാണ്. ദയവായി ശരിയായ 6 അക്ക സെക്യൂരിറ്റി കോഡ് നൽകുക.';
         }
         messages.push(`${field}: ${errors}`);
       }
