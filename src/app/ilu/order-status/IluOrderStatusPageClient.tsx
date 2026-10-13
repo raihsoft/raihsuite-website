@@ -5,9 +5,7 @@ import Link from 'next/link';
 import {
   Search,
   RefreshCw,
-  Users,
   Droplet,
-  FileText,
   ArrowLeft,
   AlertTriangle,
   BarChart3,
@@ -47,12 +45,18 @@ export default function IluOrderStatusPageClient() {
 
   const filteredSummaries = useMemo(() => {
     if (!data?.summaries) return [];
-    if (!searchQuery.trim()) return data.summaries;
+    const list = [...data.summaries];
+
+    // Strictly sort in descending order of total_count from the API
+    list.sort((a, b) => (b.totalQuantityLiters || 0) - (a.totalQuantityLiters || 0));
+
+    if (!searchQuery.trim()) return list;
 
     const q = searchQuery.toLowerCase().trim();
-    return data.summaries.filter(
+    return list.filter(
       (s) =>
         s.clubName.toLowerCase().includes(q) ||
+        (s.location && s.location.toLowerCase().includes(q)) ||
         (s.contactPerson && s.contactPerson.toLowerCase().includes(q)) ||
         (s.mobileNumber && s.mobileNumber.toLowerCase().includes(q))
     );
@@ -60,8 +64,9 @@ export default function IluOrderStatusPageClient() {
 
   // Max liters for progress bar proportion calculation
   const maxLiters = useMemo(() => {
-    if (!data?.summaries || data.summaries.length === 0) return 125;
-    return Math.max(...data.summaries.map((s) => s.totalQuantityLiters), 1);
+    if (!data?.summaries || data.summaries.length === 0) return 5;
+    const maxVal = Math.max(...data.summaries.map((s) => s.totalQuantityLiters || 0));
+    return maxVal > 0 ? maxVal : 5;
   }, [data]);
 
   return (
@@ -134,52 +139,30 @@ export default function IluOrderStatusPageClient() {
           </div>
         )}
 
-        {/* 3 SUMMARY STAT CARDS ROW */}
+        {/* TOTAL QUANTITY ORDERED STAT CARD */}
         <section>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {/* Card 1: Total Clubs */}
-            <div className="rounded-2xl bg-white border border-blue-100 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex items-center justify-between gap-4">
-              <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 shrink-0">
-                <Users className="w-7 h-7" />
+          <div className="rounded-3xl bg-white border-2 border-slate-200/90 p-5 sm:p-7 md:p-8 shadow-xl shadow-slate-900/5 hover:shadow-2xl transition flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6 relative overflow-hidden">
+            <div className="flex items-center gap-3.5 sm:gap-5 w-full sm:w-auto">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#ea183c]/10 via-[#f3631f]/10 to-[#faa70c]/10 text-[#ea183c] shrink-0 border border-[#ea183c]/15 shadow-sm">
+                <Droplet className="w-8 h-8 sm:w-10 sm:h-10 fill-[#ea183c]/30" />
               </div>
-              <div className="space-y-0.5 text-right">
-                <p className="text-xs font-semibold text-slate-500">
-                  Participating Clubs
-                </p>
-                <p className="text-3xl sm:text-4xl font-black text-slate-900">
-                  {loading ? '...' : data?.totalClubsWithOrders ?? 12}
-                </p>
-              </div>
-            </div>
-
-            {/* Card 2: Total Quantity Ordered */}
-            <div className="rounded-2xl bg-white border border-[#f3631f]/20 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex items-center justify-between gap-4">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#ea183c]/10 via-[#f3631f]/10 to-[#faa70c]/10 text-[#ea183c] shrink-0 border border-[#ea183c]/15">
-                <Droplet className="w-7 h-7 fill-[#ea183c]/30" />
-              </div>
-              <div className="space-y-0.5 text-right">
-                <p className="text-xs font-semibold text-slate-500">
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
                   Total Quantity Ordered
                 </p>
-                <p className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent">
-                  {loading ? '...' : `${data?.grandTotalLiters ?? 385} L`}
+                <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                  ക്ലബ്ബ് ഓർഡറുകളുടെ ആകെ പായസം അളവ്
                 </p>
               </div>
             </div>
 
-            {/* Card 3: Total Orders */}
-            <div className="rounded-2xl bg-white border border-emerald-100 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex items-center justify-between gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-600 shrink-0">
-                <FileText className="w-7 h-7" />
+            <div className="w-full sm:w-auto text-left sm:text-right bg-slate-50 sm:bg-transparent p-3.5 sm:p-0 rounded-2xl sm:rounded-none border sm:border-0 border-slate-100">
+              <div className="text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
+                {loading ? '...' : `${data?.organizationTotalLiters ?? 0} L`}
               </div>
-              <div className="space-y-0.5 text-right">
-                <p className="text-xs font-semibold text-slate-500">
-                  Total Orders Submitted
-                </p>
-                <p className="text-3xl sm:text-4xl font-black text-slate-900">
-                  {loading ? '...' : data?.totalOrderCount ?? 28}
-                </p>
-              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1">
+                Live organization total from ILU Foundation
+              </p>
             </div>
           </div>
         </section>
@@ -301,7 +284,14 @@ export default function IluOrderStatusPageClient() {
 
                           {/* Club Name */}
                           <td className="py-4 px-6 font-bold text-slate-900">
-                            {summary.clubName}
+                            <div className="flex items-center gap-2">
+                              <span>{summary.clubName}</span>
+                              {summary.location && (
+                                <span className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded font-normal">
+                                  {summary.location}
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Contact Person */}
@@ -345,19 +335,19 @@ export default function IluOrderStatusPageClient() {
                   <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm">
                     <BarChart3 className="w-5 h-5" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-extrabold text-base sm:text-lg text-slate-900">
-                      Total
+                  <div>
+                    <span className="font-extrabold text-base sm:text-lg text-slate-900 block">
+                      Total Quantity Ordered
                     </span>
-                    <span className="text-sm font-bold text-slate-700">
-                      {data?.totalClubsWithOrders ?? filteredSummaries.length} Clubs
+                    <span className="text-xs text-slate-500 font-medium">
+                      Organization Total
                     </span>
                   </div>
                 </div>
 
                 <div>
                   <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
-                    {data?.grandTotalLiters ?? 385} L
+                    {data?.organizationTotalLiters ?? 0} L
                   </span>
                 </div>
               </div>

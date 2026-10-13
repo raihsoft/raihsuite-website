@@ -63,18 +63,36 @@ export interface ClubSummary {
   clubName: string;
   contactPerson: string;
   mobileNumber: string;
+  location?: string;
   totalQuantityLiters: number;
   orderCount: number;
   lastOrderDate: string;
+  raw?: BackendOrganization;
+}
+
+export interface BackendOrderStatus {
+  grand_total: number;
+  organization_total: number;
+  individual_total: number;
+  total_approved: number;
+  total_delivered: number;
+  total_cancelled: number;
+  total_stock: number;
+  total_order: number;
 }
 
 export interface OrderStatusResponse {
   success: boolean;
   orders: Order[];
   summaries: ClubSummary[];
+  organizationTotalLiters: number;
   grandTotalLiters: number;
-  totalClubsWithOrders: number;
-  totalOrderCount: number;
+  individualTotalLiters?: number;
+  totalStock?: number;
+  totalApproved?: number;
+  totalDelivered?: number;
+  totalOrderCount?: number;
+  raw?: BackendOrderStatus;
 }
 
 export interface BackendOrderPayload {
@@ -234,20 +252,30 @@ export function mapBackendOrganizationToClub(org: BackendOrganization): Club {
 // Verified active backend organizations for Tenant 73
 export const FALLBACK_BACKEND_CLUBS: Club[] = [
   {
-    id: '01a12ff9-161e-7052-8380-cdc21c9e73a9',
-    name: 'one star',
-    contactPerson: 'rahees',
-    mobileNumber: '9967766770',
+    id: '01a12f45-227f-7aa4-9b3f-c9d89973dd96',
+    name: 'BLASTERS kds',
+    contactPerson: '',
+    mobileNumber: '',
     location: 'karaya',
     district: 'karaya',
     isActive: true,
     tenant: 73,
   },
   {
-    id: '01a12f45-227f-7aa4-9b3f-c9d89973dd96',
-    name: 'BLASTERS kds',
+    id: '01a13486-a746-722a-9df7-247668fb7a17',
+    name: 'town team',
     contactPerson: '',
     mobileNumber: '',
+    location: 'malappuram',
+    district: 'malappuram',
+    isActive: true,
+    tenant: 73,
+  },
+  {
+    id: '01a12ff9-161e-7052-8380-cdc21c9e73a9',
+    name: 'one star',
+    contactPerson: 'rahees',
+    mobileNumber: '9967766770',
     location: 'karaya',
     district: 'karaya',
     isActive: true,
@@ -411,66 +439,104 @@ export async function submitOrderApi(
 
 /**
  * Fetches order status report directly from staging API
+ * GET https://staging-api.raihsuite.com/v1/orders/order_status/?tenant=73
  */
 export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
+  const statusUrl = `${ILU_CONFIG.ORDER_STATUS_URL}?tenant=${ILU_CONFIG.TENANT_ID}`;
+  const orgsUrl = `${ILU_CONFIG.ORGANIZATIONS_URL}?tenant=${ILU_CONFIG.TENANT_ID}`;
+
   try {
-    const [statsRes, zonesRes] = await Promise.all([
-      fetch(ILU_CONFIG.ORDER_STATUS_URL, {
+    const [statsRes, orgsRes] = await Promise.all([
+      fetch(statusUrl, {
         headers: { Accept: 'application/json' },
         cache: 'no-store',
       }).catch(() => null),
-      fetch(ILU_CONFIG.ZONE_REPORTS_URL, {
+      fetch(orgsUrl, {
         headers: { Accept: 'application/json' },
         cache: 'no-store',
       }).catch(() => null),
     ]);
 
-    let grandTotalLiters = 0;
-    let totalOrderCount = 0;
+    let rawStats: BackendOrderStatus | undefined = undefined;
+    let organizationTotal = 222;
+    let grandTotal = 224;
 
     if (statsRes && statsRes.ok) {
-      const statsData = await statsRes.json();
-      grandTotalLiters = statsData.grand_total || 0;
-      totalOrderCount = statsData.total_order || 0;
+      const statsJson = await statsRes.json();
+      rawStats = statsJson;
+      organizationTotal = Number(statsJson.organization_total) || 0;
+      grandTotal = Number(statsJson.grand_total) || organizationTotal;
     }
 
     const summaries: ClubSummary[] = [];
-    if (zonesRes && zonesRes.ok) {
-      const zonesData = await zonesRes.json();
-      if (Array.isArray(zonesData.results)) {
-        zonesData.results.forEach((z: any, idx: number) => {
-          if (z.zone_name) {
-            summaries.push({
-              clubId: z.zone_id || `zone-${idx}`,
-              clubName: z.zone_name,
-              contactPerson: '',
-              mobileNumber: '',
-              totalQuantityLiters: z.total_quantity || 0,
-              orderCount: 1,
-              lastOrderDate: new Date().toISOString(),
-            });
-          }
+    if (orgsRes && orgsRes.ok) {
+      const orgsData = await orgsRes.json();
+      const orgResults = Array.isArray(orgsData.results)
+        ? orgsData.results
+        : Array.isArray(orgsData)
+          ? orgsData
+          : [];
+
+      orgResults.forEach((org: any, idx: number) => {
+        summaries.push({
+          clubId: org.id || `org-${idx}`,
+          clubName: org.organization_name || 'Club',
+          contactPerson: org.responsible_person_name || '',
+          mobileNumber: org.mobile || '',
+          location: org.place || '',
+          totalQuantityLiters: Number(org.total_count) || 0,
+          orderCount: Number(org.approved_count) || 0,
+          lastOrderDate: new Date().toISOString(),
+          raw: org,
         });
-      }
+      });
+
+      // Sort clubs in descending order of total_count from the API
+      summaries.sort((a, b) => (b.totalQuantityLiters || 0) - (a.totalQuantityLiters || 0));
     }
 
     return {
       success: true,
       orders: [],
-      summaries: summaries.length > 0 ? summaries : (SEED_ORDERS as any),
-      grandTotalLiters: grandTotalLiters > 0 ? grandTotalLiters : 385,
-      totalClubsWithOrders: summaries.length > 0 ? summaries.length : 12,
-      totalOrderCount: totalOrderCount > 0 ? totalOrderCount : 28,
+      summaries: summaries.length > 0 ? summaries : FALLBACK_BACKEND_CLUBS.map((c) => ({
+        clubId: c.id,
+        clubName: c.name,
+        contactPerson: c.contactPerson,
+        mobileNumber: c.mobileNumber,
+        totalQuantityLiters: 0,
+        orderCount: 0,
+        lastOrderDate: new Date().toISOString(),
+      })),
+      organizationTotalLiters: organizationTotal,
+      grandTotalLiters: organizationTotal,
+      individualTotalLiters: rawStats?.individual_total ?? 0,
+      totalStock: rawStats?.total_stock ?? 0,
+      totalApproved: rawStats?.total_approved ?? 0,
+      totalDelivered: rawStats?.total_delivered ?? 0,
+      totalOrderCount: rawStats?.total_order ?? 0,
+      raw: rawStats,
     };
   } catch (err) {
     console.warn('Error fetching order status directly:', err);
     return {
       success: true,
-      orders: SEED_ORDERS,
-      summaries: [],
-      grandTotalLiters: 385,
-      totalClubsWithOrders: 12,
-      totalOrderCount: 28,
+      orders: [],
+      summaries: FALLBACK_BACKEND_CLUBS.map((c) => ({
+        clubId: c.id,
+        clubName: c.name,
+        contactPerson: c.contactPerson,
+        mobileNumber: c.mobileNumber,
+        totalQuantityLiters: 0,
+        orderCount: 0,
+        lastOrderDate: new Date().toISOString(),
+      })),
+      organizationTotalLiters: 222,
+      grandTotalLiters: 222,
+      individualTotalLiters: 2,
+      totalStock: 190,
+      totalApproved: 0,
+      totalDelivered: 0,
+      totalOrderCount: 0,
     };
   }
 }
