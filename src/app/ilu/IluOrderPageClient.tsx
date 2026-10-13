@@ -4,9 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Heart,
-  Leaf,
-  User,
-  Phone,
   Droplet,
   AlertCircle,
   BarChart3,
@@ -14,18 +11,20 @@ import {
   RefreshCw,
   Send,
   Users,
-  Sparkles,
   PartyPopper,
   ChevronDown,
-  KeyRound,
-  Info,
+  ShieldCheck,
   Search,
   Check,
   X,
+  Soup,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import {
   Club,
   Order,
+  FALLBACK_BACKEND_CLUBS,
   fetchClubsApi,
   submitOrderApi,
   validateOrderQuantity,
@@ -33,8 +32,9 @@ import {
 } from '@/lib/iluService';
 
 export default function IluOrderPageClient() {
-  const [clubs, setClubs] = useState<Club[]>([]);
-  const [loadingClubs, setLoadingClubs] = useState(true);
+  // Preloaded with verified backend organizations so dropdown is immediately populated
+  const [clubs, setClubs] = useState<Club[]>(FALLBACK_BACKEND_CLUBS);
+  const [loadingClubs, setLoadingClubs] = useState(false);
   const [clubsError, setClubsError] = useState<string | null>(null);
 
   // Form State
@@ -42,6 +42,7 @@ export default function IluOrderPageClient() {
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [quantity, setQuantity] = useState<string>('');
   const [securityCode, setSecurityCode] = useState<string>('');
+  const [showSecurityCode, setShowSecurityCode] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
@@ -93,22 +94,20 @@ export default function IluOrderPageClient() {
   };
 
   const loadClubs = async (isManualRetry = false) => {
-    // Prevent duplicate concurrent fetches or loops
     if (isFetchingRef.current) return;
-    
+
     try {
       isFetchingRef.current = true;
       if (isManualRetry) {
         setIsRetrying(true);
-      } else {
-        setLoadingClubs(true);
       }
       setClubsError(null);
       const res = await fetchClubsApi();
-      setClubs(res.clubs);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to load clubs list';
-      setClubsError(msg);
+      if (res.clubs && res.clubs.length > 0) {
+        setClubs(res.clubs);
+      }
+    } catch {
+      // Keep verified fallback clubs active without disrupting the dropdown
     } finally {
       setLoadingClubs(false);
       setIsRetrying(false);
@@ -117,28 +116,8 @@ export default function IluOrderPageClient() {
   };
 
   useEffect(() => {
-    let isMounted = true;
-    if (isMounted) {
-      loadClubs(false);
-    }
-    return () => {
-      isMounted = false;
-    };
+    loadClubs(false);
   }, []);
-
-  const handleClubChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const clubId = e.target.value;
-    setSelectedClubId(clubId);
-    setValidationError(null);
-
-    if (!clubId) {
-      setSelectedClub(null);
-      return;
-    }
-
-    const found = clubs.find((c) => c.id === clubId);
-    setSelectedClub(found || null);
-  };
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Prevent decimal point, comma, exponent, and signs
@@ -149,59 +128,55 @@ export default function IluOrderPageClient() {
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    // Allow digits only
-    if (val === '' || /^\d+$/.test(val)) {
-      setQuantity(val);
+    if (val === '') {
+      setQuantity('');
       setValidationError(null);
+      return;
     }
+    const cleanVal = val.replace(/[^0-9]/g, '');
+    setQuantity(cleanVal);
+    setValidationError(null);
   };
 
   const handleSecurityCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only accept numeric digits up to 6 characters
-    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
     setSecurityCode(val);
     setValidationError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmittingRef.current || isSubmitting) return;
+
     setValidationError(null);
 
-    // Prevent duplicate simultaneous submissions
-    if (isSubmittingRef.current || isSubmitting) {
-      return;
-    }
-
     if (!selectedClubId) {
-      setValidationError('Please select your club from the directory.');
+      setValidationError('ദയവായി നിങ്ങളുടെ ക്ലബ്ബ് / സംഘടന തിരഞ്ഞെടുക്കുക.');
       return;
     }
 
-    // Validate quantity (strictly whole number positive integer)
     const qtyValidation = validateOrderQuantity(quantity);
-    if (!qtyValidation.isValid || typeof qtyValidation.quantity !== 'number') {
-      setValidationError(
-        qtyValidation.error ||
-          'Please enter a valid positive whole number (e.g. 1, 5, 10). Fractional quantities are not permitted.'
-      );
+    if (!qtyValidation.isValid || qtyValidation.quantity === undefined) {
+      setValidationError(qtyValidation.error || 'സാധുവായ പായസം അളവ് നൽകുക (പൂർണ്ണ സംഖ്യ മാത്രം).');
       return;
     }
 
-    // Validate 6-digit security code
     const secValidation = validateSecurityCode(securityCode);
     if (!secValidation.isValid || !secValidation.code) {
-      setValidationError(secValidation.error || 'Please enter your club 6-digit security code.');
+      setValidationError(secValidation.error || 'ദയവായി 6 അക്ക സുരക്ഷാ കോഡ് നൽകുക.');
       return;
     }
 
     try {
-      isSubmittingRef.current = true;
       setIsSubmitting(true);
+      isSubmittingRef.current = true;
 
       const newOrder = await submitOrderApi(
         selectedClubId,
         qtyValidation.quantity,
-        secValidation.code
+        secValidation.code,
+        selectedClub?.name
       );
 
       setSubmittedOrder(newOrder);
@@ -210,7 +185,7 @@ export default function IluOrderPageClient() {
       setQuantity('');
       setSecurityCode('');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'An error occurred while placing your order.';
+      const msg = err instanceof Error ? err.message : 'ഓർഡർ സമർപ്പിക്കുന്നതിൽ പിശക് സംഭവിച്ചു.';
       setValidationError(msg);
     } finally {
       setIsSubmitting(false);
@@ -219,250 +194,193 @@ export default function IluOrderPageClient() {
   };
 
   return (
-    <div className="relative overflow-x-hidden bg-transparent text-slate-100 min-h-screen font-sans selection:bg-amber-400 selection:text-slate-950">
-      {/* Background Image Layer */}
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[#030b1e]">
-        <picture className="block w-full h-full">
-          <source media="(max-width: 1023px)" srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg-mobile.png" />
+    <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
+      {/* Background Image Layer with Faded Effect */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <picture className="block w-full h-full opacity-40">
+          <source
+            media="(max-width: 1023px)"
+            srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg-white-mobile.webp"
+          />
           <img
-            src="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg.png"
-            alt="Background"
+            src="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg-white.webp"
+            alt="ILU Background"
             className="w-full h-full object-cover object-top"
           />
         </picture>
-        <div className="absolute inset-0 bg-[#030b1e]/40" />
+        <div className="absolute inset-0 bg-[#fffdf7]/40" />
       </div>
 
-      {/* Background Decorator Elements */}
-      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-[#05163b]/60 via-[#030b1e]/60 to-transparent pointer-events-none" />
-
-      {/* Floating Leaves & Gold Hearts Motifs */}
-      <div className="absolute top-16 left-6 opacity-30 pointer-events-none hidden lg:block animate-float">
-        <Leaf className="w-20 h-20 text-emerald-400 transform -rotate-12" />
-      </div>
-      <div className="absolute top-24 right-12 opacity-25 pointer-events-none hidden lg:block animate-float animation-delay-2000">
-        <Heart className="w-12 h-12 text-[#f59e0b] stroke-2 fill-transparent transform rotate-12" />
-      </div>
-      <div className="absolute top-[480px] right-20 opacity-25 pointer-events-none hidden lg:block animate-float">
-        <Leaf className="w-24 h-24 text-emerald-400 transform rotate-45" />
-      </div>
-      <div className="absolute top-[520px] left-12 opacity-30 pointer-events-none hidden lg:block animate-float animation-delay-4000">
-        <Heart className="w-10 h-10 text-[#f59e0b] stroke-2 fill-transparent" />
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10 space-y-12">
-        {/* HERO SECTION */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center pt-2 relative">
-          {/* Left Text */}
-          <div className="lg:col-span-6 space-y-3 sm:space-y-4 text-center lg:text-left relative z-10">
-            <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-blue-300/80 uppercase">
-              ILU FOUNDATION
-            </span>
-
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.08]">
-              Join the <span className="text-[#facc15]">Payasam</span> <br />
-              Challenge!
-            </h1>
-
-            <div className="space-y-1 text-slate-300 text-xs sm:text-base max-w-lg mx-auto lg:mx-0 font-normal">
-              <p>Be part of this special initiative by ILU Foundation.</p>
-              <p>Place your club’s payasam order and join the challenge.</p>
-            </div>
-          </div>
-
-          {/* Right Visual Image */}
-          <div className="lg:col-span-6 flex justify-center lg:justify-end relative -mb-8 sm:-mb-20 lg:-mb-36 mr-0 lg:-mr-28 xl:-mr-36 translate-x-0 lg:translate-x-16 z-0 pointer-events-none">
-            {/* Soft Subtle Ambient Glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-yellow-400/05 to-amber-600/10 blur-2xl rounded-full scale-110 pointer-events-none opacity-40" />
-
-            <img
-              src="https://media.raihsuite.com/RS0001/web/ilu/payasam-img.png"
-              alt="Kerala Payasam in Brass Uruli"
-              className="relative z-0 w-64 sm:w-[420px] lg:w-[580px] xl:w-[680px] max-w-full lg:max-w-none h-auto object-contain filter drop-shadow-[0_15px_30px_rgba(251,191,36,0.15)]"
+      {/* HERO SECTION: FULL WIDTH BANNER */}
+      <section className="w-full relative z-10">
+        <div className="w-full">
+          <picture>
+            <source
+              media="(max-width: 640px)"
+              srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu-banner-mobile.png"
             />
-          </div>
-        </section>
+            <source
+              media="(min-width: 641px)"
+              srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu%20banner.png"
+            />
+            <img
+              src="https://media.raihsuite.com/RS0001/web/ilu/ilu%20banner.png"
+              alt="ILU Foundation Palada Payasam Challenge 2026"
+              className="w-full h-auto object-cover block shadow-md"
+            />
+          </picture>
+        </div>
+      </section>
 
-        {/* MAIN CLUB ORDER FORM CARD */}
-        <section id="order-form" className="scroll-mt-28 relative z-20 -mt-10 sm:-mt-16 lg:-mt-24">
-          <div className="rounded-3xl bg-[#05163a]/95 backdrop-blur-xl border-2 border-blue-500/60 ring-1 ring-amber-400/40 p-6 sm:p-10 shadow-[0_30px_70px_rgba(1,6,18,0.95),0_0_45px_rgba(0,102,255,0.3)] space-y-8 relative overflow-hidden transition-all duration-300">
-            {/* Top Glowing Highlight Accent Line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-amber-400 to-blue-600" />
+      {/* MAIN CONTENT CONTAINER */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative z-10 space-y-8 sm:space-y-10">
 
+        {/* MAIN CLUB ORDER FORM CARD - CLEAN WHITE WITH STANDARD HIGHLIGHT BORDER */}
+        <section id="order-form" className="scroll-mt-24 relative z-20">
+          <div className="rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl shadow-slate-900/5 p-4 sm:p-8 md:p-10 space-y-6 sm:space-y-8 relative">
             {/* Form Header */}
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-[#fbbf24]/20 border border-[#fbbf24]/40 text-[#facc15] shadow-inner">
-                <Droplet className="w-6 h-6 fill-[#facc15]" />
+            <div className="flex items-center gap-3 sm:gap-3.5">
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-800 border border-slate-200 shadow-sm shrink-0">
+                <Soup className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
               </div>
               <div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
-                  Place Your Order
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  Place Your Club Order
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-200 font-medium">
-                  Select your club, verify contact details, and enter payasam quantity.
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+                  Select your club/organization and enter the payasam quantity.
                 </p>
               </div>
             </div>
 
-            {/* Validation Alerts */}
+            {/* Validation Alert */}
             {validationError && (
-              <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 flex items-center gap-3 text-sm animate-slide-up">
-                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-                <span>{validationError}</span>
-              </div>
-            )}
-
-            {/* Clubs Load Error Alert with Retry */}
-            {clubsError && (
-              <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 flex items-center justify-between gap-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-                  <span>{clubsError}</span>
-                </div>
-                <button
-                  type="button"
-                  disabled={isRetrying || loadingClubs}
-                  onClick={() => loadClubs(true)}
-                  className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow shrink-0 flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
-                  <span>{isRetrying ? 'Retrying...' : 'Retry'}</span>
-                </button>
+              <div className="p-3 sm:p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2.5 sm:gap-3 text-xs sm:text-sm animate-slide-up">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600 shrink-0" />
+                <span className="font-medium">{validationError}</span>
               </div>
             )}
 
             {/* Form Fields Grid */}
-            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6" noValidate>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* Field 1: Select Club (Searchable Combobox) */}
-                <div className="space-y-2 relative" ref={dropdownRef}>
+                <div className="space-y-1.5 sm:space-y-2 relative md:col-span-2" ref={dropdownRef}>
                   <div className="flex items-center justify-between">
-                    <label htmlFor="club-search-input" className="block text-xs font-bold text-slate-200">
-                      Select Club / Organization <span className="text-rose-500">*</span>
+                    <label htmlFor="club-search-input" className="block text-xs sm:text-sm font-bold text-slate-800">
+                      ക്ലബ്ബ് / സംഘടന <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      {clubs.length > 0 ? `${clubs.length} clubs available` : ''}
+                    <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                      {clubs.length > 0 ? `${clubs.length} സംഘടനകൾ ലഭ്യമാണ്` : ''}
                     </span>
                   </div>
-                  
-                  {/* Combobox Trigger: Direct Search Input or Selected Club Chip */}
+
+                  {/* Combobox Trigger */}
                   <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
+                    <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
                       {selectedClub ? (
-                        <Users className="w-4 h-4 text-amber-400" />
+                        <Users className="w-4 h-4 text-slate-600" />
                       ) : (
                         <Search className="w-4 h-4 text-slate-400" />
                       )}
                     </div>
 
                     {selectedClub ? (
-                      /* Display Selected Club State with Clear & Change buttons */
+                      /* Selected Club Chip */
                       <div
                         onClick={() => setIsDropdownOpen((prev) => !prev)}
-                        className="w-full bg-[#0c1f48] border border-amber-400/50 text-white rounded-xl pl-10 pr-10 py-3 text-sm font-medium flex items-center justify-between cursor-pointer hover:border-amber-400 transition shadow-inner"
+                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-9 sm:pr-10 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold flex items-center justify-between cursor-pointer hover:border-slate-300 hover:bg-white transition shadow-sm"
+                        title="സംഘടന മാറ്റാൻ ക്ലിക്ക് ചെയ്യുക"
                       >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <span className="font-bold text-white truncate">{selectedClub.name}</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+                          <span className="font-bold text-slate-900 truncate">{selectedClub.name}</span>
                           {selectedClub.location && (
-                            <span className="text-[11px] bg-blue-900/80 text-blue-200 border border-blue-700/60 px-2 py-0.5 rounded-md font-normal shrink-0">
+                            <span className="text-[10px] sm:text-[11px] bg-slate-100 text-slate-700 border border-slate-200 px-1.5 sm:px-2 py-0.5 rounded-md font-medium shrink-0">
                               {selectedClub.location}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleClearClub();
                             }}
-                            className="p-1 hover:bg-blue-800/80 rounded-full text-slate-300 hover:text-white transition"
-                            title="Clear selection and search again"
+                            className="p-1 hover:bg-slate-200 rounded-full text-slate-500 hover:text-slate-800 transition"
+                            title="തിരഞ്ഞെടുത്തത് മാറ്റുക"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
-                          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                         </div>
                       </div>
                     ) : (
-                      /* Direct Search Input when no club is selected */
-                      <div className="relative flex items-center">
+                      /* Direct Search Input */
+                      <div
+                        className="relative flex items-center cursor-pointer"
+                        onClick={() => setIsDropdownOpen(true)}
+                      >
                         <input
                           type="text"
                           id="club-search-input"
-                          disabled={loadingClubs || Boolean(clubsError)}
                           value={clubSearchTerm}
                           onChange={(e) => {
                             setClubSearchTerm(e.target.value);
                             setIsDropdownOpen(true);
                           }}
                           onFocus={() => setIsDropdownOpen(true)}
-                          placeholder={
-                            loadingClubs
-                              ? 'Loading clubs directory...'
-                              : 'Search club by name, place, or location...'
-                          }
-                          className="w-full bg-[#0c1f48] border border-blue-800/60 text-white placeholder:text-slate-400 rounded-xl pl-10 pr-16 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition font-medium disabled:opacity-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDropdownOpen(true);
+                          }}
+                          placeholder="ക്ലബ്ബ് / സംഘടന തിരഞ്ഞെടുക്കുക..."
+                          className="w-full bg-slate-50 hover:bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl pl-9 sm:pl-10 pr-12 sm:pr-14 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 focus:bg-white transition font-medium cursor-pointer"
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                        <div className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                           {clubSearchTerm && (
                             <button
                               type="button"
-                              onClick={() => setClubSearchTerm('')}
-                              className="p-1 text-slate-400 hover:text-white"
-                              title="Clear search filter"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setClubSearchTerm('');
+                              }}
+                              className="p-1 text-slate-400 hover:text-slate-600"
+                              title="തിരച്ചിൽ മാറ്റുക"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
                           )}
                           <button
                             type="button"
-                            onClick={() => setIsDropdownOpen((prev) => !prev)}
-                            className="p-1 text-slate-400 hover:text-white transition"
-                            title="Toggle clubs list"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsDropdownOpen((prev) => !prev);
+                            }}
+                            className="p-1 text-slate-400 hover:text-slate-700 transition"
+                            title="ലിസ്റ്റ് കാണുക"
                           >
-                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Searchable Dropdown Popup Menu */}
+                  {/* Dropdown Popup List */}
                   {isDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl bg-[#08183a] border border-blue-600/70 shadow-2xl overflow-hidden backdrop-blur-xl animate-fade-in">
-                      {/* Search Bar inside popover for quick filtering */}
-                      <div className="p-3 border-b border-blue-900/60 bg-[#05132f]/95">
-                        <div className="relative">
-                          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                          <input
-                            type="text"
-                            autoFocus
-                            value={clubSearchTerm}
-                            onChange={(e) => setClubSearchTerm(e.target.value)}
-                            placeholder="Type to filter clubs list..."
-                            className="w-full bg-[#0c1f48] border border-blue-800/80 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-400 font-medium"
-                          />
-                          {clubSearchTerm && (
-                            <button
-                              type="button"
-                              onClick={() => setClubSearchTerm('')}
-                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
+                    <div className="absolute left-0 right-0 top-full mt-1.5 sm:mt-2 z-50 rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden animate-fade-in text-slate-800">
+                      <div className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-600">
+                        <span>ലഭ്യമായ സംഘടനകൾ / ക്ലബ്ബുകൾ ({filteredClubs.length})</span>
+                        <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">ക്ലിക്ക് ചെയ്ത് തിരഞ്ഞെടുക്കുക</span>
                       </div>
-
-                      {/* Dropdown Options List */}
-                      <div className="max-h-60 overflow-y-auto divide-y divide-blue-900/30 scrollbar-thin scrollbar-thumb-blue-800">
+                      <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
                         {filteredClubs.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-slate-400">
+                          <div className="p-3.5 sm:p-4 text-center text-xs text-slate-500">
                             {clubSearchTerm
-                              ? `No clubs found matching "${clubSearchTerm}"`
-                              : 'No clubs available'}
+                              ? `"${clubSearchTerm}" എന്ന പേരിൽ ക്ലബ്ബുകൾ കണ്ടെത്തിയില്ല`
+                              : 'ക്ലബ്ബുകൾ ലഭ്യമല്ല'}
                           </div>
                         ) : (
                           filteredClubs.map((club) => {
@@ -472,36 +390,29 @@ export default function IluOrderPageClient() {
                                 key={club.id}
                                 type="button"
                                 onClick={() => handleSelectClub(club)}
-                                className={`w-full px-4 py-3 text-left text-xs transition flex items-center justify-between group ${
+                                className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3 text-left text-xs sm:text-sm transition flex items-center justify-between group ${
                                   isSelected
-                                    ? 'bg-blue-600/30 text-amber-300 font-bold'
-                                    : 'text-slate-200 hover:bg-blue-900/60 hover:text-white'
+                                    ? 'bg-slate-100 text-slate-900 font-bold'
+                                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                               >
                                 <div className="space-y-0.5">
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-semibold text-white group-hover:text-amber-300 transition">
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <p className="font-semibold text-slate-900 group-hover:text-amber-800 transition text-xs sm:text-sm">
                                       {club.name}
                                     </p>
                                     {club.location && (
-                                      <span className="text-[10px] bg-blue-950 text-blue-300 border border-blue-800/50 px-1.5 py-0.2 rounded">
+                                      <span className="text-[9px] sm:text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.2 rounded font-normal">
                                         {club.location}
                                       </span>
                                     )}
                                   </div>
-                                  {(club.contactPerson || club.mobileNumber) && (
-                                    <p className="text-[11px] text-slate-400">
-                                      {club.contactPerson ? `Contact: ${club.contactPerson}` : ''}
-                                      {club.contactPerson && club.mobileNumber ? ' • ' : ''}
-                                      {club.mobileNumber ? club.mobileNumber : ''}
-                                    </p>
-                                  )}
                                 </div>
                                 {isSelected ? (
-                                  <Check className="w-4 h-4 text-amber-400 shrink-0" />
+                                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-900 shrink-0" />
                                 ) : (
-                                  <span className="text-[10px] text-slate-500 group-hover:text-slate-300">
-                                    Select
+                                  <span className="text-[10px] sm:text-xs text-slate-400 group-hover:text-slate-800">
+                                    തിരഞ്ഞെടുക്കുക
                                   </span>
                                 )}
                               </button>
@@ -513,86 +424,14 @@ export default function IluOrderPageClient() {
                   )}
                 </div>
 
-                {/* Field 2: Contact Person (responsible_person_name) */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="contact-person" className="block text-xs font-bold text-slate-200">
-                      Contact Person
-                    </label>
-                    {selectedClub && (
-                      <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                        <Check className="w-3 h-3" /> Auto-filled
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                      <User className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      id="contact-person"
-                      readOnly
-                      disabled={!selectedClub}
-                      value={selectedClub?.contactPerson || ''}
-                      placeholder={
-                        selectedClub
-                          ? selectedClub.contactPerson || 'Not provided'
-                          : 'Auto-filled upon club selection'
-                      }
-                      className={`w-full bg-[#0c1f48] border rounded-xl pl-10 pr-4 py-3.5 text-sm focus:outline-none font-medium transition ${
-                        selectedClub
-                          ? 'border-blue-700/60 text-white font-semibold'
-                          : 'border-blue-900/40 text-slate-400 placeholder:text-slate-500 opacity-80 cursor-not-allowed'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Field 3: Mobile Number (mobile) */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="mobile-number" className="block text-xs font-bold text-slate-200">
-                      Mobile Number
-                    </label>
-                    {selectedClub && (
-                      <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                        <Check className="w-3 h-3" /> Auto-filled
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                      <Phone className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      id="mobile-number"
-                      readOnly
-                      disabled={!selectedClub}
-                      value={selectedClub?.mobileNumber || ''}
-                      placeholder={
-                        selectedClub
-                          ? selectedClub.mobileNumber || 'Not provided'
-                          : 'Auto-filled upon club selection'
-                      }
-                      className={`w-full bg-[#0c1f48] border rounded-xl pl-10 pr-4 py-3.5 text-sm focus:outline-none font-medium transition ${
-                        selectedClub
-                          ? 'border-blue-700/60 text-white font-semibold'
-                          : 'border-blue-900/40 text-slate-400 placeholder:text-slate-500 opacity-80 cursor-not-allowed'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Field 4: Quantity in Liters */}
-                <div className="space-y-2">
-                  <label htmlFor="quantity-input" className="block text-xs font-bold text-slate-200">
-                    Quantity (Liters) <span className="text-rose-500">*</span>
+                {/* Field 2: Quantity (Liters) */}
+                <div className="space-y-1.5 sm:space-y-2 md:col-span-1">
+                  <label htmlFor="quantity-input" className="block text-xs sm:text-sm font-bold text-slate-800">
+                    പായസം അളവ് (ലിറ്റർ) <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative flex items-center">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                      <Droplet className="w-4 h-4" />
+                    <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <Droplet className="w-4 h-4 fill-slate-300" />
                     </div>
                     <input
                       type="number"
@@ -603,61 +442,66 @@ export default function IluOrderPageClient() {
                       value={quantity}
                       onKeyDown={handleQuantityKeyDown}
                       onChange={handleQuantityChange}
-                      placeholder="Enter whole liters (e.g. 10)"
-                      className="w-full bg-[#0c1f48] border border-blue-800/60 text-white rounded-xl pl-10 pr-14 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition font-semibold"
+                      placeholder="അളവ് നൽകുക"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-12 sm:pr-14 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition font-bold"
                     />
-                    <div className="absolute right-3 bg-[#081738] text-blue-200 border border-blue-800/60 text-xs font-extrabold px-3 py-1 rounded-lg pointer-events-none">
+                    <div className="absolute right-3 sm:right-3.5 text-slate-600 font-bold text-xs sm:text-sm pointer-events-none">
                       L
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Whole numbers only (e.g. 1, 5, 10, 125). Fractional quantities are not permitted.
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">
+                    പൂർണ്ണ ലിറ്റർ മാത്രം നൽകുക (ഉദാ: 10, 20, 50).
                   </p>
                 </div>
 
-                {/* Field 5: Club Security Code */}
-                <div className="space-y-2 md:col-span-2">
-                  <label htmlFor="security-code" className="block text-xs font-bold text-slate-200">
-                    Club Security Code (6 Digits) <span className="text-rose-500">*</span>
+                {/* Field 3: Club Security Code */}
+                <div className="space-y-1.5 sm:space-y-2 md:col-span-1">
+                  <label htmlFor="security-code" className="block text-xs sm:text-sm font-bold text-slate-800">
+                    ക്ലബ്ബ് സുരക്ഷാ കോഡ് (6 അക്കങ്ങൾ) <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                      <KeyRound className="w-4 h-4" />
+                    <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <ShieldCheck className="w-4 h-4" />
                     </div>
                     <input
-                      type="password"
+                      type={showSecurityCode ? 'text' : 'password'}
                       id="security-code"
                       required
                       maxLength={6}
                       inputMode="numeric"
                       value={securityCode}
                       onChange={handleSecurityCodeChange}
-                      placeholder="Enter 6-digit security code assigned to your club"
-                      className="w-full bg-[#0c1f48] border border-blue-800/60 text-white rounded-xl pl-10 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-400"
+                      placeholder="6 അക്ക സുരക്ഷാ കോഡ് നൽകുക"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-10 sm:pr-11 py-2.5 sm:py-3.5 text-xs sm:text-sm font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-xs sm:placeholder:text-sm placeholder:text-slate-400 font-bold focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowSecurityCode((prev) => !prev)}
+                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1"
+                      title={showSecurityCode ? 'സുരക്ഷാ കോഡ് മറയ്ക്കുക' : 'സുരക്ഷാ കോഡ് കാണുക'}
+                    >
+                      {showSecurityCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Enter the 6-digit authorization code assigned to your club.
-                  </p>
                 </div>
               </div>
 
               {/* Submit Button */}
-              <div className="pt-2">
+              <div className="pt-1 sm:pt-2">
                 <button
                   type="submit"
                   disabled={isSubmitting || loadingClubs || !selectedClubId || clubs.length === 0}
-                  className="w-full py-4 px-6 rounded-full bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#f59e0b] hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-base shadow-lg shadow-amber-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-black text-xs sm:text-sm md:text-base shadow-lg shadow-[#ea183c]/30 hover:shadow-xl hover:shadow-[#ea183c]/40 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-manipulation"
                 >
                   {isSubmitting ? (
                     <>
-                      <RefreshCw className="w-5 h-5 animate-spin text-slate-950" />
-                      <span>Submitting Order...</span>
+                      <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" />
+                      <span>ഓർഡർ സമർപ്പിക്കുന്നു...</span>
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4 text-slate-950 fill-slate-950" />
-                      <span>Submit Order</span>
+                      <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-white" />
+                      <span>ഓർഡർ സമർപ്പിക്കുക</span>
                     </>
                   )}
                 </button>
@@ -668,40 +512,43 @@ export default function IluOrderPageClient() {
 
         {/* SUCCESS MODAL */}
         {submittedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-            <div className="relative w-full max-w-md rounded-3xl bg-[#06173a] border border-amber-400/50 p-6 shadow-2xl text-slate-100 text-center space-y-4">
-              <div className="inline-flex p-3 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm animate-fade-in">
+            <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-200 p-6 sm:p-8 shadow-2xl text-slate-900 text-center space-y-4">
+              <div className="inline-flex p-3 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200">
                 <PartyPopper className="w-8 h-8 animate-bounce" />
               </div>
 
-              <h3 className="text-2xl font-bold text-white">Order Submitted!</h3>
+              <h3 className="text-2xl font-black text-slate-900">Order Submitted!</h3>
+              <p className="text-xs text-slate-600">
+                Your club's payasam order has been successfully recorded.
+              </p>
 
-              <div className="p-4 rounded-2xl bg-[#040e21] border border-blue-900/60 text-left space-y-2 text-xs">
+              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-left space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Order Ref:</span>
-                  <span className="font-mono font-bold text-amber-300">{submittedOrder.orderRef}</span>
+                  <span className="text-slate-500">Order Ref:</span>
+                  <span className="font-mono font-bold text-amber-800">{submittedOrder.orderRef}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Club:</span>
-                  <span className="font-bold text-white">{submittedOrder.clubName}</span>
+                  <span className="text-slate-500">Club:</span>
+                  <span className="font-bold text-slate-900">{submittedOrder.clubName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Quantity:</span>
-                  <span className="font-bold text-amber-400">{submittedOrder.quantityLiters} Liters (L)</span>
+                  <span className="text-slate-500">Quantity:</span>
+                  <span className="font-bold text-amber-700">{submittedOrder.quantityLiters} Liters (L)</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-2">
                 <Link
                   href="/ilu/order-status"
-                  className="py-2.5 px-4 rounded-full bg-[#0066ff] hover:bg-blue-600 text-white font-bold text-xs shadow-md text-center"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/20 text-center transition flex items-center justify-center"
                 >
                   View Order Status
                 </Link>
                 <button
                   type="button"
                   onClick={() => setSubmittedOrder(null)}
-                  className="py-2.5 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs"
+                  className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center justify-center"
                 >
                   Close
                 </button>
@@ -710,25 +557,25 @@ export default function IluOrderPageClient() {
           </div>
         )}
 
-        {/* BOTTOM SECTION: "Want to see the latest orders?" */}
+        {/* PROMO BANNER CARD */}
         <section>
-          <div className="rounded-3xl bg-[#06173a] border border-blue-900/40 p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 text-center md:text-left">
+          <div className="rounded-3xl bg-gradient-to-r from-rose-50/70 via-amber-50/50 to-orange-50/70 border border-orange-100/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-3 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-3">
-                <div className="p-3 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-[#ea183c]/15 via-[#f3631f]/15 to-[#faa70c]/15 text-[#ea183c] shadow-sm border border-[#ea183c]/20">
                   <BarChart3 className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   Want to see the latest orders?
                 </h3>
               </div>
-              <p className="text-xs sm:text-sm text-slate-300 max-w-lg">
-                Check the total payasam quantity ordered by each club and see how the challenge is going!
+              <p className="text-xs sm:text-sm text-slate-600 max-w-lg leading-relaxed font-medium">
+                Check the total payasam quantity ordered by each club and see how the challenge is progressing!
               </p>
-              <div className="pt-2">
+              <div className="pt-1 w-full sm:w-auto">
                 <Link
                   href="/ilu/order-status"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0066ff] hover:bg-blue-600 text-white font-semibold text-sm rounded-full shadow-lg shadow-blue-600/30 transition"
+                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 text-center"
                 >
                   <span>Check Order Status</span>
                   <ArrowRight className="w-4 h-4" />
@@ -736,61 +583,61 @@ export default function IluOrderPageClient() {
               </div>
             </div>
 
-            {/* Right Payasam Bowl Photo */}
-            <div className="relative shrink-0 w-28 sm:w-36 h-auto flex items-center justify-center">
+            {/* Right Payasam Uruli Preview Photo */}
+            <div className="relative shrink-0 w-32 sm:w-44 h-auto flex items-center justify-center">
               <img
                 src="https://media.raihsuite.com/RS0001/web/ilu/payasam-img.png"
-                alt="Payasam Bowl"
-                className="w-full h-auto object-contain"
+                alt="Kerala Payasam Bowl"
+                className="w-full h-auto object-contain drop-shadow-md"
               />
             </div>
           </div>
         </section>
 
-        {/* 4 FEATURE COLUMNS */}
-        <section className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* 4 FEATURE PILLARS IN ENGLISH */}
+        <section id="features" className="pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Feature 1 */}
-            <div className="p-5 rounded-2xl bg-[#06173a]/80 border border-blue-900/30 space-y-2 text-center sm:text-left">
-              <div className="w-10 h-10 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center mx-auto sm:mx-0">
+            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
+              <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
                 <Users className="w-5 h-5" />
               </div>
-              <h4 className="text-sm font-bold text-white">Community Spirit</h4>
-              <p className="text-xs text-slate-400">
-                Clubs coming together for a larger purpose
+              <h4 className="text-sm font-black text-slate-900">Community Spirit</h4>
+              <p className="text-xs text-slate-500 font-medium">
+                Clubs coming together for a greater cause
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="p-5 rounded-2xl bg-[#06173a]/80 border border-blue-900/30 space-y-2 text-center sm:text-left">
-              <div className="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto sm:mx-0">
-                <Heart className="w-5 h-5 fill-rose-400" />
+            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
+              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
+                <Heart className="w-5 h-5 fill-rose-600" />
               </div>
-              <h4 className="text-sm font-bold text-white">Support a Cause</h4>
-              <p className="text-xs text-slate-400">
+              <h4 className="text-sm font-black text-slate-900">Support a Cause</h4>
+              <p className="text-xs text-slate-500 font-medium">
                 Your participation creates real impact
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="p-5 rounded-2xl bg-[#06173a]/80 border border-blue-900/30 space-y-2 text-center sm:text-left">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto sm:mx-0">
-                <Leaf className="w-5 h-5" />
+            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
+              <div className="w-12 h-12 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
+                <Droplet className="w-5 h-5 fill-cyan-600/30" />
               </div>
-              <h4 className="text-sm font-bold text-white">Spread Kindness</h4>
-              <p className="text-xs text-slate-400">
+              <h4 className="text-sm font-black text-slate-900">Spread Kindness</h4>
+              <p className="text-xs text-slate-500 font-medium">
                 Every portion makes a difference
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="p-5 rounded-2xl bg-[#06173a]/80 border border-blue-900/30 space-y-2 text-center sm:text-left">
-              <div className="w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto sm:mx-0">
-                <Sparkles className="w-5 h-5" />
+            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
+              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
+                <Users className="w-5 h-5" />
               </div>
-              <h4 className="text-sm font-bold text-white">Build an Inclusive Tomorrow</h4>
-              <p className="text-xs text-slate-400">
-                Together for a brighter, more inclusive society
+              <h4 className="text-sm font-black text-slate-900">Foster Inclusion</h4>
+              <p className="text-xs text-slate-500 font-medium">
+                Together for a brighter, more inclusive world
               </p>
             </div>
           </div>

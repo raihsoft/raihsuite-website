@@ -5,37 +5,37 @@ import Link from 'next/link';
 
 export default function IluFooter() {
   return (
-    <footer className="relative bg-[#020714] text-slate-300 border-t border-blue-900/30 pt-12 pb-8 overflow-hidden">
-      {/* Decorative Top Wave Pattern Accent */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-600 via-amber-400 to-blue-600 opacity-70" />
+    <footer id="footer" className="relative bg-white text-slate-700 border-t border-amber-100/80 pt-12 pb-8 overflow-hidden">
+      {/* Decorative Top Accent Line */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c]" />
 
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 xl:px-24 relative z-10">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-800/80">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-200/80">
           {/* Left: Logo */}
           <div className="flex items-center gap-3">
             <Link href="/ilu">
               <img
-                src="https://media.raihsuite.com/RS0001/web/ilu/ilu-white-logo.png"
+                src="https://media.raihsuite.com/RS0001/web/ilu/ilu-logo-dark.png"
                 alt="ILU Foundation Logo"
-                className="h-12 w-auto object-contain"
+                className="h-10 sm:h-12 w-auto object-contain"
               />
             </Link>
           </div>
 
-          {/* Center Tagline */}
+          {/* Center Tagline in English */}
           <div className="text-center">
-            <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide">
+            <p className="text-xs sm:text-sm text-slate-600 font-medium tracking-wide">
               Together for a more inclusive and compassionate world.
             </p>
           </div>
 
           {/* Right Social Icons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <a
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full bg-blue-950/60 text-slate-300 hover:text-white hover:bg-blue-900/80 transition"
+              className="p-2.5 rounded-full bg-slate-100 text-slate-700 hover:text-blue-600 hover:bg-blue-50 transition"
               aria-label="Facebook"
             >
               <svg className="w-4 h-4 fill-currentColor" viewBox="0 0 24 24">
@@ -46,7 +46,7 @@ export default function IluFooter() {
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full bg-blue-950/60 text-slate-300 hover:text-white hover:bg-blue-900/80 transition"
+              className="p-2.5 rounded-full bg-slate-100 text-slate-700 hover:text-pink-600 hover:bg-pink-50 transition"
               aria-label="Instagram"
             >
               <svg className="w-4 h-4 fill-currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ export default function IluFooter() {
               href="https://youtube.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full bg-blue-950/60 text-slate-300 hover:text-white hover:bg-blue-900/80 transition"
+              className="p-2.5 rounded-full bg-slate-100 text-slate-700 hover:text-red-600 hover:bg-red-50 transition"
               aria-label="YouTube"
             >
               <svg className="w-4 h-4 fill-currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@ export default function IluFooter() {
               href="https://whatsapp.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full bg-blue-950/60 text-slate-300 hover:text-white hover:bg-blue-900/80 transition"
+              className="p-2.5 rounded-full bg-slate-100 text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               aria-label="WhatsApp"
             >
               <svg className="w-4 h-4 fill-currentColor" viewBox="0 0 24 24">
@@ -78,11 +78,11 @@ export default function IluFooter() {
           </div>
         </div>
 
-        <div className="pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+        <div className="pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div>
             © {new Date().getFullYear()} ILU Foundation. All rights reserved.
           </div>
-          <div className="flex items-center gap-2 text-slate-400">
+          <div className="flex items-center gap-2 text-slate-500">
             <span>Designed & Developed by</span>
             <a
               href="https://www.raihsoft.com"
@@ -92,9 +92,9 @@ export default function IluFooter() {
               aria-label="Raihsoft Website"
             >
               <img
-                src="https://media.raihsuite.com/RS0013/raihsoft-logo-light.PNG"
+                src="https://media.raihsuite.com/RS0013/Raihsoft-dark-logo.png"
                 alt="Raihsoft Logo"
-                className="h-3.5 sm:h-4 w-auto object-contain inline-block"
+                className="h-4 sm:h-5 w-auto object-contain inline-block"
               />
             </a>
           </div>

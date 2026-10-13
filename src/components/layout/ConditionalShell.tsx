@@ -14,7 +14,7 @@ export default function ConditionalShell({ children }: { children: React.ReactNo
 
   if (isIluRoute) {
     return (
-      <div className="bg-[#030b1e] text-white min-h-screen flex flex-col font-sans selection:bg-amber-400 selection:text-slate-950">
+      <div className="bg-[#fffdf7] text-slate-900 min-h-screen flex flex-col font-sans selection:bg-amber-300 selection:text-amber-950">
         <IluHeader />
         <main className="flex-grow pt-20">{children}</main>
         <IluFooter />

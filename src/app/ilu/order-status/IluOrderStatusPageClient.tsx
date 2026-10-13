@@ -10,14 +10,8 @@ import {
   FileText,
   ArrowLeft,
   AlertTriangle,
-  Heart,
   BarChart3,
   X,
-  Leaf,
-  Trophy,
-  Crown,
-  Sparkles,
-  ChevronRight,
 } from 'lucide-react';
 import { OrderStatusResponse, fetchOrderStatusApi } from '@/lib/iluService';
 
@@ -38,8 +32,9 @@ export default function IluOrderStatusPageClient() {
       setError(null);
       const res = await fetchOrderStatusApi();
       setData(res);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch live order status records.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'ഓർഡർ വിവരങ്ങൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.';
+      setError(msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -58,8 +53,8 @@ export default function IluOrderStatusPageClient() {
     return data.summaries.filter(
       (s) =>
         s.clubName.toLowerCase().includes(q) ||
-        s.contactPerson.toLowerCase().includes(q) ||
-        s.mobileNumber.toLowerCase().includes(q)
+        (s.contactPerson && s.contactPerson.toLowerCase().includes(q)) ||
+        (s.mobileNumber && s.mobileNumber.toLowerCase().includes(q))
     );
   }, [data, searchQuery]);
 
@@ -70,81 +65,65 @@ export default function IluOrderStatusPageClient() {
   }, [data]);
 
   return (
-    <div className="relative overflow-x-hidden bg-transparent text-slate-100 min-h-screen font-sans selection:bg-amber-400 selection:text-slate-950">
-      {/* Background Image Layer */}
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[#030b1e]">
-        <picture className="block w-full h-full">
-          <source media="(max-width: 1023px)" srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg-mobile.png" />
+    <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
+      {/* Background Image Layer with Faded Effect */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <picture className="block w-full h-full opacity-40">
+          <source
+            media="(max-width: 1023px)"
+            srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg-white-mobile.webp"
+          />
           <img
-            src="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg.png"
-            alt="Background"
+            src="https://media.raihsuite.com/RS0001/web/ilu/ilu-bg-white.webp"
+            alt="ILU Background"
             className="w-full h-full object-cover object-top"
           />
         </picture>
-        <div className="absolute inset-0 bg-[#030b1e]/40" />
+        <div className="absolute inset-0 bg-[#fffdf7]/40" />
       </div>
 
-      {/* Background Decorator Elements */}
-      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-[#05163b]/60 via-[#030b1e]/60 to-transparent pointer-events-none" />
-
-      {/* Background Floating Leaves & Hearts */}
-      <div className="absolute top-16 left-6 opacity-25 pointer-events-none hidden lg:block animate-float">
-        <Leaf className="w-24 h-24 text-emerald-400 transform -rotate-12" />
-      </div>
-      <div className="absolute top-24 right-12 opacity-25 pointer-events-none hidden lg:block animate-float animation-delay-2000">
-        <Heart className="w-10 h-10 text-[#f59e0b] stroke-2 fill-transparent transform rotate-12" />
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10 space-y-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative z-10 space-y-8 sm:space-y-10">
         {/* HERO HEADER */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 items-center pt-2">
           {/* Left Title */}
-          <div className="lg:col-span-7 space-y-4 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-[11px] font-bold tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>ILU FOUNDATION CHALLENGE</span>
-            </div>
+          <div className="lg:col-span-7 space-y-3 text-center lg:text-left">
+            <span className="text-[11px] sm:text-xs font-bold tracking-widest text-[#1e3a8a] uppercase">
+              ILU FOUNDATION
+            </span>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.08]">
-              Payasam Challenge <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500">
+            <h1 className="tracking-tight leading-tight">
+              <span className="text-[#1e3a8a] font-black text-3xl sm:text-5xl lg:text-6xl block">
+                Payasam Challenge
+              </span>
+              <span className="text-[#dc2626] font-black text-3xl sm:text-5xl lg:text-6xl block mt-1">
                 Order Status
               </span>
             </h1>
 
-            <p className="text-slate-300 text-sm sm:text-base max-w-lg mx-auto lg:mx-0 font-normal">
-              Track real-time aggregated payasam orders by participating clubs across Kerala.
+            <p className="text-slate-600 text-sm sm:text-base max-w-lg mx-auto lg:mx-0 font-medium">
+              Track the total payasam quantity ordered by each participating club in real time.
             </p>
-
-            <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-4">
-              <Link
-                href="/ilu"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#0066ff] hover:bg-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Place New Payasam Order</span>
-              </Link>
-            </div>
           </div>
 
           {/* Right Visual Image */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end relative py-2">
-            {/* Ambient Soft Radial Gradient Glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/25 via-yellow-400/15 to-amber-600/25 blur-3xl rounded-full scale-125 pointer-events-none" />
-            <img
-              src="https://media.raihsuite.com/RS0001/web/ilu/payasam-img.png"
-              alt="Payasam Challenge Bowl"
-              className="relative z-10 w-full max-w-md sm:max-w-lg lg:max-w-xl h-auto object-contain transition-transform duration-700 hover:scale-105 filter drop-shadow-[0_25px_45px_rgba(251,191,36,0.3)]"
-            />
+          <div className="lg:col-span-5 flex justify-center lg:justify-end relative">
+            <div className="relative inline-block">
+              <div className="absolute inset-0 bg-amber-400/20 blur-3xl rounded-full scale-105 pointer-events-none" />
+              <img
+                src="https://media.raihsuite.com/RS0001/web/ilu/payasam-img.png"
+                alt="Kerala Payasam in Uruli"
+                className="relative z-10 w-64 sm:w-80 lg:w-96 max-w-full h-auto object-contain filter drop-shadow-[0_15px_30px_rgba(217,119,6,0.18)]"
+              />
+            </div>
           </div>
         </section>
 
         {/* ERROR STATE */}
         {error && (
-          <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 flex items-center justify-between gap-4 text-sm shadow-lg">
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between gap-4 text-sm shadow-sm">
             <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
-              <span>{error}</span>
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+              <span className="font-medium">{error}</span>
             </div>
             <button
               onClick={() => loadOrderStatus(true)}
@@ -157,58 +136,49 @@ export default function IluOrderStatusPageClient() {
 
         {/* 3 SUMMARY STAT CARDS ROW */}
         <section>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             {/* Card 1: Total Clubs */}
-            <div className="rounded-2xl bg-[#05173e]/90 border border-blue-500/40 p-6 shadow-[0_15px_35px_rgba(0,102,255,0.15)] backdrop-blur-xl flex items-center justify-between gap-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1">
-              <div className="space-y-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-blue-300">
+            <div className="rounded-2xl bg-white border border-blue-100 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex items-center justify-between gap-4">
+              <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 shrink-0">
+                <Users className="w-7 h-7" />
+              </div>
+              <div className="space-y-0.5 text-right">
+                <p className="text-xs font-semibold text-slate-500">
                   Participating Clubs
                 </p>
-                <p className="text-4xl font-black text-white">
-                  {loading ? '...' : data?.totalClubsWithOrders || 12}
+                <p className="text-3xl sm:text-4xl font-black text-slate-900">
+                  {loading ? '...' : data?.totalClubsWithOrders ?? 12}
                 </p>
-                <p className="text-[11px] text-slate-400 font-medium">Clubs with active orders</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-[#0066ff]/20 border border-[#0066ff]/40 text-blue-400 shrink-0 shadow-inner">
-                <Users className="w-7 h-7" />
               </div>
             </div>
 
             {/* Card 2: Total Quantity Ordered */}
-            <div className="rounded-2xl bg-[#1c1507]/90 border border-amber-500/50 ring-1 ring-amber-400/30 p-6 shadow-[0_15px_35px_rgba(251,191,36,0.15)] backdrop-blur-xl flex items-center justify-between gap-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                    Total Quantity Ordered
-                  </p>
-                  <span className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                  </span>
-                </div>
-                <p className="text-4xl font-black text-[#facc15]">
-                  {loading ? '...' : `${data?.grandTotalLiters || 385} L`}
-                </p>
-                <p className="text-[11px] text-amber-300/80 font-medium">Liters of payasam ordered</p>
+            <div className="rounded-2xl bg-white border border-[#f3631f]/20 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex items-center justify-between gap-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#ea183c]/10 via-[#f3631f]/10 to-[#faa70c]/10 text-[#ea183c] shrink-0 border border-[#ea183c]/15">
+                <Droplet className="w-7 h-7 fill-[#ea183c]/30" />
               </div>
-              <div className="p-4 rounded-2xl bg-[#fbbf24]/20 border border-[#fbbf24]/40 text-[#facc15] shrink-0 shadow-inner">
-                <Droplet className="w-7 h-7 fill-[#facc15]" />
+              <div className="space-y-0.5 text-right">
+                <p className="text-xs font-semibold text-slate-500">
+                  Total Quantity Ordered
+                </p>
+                <p className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent">
+                  {loading ? '...' : `${data?.grandTotalLiters ?? 385} L`}
+                </p>
               </div>
             </div>
 
             {/* Card 3: Total Orders */}
-            <div className="rounded-2xl bg-[#041d2d]/90 border border-teal-500/40 p-6 shadow-[0_15px_35px_rgba(45,212,191,0.15)] backdrop-blur-xl flex items-center justify-between gap-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1">
-              <div className="space-y-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-teal-300">
+            <div className="rounded-2xl bg-white border border-emerald-100 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex items-center justify-between gap-4">
+              <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-600 shrink-0">
+                <FileText className="w-7 h-7" />
+              </div>
+              <div className="space-y-0.5 text-right">
+                <p className="text-xs font-semibold text-slate-500">
                   Total Orders Submitted
                 </p>
-                <p className="text-4xl font-black text-white">
-                  {loading ? '...' : data?.totalOrderCount || 28}
+                <p className="text-3xl sm:text-4xl font-black text-slate-900">
+                  {loading ? '...' : data?.totalOrderCount ?? 28}
                 </p>
-                <p className="text-[11px] text-teal-300/80 font-medium">Individual order entries</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-teal-500/20 border border-teal-500/40 text-teal-300 shrink-0 shadow-inner">
-                <FileText className="w-7 h-7" />
               </div>
             </div>
           </div>
@@ -216,7 +186,7 @@ export default function IluOrderStatusPageClient() {
 
         {/* SEARCH & REFRESH TOOLBAR */}
         <section>
-          <div className="bg-[#05163a]/90 backdrop-blur-xl border border-blue-500/40 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Search Input */}
             <div className="relative w-full sm:w-96">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -225,30 +195,24 @@ export default function IluOrderStatusPageClient() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by club name or contact person..."
-                className="w-full bg-[#081a3e] border border-blue-700/60 text-white rounded-xl pl-10 pr-9 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition font-medium placeholder-slate-400"
+                className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl pl-10 pr-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium transition"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* Controls Right */}
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-              <span className="text-xs text-slate-400 font-medium">
-                Showing <strong className="text-white">{filteredSummaries.length}</strong> of{' '}
-                <strong className="text-white">{data?.summaries?.length || 12}</strong> clubs
-              </span>
-
-              {/* Refresh Button */}
+            {/* Refresh Button with Brand Gradient */}
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={() => loadOrderStatus(true)}
                 disabled={refreshing}
-                className="px-5 py-2.5 rounded-xl bg-[#0066ff] hover:bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-600/30 flex items-center gap-2 transition disabled:opacity-50 active:scale-95"
+                className="w-full sm:w-auto justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/20 flex items-center gap-2 transition disabled:opacity-50 active:scale-95 text-center"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 <span>Refresh Live</span>
@@ -257,138 +221,113 @@ export default function IluOrderStatusPageClient() {
           </div>
         </section>
 
-        {/* ORDER SUMMARY TABLE WITH LEADERBOARD BADGES & PROGRESS BARS */}
+        {/* ORDER SUMMARY TABLE */}
         <section>
-          <div className="rounded-3xl bg-[#05163a]/95 backdrop-blur-xl border-2 border-blue-500/50 overflow-hidden shadow-[0_30px_70px_rgba(1,6,18,0.95)] relative">
-            {/* Header Glowing Accent Bar */}
-            <div className="h-1.5 bg-gradient-to-r from-blue-600 via-amber-400 to-cyan-400" />
-
+          <div className="rounded-3xl bg-white border border-slate-200/90 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-200">
-                <thead className="bg-[#030e28] border-b border-blue-900/70 text-[11px] uppercase font-extrabold text-blue-300 tracking-wider">
+              <table className="w-full text-left text-sm text-slate-800">
+                <thead className="bg-[#f8fafc] border-b border-slate-200 text-xs font-bold text-slate-700">
                   <tr>
-                    <th scope="col" className="py-4 px-4 text-center w-16">
-                      Rank
+                    <th scope="col" className="py-4 px-4 text-center w-12 text-slate-500">
+                      #
                     </th>
-                    <th scope="col" className="py-4 px-6">
-                      Club Name
+                    <th scope="col" className="py-4 px-6 font-bold">
+                      Club / Organization
                     </th>
-                    <th scope="col" className="py-4 px-6 text-amber-300">
-                      Total Quantity Ordered ↓
+                    <th scope="col" className="py-4 px-6 font-bold">
+                      Contact Person
                     </th>
-                    <th scope="col" className="py-4 px-6 w-52">
-                      Challenge Progress
+                    <th scope="col" className="py-4 px-6 font-bold">
+                      Mobile Number
+                    </th>
+                    <th scope="col" className="py-4 px-6 font-bold text-right">
+                      Total Quantity
+                    </th>
+                    <th scope="col" className="py-4 px-6 w-52 font-bold">
+                      Progress
                     </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-blue-900/40">
+                <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     // Skeleton Rows
-                    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((idx) => (
+                    [1, 2, 3, 4, 5, 6, 7, 8].map((idx) => (
                       <tr key={idx} className="animate-pulse">
                         <td className="py-4 px-4 text-center">
-                          <div className="h-5 bg-blue-900/40 rounded-full w-6 mx-auto" />
+                          <div className="h-4 bg-slate-100 rounded-full w-5 mx-auto" />
                         </td>
                         <td className="py-4 px-6">
-                          <div className="h-5 bg-blue-900/40 rounded w-40" />
+                          <div className="h-4 bg-slate-100 rounded w-36" />
                         </td>
                         <td className="py-4 px-6">
-                          <div className="h-5 bg-amber-400/30 rounded w-20" />
+                          <div className="h-4 bg-slate-100 rounded w-28" />
                         </td>
                         <td className="py-4 px-6">
-                          <div className="h-3 bg-blue-900/40 rounded-full w-full" />
+                          <div className="h-4 bg-slate-100 rounded w-24" />
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <div className="h-4 bg-amber-100 rounded w-16 ml-auto" />
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="h-3 bg-slate-100 rounded-full w-full" />
                         </td>
                       </tr>
                     ))
                   ) : filteredSummaries.length === 0 ? (
-                    // Empty State
                     <tr>
-                      <td colSpan={4} className="py-16 text-center text-slate-400 space-y-3">
-                        <Trophy className="w-10 h-10 mx-auto text-slate-600 opacity-60" />
-                        <p className="text-base font-semibold text-slate-300">
-                          {searchQuery
-                            ? `No club found matching "${searchQuery}"`
-                            : 'No club orders recorded yet.'}
-                        </p>
+                      <td colSpan={6} className="py-12 text-center text-slate-500 font-medium">
+                        {searchQuery
+                          ? `No clubs found matching "${searchQuery}"`
+                          : 'No orders recorded yet.'}
                       </td>
                     </tr>
                   ) : (
-                    // Real Summaries Rows
                     filteredSummaries.map((summary, idx) => {
                       const percent = Math.min(
                         100,
-                        Math.max(6, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
+                        Math.max(4, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
                       );
-
-                      // Rank Badges
-                      let rankBadge;
-                      if (idx === 0) {
-                        rankBadge = (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs shadow-md shadow-amber-500/30">
-                            <Crown className="w-3.5 h-3.5 fill-slate-950" />
-                            <span>1st</span>
-                          </span>
-                        );
-                      } else if (idx === 1) {
-                        rankBadge = (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-slate-200 to-slate-400 text-slate-950 font-black text-xs shadow-md">
-                            <span>2nd</span>
-                          </span>
-                        );
-                      } else if (idx === 2) {
-                        rankBadge = (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black text-xs shadow-md">
-                            <span>3rd</span>
-                          </span>
-                        );
-                      } else {
-                        rankBadge = (
-                          <span className="inline-block px-2.5 py-1 rounded-full bg-[#0a1b3d] text-slate-300 font-mono font-bold text-xs border border-blue-900/60">
-                            #{idx + 1}
-                          </span>
-                        );
-                      }
 
                       return (
                         <tr
                           key={summary.clubId}
-                          className="hover:bg-blue-900/30 transition-colors duration-200 group"
+                          className="hover:bg-amber-50/40 transition-colors"
                         >
-                          {/* Rank */}
-                          <td className="py-4 px-4 text-center">{rankBadge}</td>
+                          {/* # */}
+                          <td className="py-4 px-4 text-center font-bold text-xs text-slate-500">
+                            {idx + 1}
+                          </td>
 
                           {/* Club Name */}
-                          <td className="py-4 px-6 font-bold text-white text-base group-hover:text-amber-300 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <span>{summary.clubName}</span>
-                            </div>
+                          <td className="py-4 px-6 font-bold text-slate-900">
+                            {summary.clubName}
+                          </td>
+
+                          {/* Contact Person */}
+                          <td className="py-4 px-6 text-slate-600 font-medium text-xs sm:text-sm">
+                            {summary.contactPerson || '—'}
+                          </td>
+
+                          {/* Mobile */}
+                          <td className="py-4 px-6 text-slate-600 font-mono text-xs sm:text-sm">
+                            {summary.mobileNumber || '—'}
                           </td>
 
                           {/* Quantity */}
-                          <td className="py-4 px-6">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xl font-black text-[#facc15]">
-                                {summary.totalQuantityLiters}
-                              </span>
-                              <span className="text-xs font-bold text-amber-400/90 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-md">
-                                Liters
-                              </span>
-                            </div>
+                          <td className="py-4 px-6 text-right">
+                            <span className="font-black text-slate-900 text-sm sm:text-base">
+                              {summary.totalQuantityLiters} L
+                            </span>
                           </td>
 
-                          {/* Progress Bar */}
+                          {/* Progress */}
                           <td className="py-4 px-6">
-                            <div className="space-y-1">
-                              <div className="w-full bg-[#08183a] rounded-full h-3.5 border border-blue-800/60 overflow-hidden p-0.5 shadow-inner">
-                                <div
-                                  className="bg-gradient-to-r from-blue-500 via-cyan-400 to-amber-400 h-full rounded-full transition-all duration-700 shadow"
-                                  style={{ width: `${percent}%` }}
-                                />
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-mono text-right font-medium">
-                                {percent}% of top order
-                              </div>
+                            <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] h-full rounded-full transition-all duration-500"
+                                style={{ width: `${percent}%` }}
+                              />
                             </div>
                           </td>
                         </tr>
@@ -399,54 +338,41 @@ export default function IluOrderStatusPageClient() {
               </table>
             </div>
 
-            {/* Table Footer Grand Total Banner */}
-            {!loading && filteredSummaries.length > 0 && (
-              <div className="bg-gradient-to-r from-[#171004] via-[#2d1e05] to-[#171004] border-t-2 border-amber-400/50 p-5 px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Total Row */}
+            {!loading && (
+              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-5 px-6 sm:px-8 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-400/20 text-amber-400 border border-amber-400/40">
-                    <BarChart3 className="w-5 h-5 text-amber-400" />
+                  <div className="p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm">
+                    <BarChart3 className="w-5 h-5" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-                      GRAND TOTAL AGGREGATED
-                    </h4>
-                    <p className="text-xs text-amber-200/80 font-medium">
-                      Across {data?.totalClubsWithOrders || filteredSummaries.length} participating clubs
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <span className="font-extrabold text-base sm:text-lg text-slate-900">
+                      Total
+                    </span>
+                    <span className="text-sm font-bold text-slate-700">
+                      {data?.totalClubsWithOrders ?? filteredSummaries.length} Clubs
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <span className="text-xs text-amber-300/80 block font-medium">
-                      Total Challenge Volume
-                    </span>
-                    <span className="text-3xl font-black text-[#facc15] tracking-tight">
-                      {data?.grandTotalLiters || 385} Liters
-                    </span>
-                  </div>
-
-                  <Link
-                    href="/ilu"
-                    className="hidden lg:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#f59e0b] hover:from-amber-400 hover:to-amber-300 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition transform hover:-translate-y-0.5"
-                  >
-                    <span>Order Payasam</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
+                <div>
+                  <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
+                    {data?.grandTotalLiters ?? 385} L
+                  </span>
                 </div>
               </div>
             )}
           </div>
         </section>
 
-        {/* BOTTOM ACTION BUTTON */}
-        <section className="pt-4 text-center">
+        {/* Back Button */}
+        <section className="pt-2 text-center">
           <Link
             href="/ilu"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#0066ff] hover:bg-blue-600 text-white font-extrabold text-base shadow-xl shadow-blue-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/25 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Place New Payasam Order</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Order Page</span>
           </Link>
         </section>
       </div>
