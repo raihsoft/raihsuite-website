@@ -152,7 +152,7 @@ export default function IluOrderPageClient() {
     setValidationError(null);
 
     if (!selectedClubId) {
-      setValidationError('ദയവായി നിങ്ങളുടെ ക്ലബ്ബ് / സംഘടന തിരഞ്ഞെടുക്കുക.');
+      setValidationError('ദയവായി നിങ്ങളുടെ ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ തിരഞ്ഞെടുക്കുക.');
       return;
     }
 
@@ -245,7 +245,7 @@ export default function IluOrderPageClient() {
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Place Your Club Order
+                  Place Your Order
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
                   Select your club/organization and enter the payasam quantity.
@@ -268,7 +268,7 @@ export default function IluOrderPageClient() {
                 <div className="space-y-1.5 sm:space-y-2 relative md:col-span-2" ref={dropdownRef}>
                   <div className="flex items-center justify-between">
                     <label htmlFor="club-search-input" className="block text-xs sm:text-sm font-bold text-slate-800">
-                      ക്ലബ്ബ് / സംഘടന <span className="text-rose-500">*</span>
+                      ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ <span className="text-rose-500">*</span>
                     </label>
                     <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
                       {clubs.length > 0 ? `${clubs.length} സംഘടനകൾ ലഭ്യമാണ്` : ''}
@@ -335,7 +335,7 @@ export default function IluOrderPageClient() {
                             e.stopPropagation();
                             setIsDropdownOpen(true);
                           }}
-                          placeholder="ക്ലബ്ബ് / സംഘടന തിരഞ്ഞെടുക്കുക..."
+                          placeholder="ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ തിരഞ്ഞെടുക്കുക..."
                           className="w-full bg-slate-50 hover:bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl pl-9 sm:pl-10 pr-12 sm:pr-14 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 focus:bg-white transition font-medium cursor-pointer"
                         />
                         <div className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -427,7 +427,7 @@ export default function IluOrderPageClient() {
                 {/* Field 2: Quantity (Liters) */}
                 <div className="space-y-1.5 sm:space-y-2 md:col-span-1">
                   <label htmlFor="quantity-input" className="block text-xs sm:text-sm font-bold text-slate-800">
-                    പായസം അളവ് (ലിറ്റർ) <span className="text-rose-500">*</span>
+                    ലിറ്റർ <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative flex items-center">
                     <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -442,7 +442,7 @@ export default function IluOrderPageClient() {
                       value={quantity}
                       onKeyDown={handleQuantityKeyDown}
                       onChange={handleQuantityChange}
-                      placeholder="അളവ് നൽകുക"
+                      placeholder="എണ്ണം നൽകുക"
                       className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-12 sm:pr-14 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition font-bold"
                     />
                     <div className="absolute right-3 sm:right-3.5 text-slate-600 font-bold text-xs sm:text-sm pointer-events-none">
@@ -450,14 +450,14 @@ export default function IluOrderPageClient() {
                     </div>
                   </div>
                   <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">
-                    പൂർണ്ണ ലിറ്റർ മാത്രം നൽകുക (ഉദാ: 10, 20, 50).
+                    കൂട്ടിച്ചേർക്കേണ്ട ലിറ്റർ മാത്രം നൽകുക
                   </p>
                 </div>
 
-                {/* Field 3: Club Security Code */}
+                {/* Field 3: Security Code */}
                 <div className="space-y-1.5 sm:space-y-2 md:col-span-1">
                   <label htmlFor="security-code" className="block text-xs sm:text-sm font-bold text-slate-800">
-                    ക്ലബ് സെക്യൂരിറ്റി കോഡ് (6 അക്കങ്ങൾ) <span className="text-rose-500">*</span>
+                    സെക്യൂരിറ്റി കോഡ് (6 അക്കങ്ങൾ) <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
