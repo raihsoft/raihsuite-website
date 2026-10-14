@@ -284,6 +284,7 @@ export interface BackendOrderPayload {
   organization: string;
   quantity: number;
   security_code: string;
+  status: 'APPROVED' | 'INITIATED' | string;
 }
 
 // Empty compatibility exports: real clubs/orders must come from the backend.
@@ -372,6 +373,7 @@ export async function constructOrderPayload(
     organization: clubId,
     quantity,
     security_code: securityCode.trim(),
+    status: 'APPROVED',
   };
 }
 
@@ -568,7 +570,7 @@ export async function submitOrderApi(
     quantityLiters: Number(
       responseData?.quantity ?? quantityValidation.quantity
     ),
-    status: String(responseData?.status ?? ''),
+    status: String(responseData?.status ?? 'APPROVED'),
     createdAt: String(responseData?.created_at ?? ''),
     raw: responseData,
   };
@@ -632,8 +634,8 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
       contactPerson: organization.responsible_person_name?.trim() ?? '',
       mobileNumber: organization.mobile?.trim() ?? '',
       location: organization.place ?? '',
-      totalQuantityLiters: Number(organization.total_count ?? 0),
-      orderCount: Number(organization.approved_count ?? 0),
+      totalQuantityLiters: Number(organization.total_count || organization.approved_count || 0),
+      orderCount: Number(organization.approved_count || organization.total_count || 0),
       lastOrderDate: '',
       raw: organization,
     }))
@@ -641,8 +643,23 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
       (a, b) => b.totalQuantityLiters - a.totalQuantityLiters
     );
 
-  const organizationTotal = Number(rawStats.organization_total ?? 0);
-  const grandTotal = Number(rawStats.grand_total ?? organizationTotal);
+  const calculatedSum = summaries.reduce(
+    (acc, item) => acc + (item.totalQuantityLiters || 0),
+    0
+  );
+
+  const organizationTotal = Number(
+    rawStats.organization_total ||
+    rawStats.total_approved ||
+    rawStats.total_order ||
+    calculatedSum ||
+    0
+  );
+  const grandTotal = Number(
+    rawStats.grand_total ||
+    rawStats.total_order ||
+    organizationTotal
+  );
 
   return {
     success: true,

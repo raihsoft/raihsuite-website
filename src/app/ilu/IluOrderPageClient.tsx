@@ -120,8 +120,8 @@ export default function IluOrderPageClient() {
   }, []);
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Prevent decimal point, comma, exponent, and signs
-    if (['.', ',', 'e', 'E', '+', '-'].includes(e.key)) {
+    // Prevent decimal point, comma, exponent, signs, and arrow up/down increment
+    if (['.', ',', 'e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
       e.preventDefault();
     }
   };
@@ -442,12 +442,14 @@ export default function IluOrderPageClient() {
                       id="quantity-input"
                       step="1"
                       min="1"
+                      inputMode="numeric"
                       required
                       value={quantity}
+                      onWheel={(e) => e.currentTarget.blur()}
                       onKeyDown={handleQuantityKeyDown}
                       onChange={handleQuantityChange}
                       placeholder="എണ്ണം നൽകുക"
-                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-12 sm:pr-14 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition font-bold"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-12 sm:pr-14 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <div className="absolute right-3 sm:right-3.5 text-slate-600 font-bold text-xs sm:text-sm pointer-events-none">
                       L
