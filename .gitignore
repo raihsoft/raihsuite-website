@@ -15,3 +15,44 @@ pnpm-debug.log*
 coverage/
 .devcontainer/.pnpm
 .vercel/output/
+
+# Media - Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.avif
+*.bmp
+*.tiff
+*.tif
+*.heic
+
+# Keep Next.js metadata icons tracked
+!src/app/**/icon.*
+!src/app/**/apple-icon.*
+!src/app/**/favicon.*
+
+# Media - Videos
+*.mp4
+*.webm
+*.mov
+*.avi
+*.mkv
+*.wmv
+*.m4v
+*.flv
+
+# Media - Audio
+*.mp3
+*.wav
+*.ogg
+*.m4a
+*.flac
+*.aac
+
+# Design & Raw Media Files
+*.psd
+*.ai
+*.sketch
+*.fig
