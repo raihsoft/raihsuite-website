@@ -1,32 +1,37 @@
-// Fixed Configuration for ILU Foundation Payasam Challenge
-// export const ILU_CONFIG = {
-//   TENANT_ID: 73,
-//   TENANT_NAME: 'ILU',
-//   TENANT_CODE: 'ILU001',
-//   FUNDRAISING_ID: '01a12f6e-124f-76bc-aec1-315fc26ef222',
-//   FUNDRAISING_NAME: 'ilu payasam-challenge-2026',
-//   BASE_API_URL: 'https://staging-api.raihsuite.com/v1/',
-//   ORGANIZATIONS_URL: 'https://staging-api.raihsuite.com/v1/orders/organizations/',
-//   ORDERS_URL: 'https://staging-api.raihsuite.com/v1/orders/orders/',
-//   ORDER_STATUS_URL: 'https://staging-api.raihsuite.com/v1/orders/order_status/',
-//   ZONE_REPORTS_URL: 'https://staging-api.raihsuite.com/v1/orders/zone_reports/',
-// } as const;
+// Map tenant codes to their respective numeric IDs
+const TENANT_CODE_TO_ID: Record<string, number> = {
+  ILU001: 73,
+};
 
 const BASE_API_URL = (
   process.env.NEXT_PUBLIC_BASE_API_URL ||
   'https://staging-api.raihsuite.com/v1/'
 ).replace(/\/+$/, '') + '/';
 
+const TENANT_CODE =
+  process.env.NEXT_PUBLIC_ILU_TENANT_CODE ||
+  process.env.NEXT_PUBLIC_TENANT_CODE ||
+  'ILU001';
+
+const TENANT_ID =
+  Number(process.env.NEXT_PUBLIC_ILU_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID) ||
+  (TENANT_CODE_TO_ID[TENANT_CODE] ?? 73);
+
 export const ILU_CONFIG = {
-  TENANT_ID: Number(process.env.NEXT_PUBLIC_TENANT_ID || 73),
-  TENANT_NAME: process.env.NEXT_PUBLIC_TENANT_NAME || 'ILU',
-  TENANT_CODE: process.env.NEXT_PUBLIC_TENANT_CODE || 'ILU001',
+  TENANT_ID,
+  TENANT_NAME:
+    process.env.NEXT_PUBLIC_ILU_TENANT_NAME ||
+    process.env.NEXT_PUBLIC_TENANT_NAME ||
+    'ILU',
+  TENANT_CODE,
 
   FUNDRAISING_ID:
+    process.env.NEXT_PUBLIC_ILU_FUNDRAISING_ID ||
     process.env.NEXT_PUBLIC_FUNDRAISING_ID ||
     '01a12f6e-124f-76bc-aec1-315fc26ef222',
 
   FUNDRAISING_NAME:
+    process.env.NEXT_PUBLIC_ILU_FUNDRAISING_NAME ||
     process.env.NEXT_PUBLIC_FUNDRAISING_NAME ||
     'ilu payasam-challenge-2026',
 
