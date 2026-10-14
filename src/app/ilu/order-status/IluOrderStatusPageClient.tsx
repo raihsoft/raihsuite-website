@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Search,
   RefreshCw,
-  Droplet,
+  Soup,
   ArrowLeft,
   AlertTriangle,
   BarChart3,
@@ -94,41 +94,34 @@ export default function IluOrderStatusPageClient() {
         <div className="absolute inset-0 bg-[#fffdf7]/40" />
       </div>
 
+      {/* HERO SECTION: FULL WIDTH BANNER WITH FESTIVAL GRADIENT BORDER */}
+      <section className="w-full relative z-10 shadow-md">
+        <div className="w-full relative">
+          <picture>
+            <source
+              media="(max-width: 640px)"
+              srcSet="https://media.raihsuite.com/RS0001/web/ilu/order-status-banner-mobile.webp"
+            />
+            <source
+              media="(min-width: 641px)"
+              srcSet="https://media.raihsuite.com/RS0001/web/ilu/order-status-banner.webp"
+            />
+            <img
+              src="https://media.raihsuite.com/RS0001/web/ilu/order-status-banner.webp"
+              alt="ILU Foundation Payasam Challenge Order Status"
+              className="w-full h-auto object-cover block"
+            />
+          </picture>
+
+          {/* Signature Festival Gradient Bottom Ribbon */}
+          <div
+            className="w-full h-1.5 sm:h-2 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] shadow-sm"
+            aria-hidden="true"
+          />
+        </div>
+      </section>
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative z-10 space-y-8 sm:space-y-10">
-        {/* HERO HEADER */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 items-center pt-2">
-          {/* Left Title */}
-          <div className="lg:col-span-7 space-y-3 text-center lg:text-left">
-            <span className="text-[11px] sm:text-xs font-bold tracking-widest text-[#1e3a8a] uppercase">
-              ILU FOUNDATION
-            </span>
-
-            <h1 className="tracking-tight leading-tight">
-              <span className="text-[#1e3a8a] font-black text-3xl sm:text-5xl lg:text-6xl block">
-                Payasam Challenge
-              </span>
-              <span className="text-[#dc2626] font-black text-3xl sm:text-5xl lg:text-6xl block mt-1">
-                Order Status
-              </span>
-            </h1>
-
-            <p className="text-slate-600 text-sm sm:text-base max-w-lg mx-auto lg:mx-0 font-medium">
-              Track the total payasam quantity ordered by each participating club in real time.
-            </p>
-          </div>
-
-          {/* Right Visual Image */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end relative">
-            <div className="relative inline-block">
-              <div className="absolute inset-0 bg-amber-400/20 blur-3xl rounded-full scale-105 pointer-events-none" />
-              <img
-                src="https://media.raihsuite.com/RS0001/web/ilu/payasam-img.png"
-                alt="Kerala Payasam in Uruli"
-                className="relative z-10 w-64 sm:w-80 lg:w-96 max-w-full h-auto object-contain filter drop-shadow-[0_15px_30px_rgba(217,119,6,0.18)]"
-              />
-            </div>
-          </div>
-        </section>
 
         {/* ERROR STATE */}
         {error && (
@@ -151,7 +144,7 @@ export default function IluOrderStatusPageClient() {
           <div className="rounded-3xl bg-white border-2 border-slate-200/90 p-5 sm:p-7 md:p-8 shadow-xl shadow-slate-900/5 hover:shadow-2xl transition flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6 relative overflow-hidden">
             <div className="flex items-center gap-3.5 sm:gap-5 w-full sm:w-auto">
               <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#ea183c]/10 via-[#f3631f]/10 to-[#faa70c]/10 text-[#ea183c] shrink-0 border border-[#ea183c]/15 shadow-sm">
-                <Droplet className="w-8 h-8 sm:w-10 sm:h-10 fill-[#ea183c]/30" />
+                <Soup className="w-8 h-8 sm:w-10 sm:h-10 stroke-[2.2]" />
               </div>
               <div>
                 <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
