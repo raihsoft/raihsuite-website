@@ -158,7 +158,7 @@ export default function IluOrderStatusPageClient() {
                 {loading ? '...' : `${data?.organizationTotalLiters ?? 0} L`}
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1">
-                Live organization total from ILU Foundation
+                Live total from ILU Foundation
               </p>
             </div>
           </div>
@@ -501,9 +501,6 @@ export default function IluOrderStatusPageClient() {
                   <div>
                     <span className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 block">
                       Total Quantity Ordered
-                    </span>
-                    <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
-                      Organization Total
                     </span>
                   </div>
                 </div>
