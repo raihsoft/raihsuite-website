@@ -221,10 +221,10 @@ export default function IluOrderPageClient() {
             />
             <source
               media="(min-width: 641px)"
-              srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu-banner-new.png"
+              srcSet="https://media.raihsuite.com/RS0001/web/ilu/hero-banner.webp"
             />
             <img
-              src="https://media.raihsuite.com/RS0001/web/ilu/ilu-banner-new.png"
+              src="https://media.raihsuite.com/RS0001/web/ilu/hero-banner.webp"
               alt="ILU Foundation Palada Payasam Challenge 2026"
               className="w-full h-auto object-cover block shadow-md"
             />
