@@ -457,7 +457,7 @@ export async function fetchClubsApi(): Promise<ClubsFetchResult> {
   const config = await getILUConfig();
   const url = `${config.ORGANIZATIONS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
-  )}`;
+  )}&limit=500&offset=0`;
 
   const response = await fetch(url, {
     method: 'GET',
@@ -588,7 +588,7 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
   )}`;
   const organizationsUrl = `${config.ORGANIZATIONS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
-  )}`;
+  )}&limit=500&offset=0`;
 
   const [statusResponse, organizationsResponse] = await Promise.all([
     fetch(statusUrl, {
