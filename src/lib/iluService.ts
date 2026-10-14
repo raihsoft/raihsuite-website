@@ -1,6 +1,22 @@
-// Map tenant codes to their respective numeric IDs
-const TENANT_CODE_TO_ID: Record<string, number> = {
-  ILU001: 73,
+// Detect Main (Production) branch or production API
+const isMainBranch =
+  process.env.CF_PAGES_BRANCH === 'main' ||
+  process.env.NEXT_PUBLIC_CF_PAGES_BRANCH === 'main' ||
+  process.env.CF_PAGES_ENVIRONMENT === 'production' ||
+  process.env.NEXT_PUBLIC_CF_PAGES_ENVIRONMENT === 'production' ||
+  Boolean(
+    process.env.NEXT_PUBLIC_BASE_API_URL &&
+      !process.env.NEXT_PUBLIC_BASE_API_URL.includes('staging') &&
+      !process.env.NEXT_PUBLIC_BASE_API_URL.includes('localhost')
+  );
+
+// Map tenant codes to numeric IDs by environment:
+// Main branch (Production): 12 | Preview / Staging: 73
+const TENANT_CODE_TO_ID: Record<string, { staging: number; production: number }> = {
+  ILU001: {
+    staging: 73,
+    production: 12,
+  },
 };
 
 const RAW_BASE_URL =
@@ -29,9 +45,16 @@ const DEFAULT_FUNDRAISING_NAME =
   process.env.NEXT_PUBLIC_FUNDRAISING_NAME ||
   'ilu payasam-challenge-2026';
 
+const explicitTenantId = Number(
+  process.env.NEXT_PUBLIC_ILU_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID
+);
+
 const DEFAULT_TENANT_ID =
-  Number(process.env.NEXT_PUBLIC_ILU_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID) ||
-  (TENANT_CODE_TO_ID[DEFAULT_TENANT_CODE] ?? 73);
+  !Number.isNaN(explicitTenantId) && explicitTenantId > 0
+    ? explicitTenantId
+    : isMainBranch
+      ? TENANT_CODE_TO_ID[DEFAULT_TENANT_CODE]?.production ?? 12
+      : TENANT_CODE_TO_ID[DEFAULT_TENANT_CODE]?.staging ?? 73;
 
 export interface ILUConfig {
   TENANT_ID: number;
