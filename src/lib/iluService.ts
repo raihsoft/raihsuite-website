@@ -501,6 +501,81 @@ export async function fetchClubsApi(): Promise<ClubsFetchResult> {
   };
 }
 
+export interface CreateOrganizationInput {
+  organization_name: string;
+  responsible_person_name: string;
+  place: string;
+  mobile: string;
+}
+
+/**
+ * Creates a new organization/club on the backend.
+ */
+export async function createOrganizationApi(
+  data: CreateOrganizationInput
+): Promise<Club> {
+  const orgName = data.organization_name.trim();
+  const personName = data.responsible_person_name.trim();
+  const place = data.place.trim();
+  const mobile = data.mobile.trim();
+
+  if (!orgName) {
+    throw new Error('ക്ലബ്ബ് / കൂട്ടായ്മയുടെ പേര് നൽകുക.');
+  }
+  if (!personName) {
+    throw new Error('ചുമതലയുള്ള വ്യക്തിയുടെ പേര് നൽകുക.');
+  }
+  if (!place) {
+    throw new Error('സ്ഥലം നൽകുക.');
+  }
+  if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
+    throw new Error('സാധുവായ 10 അക്ക മൊബൈൽ നമ്പർ നൽകുക.');
+  }
+
+  const config = await getILUConfig();
+  const url = `${config.ORGANIZATIONS_URL}?tenant=${encodeURIComponent(
+    String(config.TENANT_ID)
+  )}`;
+
+  const payload = {
+    organization_name: orgName,
+    responsible_person_name: personName,
+    place,
+    mobile,
+    tenant: config.TENANT_ID,
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const responseData: any = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      normalizeApiError(
+        responseData,
+        `ക്ലബ് ചേർക്കുന്നതിൽ പിശക് സംഭവിച്ചു (${response.status} ${response.statusText}).`
+      )
+    );
+  }
+
+  return mapBackendOrganizationToClub({
+    id: String(responseData?.id ?? ''),
+    place: responseData?.place ?? place,
+    organization_name: responseData?.organization_name ?? orgName,
+    responsible_person_name: responseData?.responsible_person_name ?? personName,
+    mobile: responseData?.mobile ?? mobile,
+    is_active: true,
+    tenant: responseData?.tenant ?? null,
+  });
+}
+
 /**
  * Submits an organization order using the resolved backend configuration.
  */

@@ -20,6 +20,11 @@ import {
   Soup,
   Eye,
   EyeOff,
+  Phone,
+  Plus,
+  User,
+  MapPin,
+  Building2,
 } from 'lucide-react';
 import {
   Club,
@@ -27,6 +32,7 @@ import {
   FALLBACK_BACKEND_CLUBS,
   fetchClubsApi,
   submitOrderApi,
+  createOrganizationApi,
   validateOrderQuantity,
   validateSecurityCode,
 } from '@/lib/iluService';
@@ -54,6 +60,78 @@ export default function IluOrderPageClient() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [clubSearchTerm, setClubSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Add New Organization Modal State
+  const [isAddClubModalOpen, setIsAddClubModalOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
+  const [newPersonName, setNewPersonName] = useState('');
+  const [newPlace, setNewPlace] = useState('');
+  const [newMobile, setNewMobile] = useState('');
+  const [isAddingClub, setIsAddingClub] = useState(false);
+  const [addClubError, setAddClubError] = useState<string | null>(null);
+  const [addClubSuccess, setAddClubSuccess] = useState<string | null>(null);
+
+  const handleCreateOrganization = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddClubError(null);
+
+    const orgName = newOrgName.trim();
+    const personName = newPersonName.trim();
+    const place = newPlace.trim();
+    const mobile = newMobile.trim();
+
+    if (!orgName) {
+      setAddClubError('ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ പേര് നൽകുക.');
+      return;
+    }
+    if (!personName) {
+      setAddClubError('ചുമതലയുള്ള വ്യക്തിയുടെ പേര് നൽകുക.');
+      return;
+    }
+    if (!place) {
+      setAddClubError('സ്ഥലം നൽകുക.');
+      return;
+    }
+    if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
+      setAddClubError('സാധുവായ 10 അക്ക മൊബൈൽ നമ്പർ നൽകുക.');
+      return;
+    }
+
+    try {
+      setIsAddingClub(true);
+      const createdClub = await createOrganizationApi({
+        organization_name: orgName,
+        responsible_person_name: personName,
+        place,
+        mobile,
+      });
+
+      // Add to local clubs list and select it immediately
+      setClubs((prev) => [createdClub, ...prev.filter((c) => c.id !== createdClub.id)]);
+      setSelectedClubId(createdClub.id);
+      setSelectedClub(createdClub);
+
+      // Reset modal inputs and close
+      setNewOrgName('');
+      setNewPersonName('');
+      setNewPlace('');
+      setNewMobile('');
+      setIsAddClubModalOpen(false);
+      setAddClubSuccess(`"${createdClub.name}" വിജയകരമായി ചേർത്തു!`);
+
+      setTimeout(() => {
+        setAddClubSuccess(null);
+      }, 5000);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'സംഘടന ചേർക്കുന്നതിൽ പിശക് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.';
+      setAddClubError(msg);
+    } finally {
+      setIsAddingClub(false);
+    }
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -426,6 +504,38 @@ export default function IluOrderPageClient() {
                       </div>
                     </div>
                   )}
+
+                  {/* Add New Organization Trigger */}
+                  <div className="pt-1.5 flex flex-wrap items-center gap-1.5 text-xs sm:text-sm text-slate-600">
+                    <span>പുതിയ ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ ചേർക്കാൻ</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddClubModalOpen(true);
+                        setAddClubError(null);
+                      }}
+                      className="font-bold text-amber-700 hover:text-amber-800 underline inline-flex items-center gap-1 transition focus:outline-none"
+                    >
+                      Click here
+                    </button>
+                  </div>
+
+                  {/* Success notification if just added */}
+                  {addClubSuccess && (
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-center justify-between gap-2 animate-fade-in">
+                      <span className="font-semibold flex items-center gap-1.5">
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                        {addClubSuccess}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAddClubSuccess(null)}
+                        className="text-emerald-600 hover:text-emerald-800 p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Field 2: Quantity (Liters) */}
@@ -512,6 +622,20 @@ export default function IluOrderPageClient() {
                   )}
                 </button>
               </div>
+
+              {/* Contact for more details */}
+              <div className="pt-2 sm:pt-3 text-center border-t border-slate-100 flex flex-wrap items-center justify-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium">
+                <span className="flex items-center gap-1.5 text-slate-500">
+                  <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  Contact for more details :
+                </span>
+                <a
+                  href="tel:+917907531608"
+                  className="font-bold text-amber-700 hover:text-amber-800 hover:underline transition inline-flex items-center gap-1"
+                >
+                  +91 79075 31608
+                </a>
+              </div>
             </form>
           </div>
         </section>
@@ -559,6 +683,185 @@ export default function IluOrderPageClient() {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ADD NEW CLUB / ORGANIZATION MODAL */}
+        {isAddClubModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+            <div className="relative w-full max-w-lg rounded-3xl bg-white border border-amber-200/80 p-6 sm:p-8 shadow-2xl text-slate-900 space-y-5 my-8">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-[#ea183c]/10 via-[#f3631f]/10 to-[#faa70c]/10 text-amber-700 border border-amber-200/50 shadow-sm shrink-0">
+                    <Building2 className="w-6 h-6 stroke-[2.2]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                      പുതിയ ക്ലബ് / കൂട്ടായ്മ ചേർക്കുക
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      വിവരങ്ങൾ പൂരിപ്പിച്ച് സംഘടന ചേർക്കുക
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddClubModalOpen(false);
+                    setAddClubError(null);
+                  }}
+                  className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Error Alert */}
+              {addClubError && (
+                <div className="p-3 sm:p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2.5 text-xs sm:text-sm animate-slide-up">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span className="font-medium">{addClubError}</span>
+                </div>
+              )}
+
+              {/* Add Club Form */}
+              <form onSubmit={handleCreateOrganization} className="space-y-4" noValidate>
+                {/* 1. Organization Name */}
+                <div className="space-y-1.5">
+                  <label htmlFor="new-org-name" className="block text-xs sm:text-sm font-bold text-slate-800">
+                    ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ പേര് <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      id="new-org-name"
+                      required
+                      value={newOrgName}
+                      onChange={(e) => {
+                        setNewOrgName(e.target.value);
+                        setAddClubError(null);
+                      }}
+                      placeholder="ക്ലബ്ബിന്റെ പേര് നൽകുക"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Responsible Person Name */}
+                <div className="space-y-1.5">
+                  <label htmlFor="new-person-name" className="block text-xs sm:text-sm font-bold text-slate-800">
+                    ചുമതലയുള്ള വ്യക്തിയുടെ പേര് <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      id="new-person-name"
+                      required
+                      value={newPersonName}
+                      onChange={(e) => {
+                        setNewPersonName(e.target.value);
+                        setAddClubError(null);
+                      }}
+                      placeholder="ചുമതലയുള്ള വ്യക്തിയുടെ പേര് നൽകുക"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* 3. Place */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="new-place" className="block text-xs sm:text-sm font-bold text-slate-800">
+                      സ്ഥലം <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        id="new-place"
+                        required
+                        value={newPlace}
+                        onChange={(e) => {
+                          setNewPlace(e.target.value);
+                          setAddClubError(null);
+                        }}
+                        placeholder="സ്ഥലം നൽകുക"
+                        className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 4. Mobile Number */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="new-mobile" className="block text-xs sm:text-sm font-bold text-slate-800">
+                      മൊബൈൽ നമ്പർ <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="tel"
+                        id="new-mobile"
+                        required
+                        maxLength={10}
+                        inputMode="numeric"
+                        value={newMobile}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                          setNewMobile(val);
+                          setAddClubError(null);
+                        }}
+                        placeholder="10 അക്ക മൊബൈൽ നമ്പർ"
+                        className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Buttons */}
+                <div className="pt-3 grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddClubModalOpen(false);
+                      setAddClubError(null);
+                    }}
+                    className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition"
+                  >
+                    റദ്ദാക്കുക
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isAddingClub}
+                    className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isAddingClub ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>ചേർക്കുന്നു...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>ചേർക്കുക</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

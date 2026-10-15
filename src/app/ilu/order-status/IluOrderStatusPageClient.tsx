@@ -69,12 +69,6 @@ export default function IluOrderStatusPageClient() {
     );
   }, [rankedSummaries, searchQuery]);
 
-  // Max liters for progress bar proportion calculation
-  const maxLiters = useMemo(() => {
-    if (!data?.summaries || data.summaries.length === 0) return 5;
-    const maxVal = Math.max(...data.summaries.map((s) => s.totalQuantityLiters || 0));
-    return maxVal > 0 ? maxVal : 5;
-  }, [data]);
 
   return (
     <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
@@ -218,9 +212,6 @@ export default function IluOrderStatusPageClient() {
                     <th scope="col" className="py-4 px-6 font-bold text-right">
                       Total Quantity
                     </th>
-                    <th scope="col" className="py-4 px-6 w-48 sm:w-60 font-bold">
-                      Progress
-                    </th>
                   </tr>
                 </thead>
 
@@ -238,14 +229,11 @@ export default function IluOrderStatusPageClient() {
                         <td className="py-4 px-6 text-right">
                           <div className="h-4 bg-amber-100 rounded w-16 ml-auto" />
                         </td>
-                        <td className="py-4 px-6">
-                          <div className="h-3 bg-slate-100 rounded-full w-full" />
-                        </td>
                       </tr>
                     ))
                   ) : filteredSummaries.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-slate-500 font-medium">
+                      <td colSpan={3} className="py-12 text-center text-slate-500 font-medium">
                         {searchQuery
                           ? `No clubs found matching "${searchQuery}"`
                           : 'No orders recorded yet.'}
@@ -253,10 +241,6 @@ export default function IluOrderStatusPageClient() {
                     </tr>
                   ) : (
                     filteredSummaries.map((summary) => {
-                      const percent = Math.min(
-                        100,
-                        Math.max(4, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
-                      );
 
                       const isFirst = summary.rank === 1;
                       const isSecond = summary.rank === 2;
@@ -340,16 +324,6 @@ export default function IluOrderStatusPageClient() {
                               {summary.totalQuantityLiters} L
                             </span>
                           </td>
-
-                          {/* Progress */}
-                          <td className="py-4 px-6">
-                            <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                              <div
-                                className="bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] h-full rounded-full transition-all duration-500"
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </td>
                         </tr>
                       );
                     })
@@ -371,7 +345,6 @@ export default function IluOrderStatusPageClient() {
                       </div>
                       <div className="h-5 w-12 bg-amber-100 rounded" />
                     </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full" />
                   </div>
                 ))
               ) : filteredSummaries.length === 0 ? (
@@ -382,10 +355,6 @@ export default function IluOrderStatusPageClient() {
                 </div>
               ) : (
                 filteredSummaries.map((summary) => {
-                  const percent = Math.min(
-                    100,
-                    Math.max(4, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
-                  );
 
                   const isFirst = summary.rank === 1;
                   const isSecond = summary.rank === 2;
@@ -471,19 +440,6 @@ export default function IluOrderStatusPageClient() {
                             {summary.totalQuantityLiters} L
                           </span>
                         </div>
-                      </div>
-
-                      {/* Progress Bar with Percent */}
-                      <div className="mt-2.5 flex items-center gap-2">
-                        <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] h-full rounded-full transition-all duration-500"
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400 shrink-0">
-                          {percent}%
-                        </span>
                       </div>
                     </div>
                   );
