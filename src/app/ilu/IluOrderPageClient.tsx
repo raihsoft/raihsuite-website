@@ -544,12 +544,8 @@ export default function IluOrderPageClient() {
                                     )}
                                   </div>
                                 </div>
-                                {isSelected ? (
-                                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-900 shrink-0" />
-                                ) : (
-                                  <span className="text-[10px] sm:text-xs text-slate-400 group-hover:text-slate-800">
-                                    തിരഞ്ഞെടുക്കുക
-                                  </span>
+                                {isSelected && (
+                                  <Check className="w-4 h-4 text-amber-600 shrink-0" />
                                 )}
                               </button>
                             );
