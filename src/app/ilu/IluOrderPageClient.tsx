@@ -20,6 +20,9 @@ import {
   Eye,
   EyeOff,
   Phone,
+  Calendar,
+  Timer,
+  Sparkles,
 } from 'lucide-react';
 import {
   Club,
@@ -79,7 +82,42 @@ function useAnimatedCount(targetNumber: number, duration: number = 2200) {
   return { displayedCount, overlayProgress };
 }
 
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isExpired: boolean;
+}
+
+// Challenge Day: 2026 November 8 (IST 00:00:00)
+const CHALLENGE_TARGET_TIMESTAMP = new Date('2026-11-08T00:00:00+05:30').getTime();
+
+function calculateChallengeTimeLeft(): TimeLeft {
+  const diff = CHALLENGE_TARGET_TIMESTAMP - Date.now();
+  if (diff <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true };
+  }
+  return {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((diff / (1000 * 60)) % 60),
+    seconds: Math.floor((diff / 1000) % 60),
+    isExpired: false,
+  };
+}
+
 export default function IluOrderPageClient() {
+  // Countdown State for 2026 November 8 Challenge
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calculateChallengeTimeLeft());
+
+  useEffect(() => {
+    setTimeLeft(calculateChallengeTimeLeft());
+    const interval = setInterval(() => {
+      setTimeLeft(calculateChallengeTimeLeft());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   // Preloaded with verified backend organizations so dropdown is immediately populated
   const [clubs, setClubs] = useState<Club[]>(FALLBACK_BACKEND_CLUBS);
   const [loadingClubs, setLoadingClubs] = useState(false);
@@ -277,8 +315,8 @@ export default function IluOrderPageClient() {
         <div className="absolute inset-0 bg-[#fffdf7]/40" />
       </div>
 
-      {/* HERO SECTION: FULL WIDTH BANNER */}
-      <section className="w-full relative z-10">
+      {/* HERO SECTION: FULL WIDTH BANNER (DESKTOP ONLY) */}
+      <section className="hidden sm:block w-full relative z-10">
         <div className="w-full">
           <picture>
             <source
@@ -303,7 +341,7 @@ export default function IluOrderPageClient() {
 
         {/* TOGETHER WE ACHIEVED TOTAL STAT CARD - STANDOUT SHOWCASE MILESTONE */}
         <section>
-          <div className="rounded-3xl bg-gradient-to-br from-[#700824] via-[#941334] via-[#b91c1c] to-[#c2410c] p-6 sm:p-8 md:p-9 shadow-2xl shadow-rose-950/25 border-2 border-white/20 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
+          <div className="rounded-3xl bg-gradient-to-r from-[#800720] via-[#be123c] via-[#ea580c] to-[#f59e0b] p-5 sm:p-7 md:p-8 shadow-2xl shadow-rose-950/20 border-2 border-white/20 text-white relative overflow-hidden min-h-[140px] sm:min-h-[160px] flex flex-col justify-between">
             {/* Top hairline border glow */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
 
@@ -324,45 +362,31 @@ export default function IluOrderPageClient() {
               />
               {/* Luminous soft ambient radial glow behind the numbers */}
               <div
-                className="absolute -right-16 -top-16 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-amber-300/30 blur-3xl pointer-events-none transition-transform duration-500 ease-out"
+                className="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform duration-500 ease-out"
                 style={{
-                  transform: `scale(${0.6 + overlayProgress * 0.5})`,
+                  transform: `scale(${0.7 + overlayProgress * 0.4})`,
                   opacity: 0.3 + overlayProgress * 0.7,
                 }}
-              />
-              {/* Secondary deep glow */}
-              <div
-                className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-rose-400/20 blur-3xl pointer-events-none"
-              />
+              >
+                <div className="w-96 h-96 rounded-full bg-amber-300/25 blur-3xl" />
+              </div>
             </div>
 
-            {/* Left Content */}
-            <div className="relative z-10 max-w-xl space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-amber-200 text-[11px] sm:text-xs font-bold tracking-wider uppercase shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-300"></span>
-                </span>
-                <span>Total Quantity Ordered</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-                Together we achieved.
+            {/* Top-left: Together we achieved */}
+            <div className="relative z-10 text-left">
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight drop-shadow-sm">
+                Together we achieved
               </h2>
-              <p className="text-xs sm:text-sm text-rose-100/90 font-medium">
-                Liters recorded across all participating clubs
-              </p>
             </div>
 
-            {/* Right Metric Showcase */}
-            <div className="w-full md:w-auto relative z-10 flex justify-start md:justify-end">
-              <div className="bg-black/25 md:bg-white/10 backdrop-blur-md px-6 py-4 sm:px-8 sm:py-5 rounded-2xl sm:rounded-3xl border border-white/25 shadow-xl flex items-baseline gap-2.5">
-                <span className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight drop-shadow-lg font-mono">
-                  {loadingOrderStatus ? '...' : displayedCount.toLocaleString()}
-                </span>
-                <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-300 drop-shadow-sm">
-                  Liters
-                </span>
-              </div>
+            {/* Center: Big Highlighted Count + LTR */}
+            <div className="relative z-10 flex items-baseline justify-center gap-2 sm:gap-3 py-2 sm:py-3 my-auto">
+              <span className="text-5xl sm:text-7xl md:text-8xl font-black text-yellow-300 font-mono tracking-tight drop-shadow-[0_4px_16px_rgba(250,204,21,0.45)]">
+                {loadingOrderStatus ? '...' : displayedCount.toLocaleString()}
+              </span>
+              <span className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-wider drop-shadow-md">
+                LTR
+              </span>
             </div>
           </div>
         </section>
@@ -557,12 +581,14 @@ export default function IluOrderPageClient() {
 
                   {/* Notice for adding new club/organization */}
                   <p className="pt-1.5 text-[11px] sm:text-xs md:text-sm text-slate-600 font-medium leading-relaxed break-words">
-                    <span>പുതിയ ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ എന്നിവ ചേർക്കുന്നതിനായി </span>
+                    <span className="font-bold text-amber-950 bg-amber-100/70 px-1.5 py-0.5 rounded border border-amber-200/80">
+                      പുതിയ ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ
+                    </span>
+                    <span> എന്നിവ ചേർക്കുന്നതിനായി </span>
                     <a
                       href="tel:+917907531608"
-                      className="font-bold text-amber-700 hover:text-amber-800 underline whitespace-nowrap inline-flex items-center gap-1 transition touch-manipulation"
+                      className="font-bold text-amber-800 bg-amber-100/70 hover:bg-amber-200/80 px-1.5 py-0.5 rounded border border-amber-200/80 whitespace-nowrap inline-block transition touch-manipulation underline underline-offset-2"
                     >
-                      <Phone className="w-3 h-3 text-amber-600 shrink-0 inline" />
                       +91 79075 31608
                     </a>
                     <span> എന്ന നമ്പറിൽ ബന്ധപ്പെടുക.</span>
@@ -590,10 +616,10 @@ export default function IluOrderPageClient() {
                       onKeyDown={handleQuantityKeyDown}
                       onChange={handleQuantityChange}
                       placeholder="എണ്ണം നൽകുക"
-                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-12 sm:pr-14 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 rounded-xl pl-9 sm:pl-10 pr-14 sm:pr-16 py-2.5 sm:py-3.5 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <div className="absolute right-3 sm:right-3.5 text-slate-600 font-bold text-xs sm:text-sm pointer-events-none">
-                      L
+                    <div className="absolute right-3 sm:right-3.5 text-slate-600 font-bold text-xs sm:text-sm pointer-events-none tracking-wider">
+                      LTR
                     </div>
                   </div>
                   <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">
@@ -654,11 +680,11 @@ export default function IluOrderPageClient() {
                 </button>
               </div>
 
-              {/* Contact for more details */}
+              {/* Contact for any support */}
               <div className="pt-2 sm:pt-3 text-center border-t border-slate-100 flex flex-wrap items-center justify-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium">
                 <span className="flex items-center gap-1.5 text-slate-500">
                   <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  For more details :
+                  Contact for any support :
                 </span>
                 <a
                   href="tel:+917907531608"
@@ -668,6 +694,96 @@ export default function IluOrderPageClient() {
                 </a>
               </div>
             </form>
+          </div>
+        </section>
+
+        {/* CHALLENGE COUNTDOWN CARD - TARGET: 2026 NOVEMBER 8 */}
+        <section>
+          <div className="rounded-3xl bg-gradient-to-br from-[#fffbeb] via-[#fff7ed] to-[#fef2f2] border-2 border-amber-300/80 p-5 sm:p-7 md:p-8 shadow-xl shadow-amber-950/5 relative overflow-hidden">
+            {/* Ambient Festive Radial Glows */}
+            <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
+            <div className="absolute -left-12 -bottom-12 w-56 h-56 rounded-full bg-rose-400/15 blur-3xl pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+
+            <div className="relative z-10 flex flex-col items-center justify-center text-center">
+              <p className="text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4">
+                Time remaining until challenge day
+              </p>
+
+              {timeLeft.isExpired ? (
+                <div className="py-4 px-6 rounded-2xl bg-amber-100/90 border border-amber-300 text-amber-950 font-black text-base sm:text-lg flex items-center justify-center gap-2">
+                  <PartyPopper className="w-5 h-5 text-amber-700 shrink-0" />
+                  <span>The Challenge Day is Here!</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-2 sm:gap-3.5 w-full max-w-xs sm:max-w-md md:max-w-lg mx-auto">
+                  {/* Days */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 sm:h-22 md:h-26 rounded-xl sm:rounded-2xl bg-white border-2 border-amber-300/90 shadow-md shadow-amber-500/10 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+                      <span
+                        className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 font-mono tracking-tight"
+                        suppressHydrationWarning
+                      >
+                        {String(timeLeft.days).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 mt-1.5 sm:mt-2">
+                      Days
+                    </span>
+                  </div>
+
+                  {/* Hours */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 sm:h-22 md:h-26 rounded-xl sm:rounded-2xl bg-white border-2 border-amber-300/90 shadow-md shadow-amber-500/10 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+                      <span
+                        className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 font-mono tracking-tight"
+                        suppressHydrationWarning
+                      >
+                        {String(timeLeft.hours).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 mt-1.5 sm:mt-2">
+                      Hours
+                    </span>
+                  </div>
+
+                  {/* Minutes */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 sm:h-22 md:h-26 rounded-xl sm:rounded-2xl bg-white border-2 border-amber-300/90 shadow-md shadow-amber-500/10 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+                      <span
+                        className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 font-mono tracking-tight"
+                        suppressHydrationWarning
+                      >
+                        {String(timeLeft.minutes).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 mt-1.5 sm:mt-2">
+                      Mins
+                    </span>
+                  </div>
+
+                  {/* Seconds */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 sm:h-22 md:h-26 rounded-xl sm:rounded-2xl bg-gradient-to-b from-amber-100/90 via-orange-50 to-rose-50 border-2 border-[#ea183c]/60 shadow-lg shadow-[#ea183c]/15 flex items-center justify-center relative overflow-hidden ring-2 ring-amber-400/30">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c]" />
+                      <span
+                        className="text-2xl sm:text-4xl md:text-5xl font-black text-[#ea183c] font-mono tracking-tight"
+                        suppressHydrationWarning
+                      >
+                        {String(timeLeft.seconds).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#ea183c] mt-1.5 sm:mt-2 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ea183c] animate-ping" />
+                      Secs
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 

@@ -14,16 +14,22 @@ export default function IluHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo Section */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/ilu"
-              className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-[#f3631f] rounded-lg p-1 transition"
+              className="flex items-center gap-2 sm:gap-3 group focus:outline-none focus:ring-2 focus:ring-[#f3631f] rounded-lg p-1 transition"
               aria-label="ILU Foundation Home"
             >
               <img
                 src="https://media.raihsuite.com/RS0001/web/ilu/ilu-logo-dark.png"
                 alt="ILU Foundation Logo"
-                className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                className="h-8 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+              />
+              {/* Mobile screen only: Typography near the logo */}
+              <img
+                src="https://media.raihsuite.com/RS0001/web/ilu/typography.png"
+                alt="ILU Challenge Typography"
+                className="block sm:hidden h-6 xs:h-7 w-auto max-w-[120px] xs:max-w-[160px] object-contain"
               />
             </Link>
           </div>
