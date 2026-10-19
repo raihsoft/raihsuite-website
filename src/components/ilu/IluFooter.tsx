@@ -23,9 +23,18 @@ export default function IluFooter() {
           </div>
 
           {/* Center Tagline in English */}
-          <div className="text-center">
+          <div className="text-center space-y-1">
             <p className="text-xs sm:text-sm text-slate-600 font-medium tracking-wide">
               Together for a more inclusive and compassionate world.
+            </p>
+            <p className="text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5">
+              <span>For more details :</span>
+              <a
+                href="tel:+917907531608"
+                className="font-bold text-amber-700 hover:text-amber-800 hover:underline transition"
+              >
+                +91 79075 31608
+              </a>
             </p>
           </div>
 

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
-  Heart,
   Droplet,
   AlertCircle,
   BarChart3,
@@ -20,6 +19,7 @@ import {
   Soup,
   Eye,
   EyeOff,
+  Phone,
 } from 'lucide-react';
 import {
   Club,
@@ -29,7 +29,55 @@ import {
   submitOrderApi,
   validateOrderQuantity,
   validateSecurityCode,
+  fetchOrderStatusApi,
+  OrderStatusResponse,
 } from '@/lib/iluService';
+
+function useAnimatedCount(targetNumber: number, duration: number = 2200) {
+  const [displayedCount, setDisplayedCount] = useState<number>(0);
+  const [overlayProgress, setOverlayProgress] = useState<number>(0);
+  const prevTargetRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!targetNumber || targetNumber <= 0) {
+      setDisplayedCount(0);
+      setOverlayProgress(0);
+      prevTargetRef.current = 0;
+      return;
+    }
+
+    const startVal = prevTargetRef.current;
+    let startTimestamp: number | null = null;
+    let animationFrameId: number;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+      const rawProgress = Math.min(elapsed / duration, 1);
+      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+
+      const current = Math.round(startVal + (targetNumber - startVal) * easedProgress);
+      setDisplayedCount(current);
+      setOverlayProgress(easedProgress);
+
+      if (rawProgress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      } else {
+        setDisplayedCount(targetNumber);
+        setOverlayProgress(1);
+        prevTargetRef.current = targetNumber;
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [targetNumber, duration]);
+
+  return { displayedCount, overlayProgress };
+}
 
 export default function IluOrderPageClient() {
   // Preloaded with verified backend organizations so dropdown is immediately populated
@@ -49,6 +97,10 @@ export default function IluOrderPageClient() {
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const isFetchingRef = useRef(false);
+  const [orderStatusData, setOrderStatusData] = useState<OrderStatusResponse | null>(null);
+  const [loadingOrderStatus, setLoadingOrderStatus] = useState<boolean>(true);
+  const totalLiters = orderStatusData?.organizationTotalLiters ?? 0;
+  const { displayedCount, overlayProgress } = useAnimatedCount(loadingOrderStatus ? 0 : totalLiters);
 
   // Searchable dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -115,8 +167,21 @@ export default function IluOrderPageClient() {
     }
   };
 
+  const loadOrderStatusTotal = async () => {
+    try {
+      setLoadingOrderStatus(true);
+      const res = await fetchOrderStatusApi();
+      setOrderStatusData(res);
+    } catch {
+      // Keep graceful fallback
+    } finally {
+      setLoadingOrderStatus(false);
+    }
+  };
+
   useEffect(() => {
     loadClubs(false);
+    loadOrderStatusTotal();
   }, []);
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -184,6 +249,7 @@ export default function IluOrderPageClient() {
       setSelectedClub(null);
       setQuantity('');
       setSecurityCode('');
+      loadOrderStatusTotal();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'ഓർഡർ സമർപ്പിക്കുന്നതിൽ പിശക് സംഭവിച്ചു.';
       setValidationError(msg);
@@ -234,6 +300,72 @@ export default function IluOrderPageClient() {
 
       {/* MAIN CONTENT CONTAINER */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative z-10 space-y-8 sm:space-y-10">
+
+        {/* TOGETHER WE ACHIEVED TOTAL STAT CARD - STANDOUT SHOWCASE MILESTONE */}
+        <section>
+          <div className="rounded-3xl bg-gradient-to-br from-[#700824] via-[#941334] via-[#b91c1c] to-[#c2410c] p-6 sm:p-8 md:p-9 shadow-2xl shadow-rose-950/25 border-2 border-white/20 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
+            {/* Top hairline border glow */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
+            {/* Slowly Faded Gradient Overlay increasing as numbers climb */}
+            <div
+              className="absolute inset-0 pointer-events-none transition-opacity duration-700 ease-out z-0"
+              style={{
+                opacity: overlayProgress,
+              }}
+            >
+              {/* Expanding warm light wash across the card */}
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-white/0 via-amber-200/15 to-white/20 transition-transform duration-500 ease-out"
+                style={{
+                  transform: `scaleX(${0.1 + overlayProgress * 0.9})`,
+                  transformOrigin: 'right center',
+                }}
+              />
+              {/* Luminous soft ambient radial glow behind the numbers */}
+              <div
+                className="absolute -right-16 -top-16 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-amber-300/30 blur-3xl pointer-events-none transition-transform duration-500 ease-out"
+                style={{
+                  transform: `scale(${0.6 + overlayProgress * 0.5})`,
+                  opacity: 0.3 + overlayProgress * 0.7,
+                }}
+              />
+              {/* Secondary deep glow */}
+              <div
+                className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-rose-400/20 blur-3xl pointer-events-none"
+              />
+            </div>
+
+            {/* Left Content */}
+            <div className="relative z-10 max-w-xl space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-amber-200 text-[11px] sm:text-xs font-bold tracking-wider uppercase shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-300"></span>
+                </span>
+                <span>Total Quantity Ordered</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                Together we achieved.
+              </h2>
+              <p className="text-xs sm:text-sm text-rose-100/90 font-medium">
+                Liters recorded across all participating clubs
+              </p>
+            </div>
+
+            {/* Right Metric Showcase */}
+            <div className="w-full md:w-auto relative z-10 flex justify-start md:justify-end">
+              <div className="bg-black/25 md:bg-white/10 backdrop-blur-md px-6 py-4 sm:px-8 sm:py-5 rounded-2xl sm:rounded-3xl border border-white/25 shadow-xl flex items-baseline gap-2.5">
+                <span className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight drop-shadow-lg font-mono">
+                  {loadingOrderStatus ? '...' : displayedCount.toLocaleString()}
+                </span>
+                <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-300 drop-shadow-sm">
+                  Liters
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* MAIN CLUB ORDER FORM CARD - HIGHLIGHTED AMBER BORDER MATCHING DROPDOWN */}
         <section id="order-form" className="scroll-mt-24 relative z-20">
@@ -412,12 +544,8 @@ export default function IluOrderPageClient() {
                                     )}
                                   </div>
                                 </div>
-                                {isSelected ? (
-                                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-900 shrink-0" />
-                                ) : (
-                                  <span className="text-[10px] sm:text-xs text-slate-400 group-hover:text-slate-800">
-                                    തിരഞ്ഞെടുക്കുക
-                                  </span>
+                                {isSelected && (
+                                  <Check className="w-4 h-4 text-amber-600 shrink-0" />
                                 )}
                               </button>
                             );
@@ -426,6 +554,19 @@ export default function IluOrderPageClient() {
                       </div>
                     </div>
                   )}
+
+                  {/* Notice for adding new club/organization */}
+                  <p className="pt-1.5 text-[11px] sm:text-xs md:text-sm text-slate-600 font-medium leading-relaxed break-words">
+                    <span>പുതിയ ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ എന്നിവ ചേർക്കുന്നതിനായി </span>
+                    <a
+                      href="tel:+917907531608"
+                      className="font-bold text-amber-700 hover:text-amber-800 underline whitespace-nowrap inline-flex items-center gap-1 transition touch-manipulation"
+                    >
+                      <Phone className="w-3 h-3 text-amber-600 shrink-0 inline" />
+                      +91 79075 31608
+                    </a>
+                    <span> എന്ന നമ്പറിൽ ബന്ധപ്പെടുക.</span>
+                  </p>
                 </div>
 
                 {/* Field 2: Quantity (Liters) */}
@@ -512,6 +653,20 @@ export default function IluOrderPageClient() {
                   )}
                 </button>
               </div>
+
+              {/* Contact for more details */}
+              <div className="pt-2 sm:pt-3 text-center border-t border-slate-100 flex flex-wrap items-center justify-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium">
+                <span className="flex items-center gap-1.5 text-slate-500">
+                  <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  For more details :
+                </span>
+                <a
+                  href="tel:+917907531608"
+                  className="font-bold text-amber-700 hover:text-amber-800 hover:underline transition inline-flex items-center gap-1"
+                >
+                  +91 79075 31608
+                </a>
+              </div>
             </form>
           </div>
         </section>
@@ -583,7 +738,7 @@ export default function IluOrderPageClient() {
                   href="/ilu/order-status"
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 text-center"
                 >
-                  <span>Check Order Status</span>
+                  <span>Check Leader Board</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -596,55 +751,6 @@ export default function IluOrderPageClient() {
                 alt="Kerala Payasam Bowl"
                 className="w-full h-auto object-contain drop-shadow-md"
               />
-            </div>
-          </div>
-        </section>
-
-        {/* 4 FEATURE PILLARS IN ENGLISH */}
-        <section id="features" className="pt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {/* Feature 1 */}
-            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
-              <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
-                <Users className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-black text-slate-900">Community Spirit</h4>
-              <p className="text-xs text-slate-500 font-medium">
-                Clubs coming together for a greater cause
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
-              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
-                <Heart className="w-5 h-5 fill-rose-600" />
-              </div>
-              <h4 className="text-sm font-black text-slate-900">Support a Cause</h4>
-              <p className="text-xs text-slate-500 font-medium">
-                Your participation creates real impact
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
-              <div className="w-12 h-12 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
-                <Droplet className="w-5 h-5 fill-cyan-600/30" />
-              </div>
-              <h4 className="text-sm font-black text-slate-900">Spread Kindness</h4>
-              <p className="text-xs text-slate-500 font-medium">
-                Every portion makes a difference
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="p-5 rounded-2xl bg-white/95 border border-slate-100 shadow-sm hover:shadow-md transition space-y-2.5 text-center sm:text-left">
-              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto sm:mx-0 shadow-sm">
-                <Users className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-black text-slate-900">Foster Inclusion</h4>
-              <p className="text-xs text-slate-500 font-medium">
-                Together for a brighter, more inclusive world
-              </p>
             </div>
           </div>
         </section>
