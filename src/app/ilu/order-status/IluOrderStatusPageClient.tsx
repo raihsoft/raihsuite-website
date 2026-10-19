@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
   Search,
   RefreshCw,
-  Soup,
   ArrowLeft,
   AlertTriangle,
   BarChart3,
@@ -15,9 +14,57 @@ import {
 } from 'lucide-react';
 import { OrderStatusResponse, fetchOrderStatusApi } from '@/lib/iluService';
 
+function useAnimatedCount(targetNumber: number, duration: number = 2200) {
+  const [displayedCount, setDisplayedCount] = useState<number>(0);
+  const [overlayProgress, setOverlayProgress] = useState<number>(0);
+  const prevTargetRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!targetNumber || targetNumber <= 0) {
+      setDisplayedCount(0);
+      setOverlayProgress(0);
+      prevTargetRef.current = 0;
+      return;
+    }
+
+    const startVal = prevTargetRef.current;
+    let startTimestamp: number | null = null;
+    let animationFrameId: number;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+      const rawProgress = Math.min(elapsed / duration, 1);
+      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+
+      const current = Math.round(startVal + (targetNumber - startVal) * easedProgress);
+      setDisplayedCount(current);
+      setOverlayProgress(easedProgress);
+
+      if (rawProgress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      } else {
+        setDisplayedCount(targetNumber);
+        setOverlayProgress(1);
+        prevTargetRef.current = targetNumber;
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [targetNumber, duration]);
+
+  return { displayedCount, overlayProgress };
+}
+
 export default function IluOrderStatusPageClient() {
   const [data, setData] = useState<OrderStatusResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const totalLiters = data?.organizationTotalLiters ?? 0;
+  const { displayedCount, overlayProgress } = useAnimatedCount(loading ? 0 : totalLiters);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -69,12 +116,6 @@ export default function IluOrderStatusPageClient() {
     );
   }, [rankedSummaries, searchQuery]);
 
-  // Max liters for progress bar proportion calculation
-  const maxLiters = useMemo(() => {
-    if (!data?.summaries || data.summaries.length === 0) return 5;
-    const maxVal = Math.max(...data.summaries.map((s) => s.totalQuantityLiters || 0));
-    return maxVal > 0 ? maxVal : 5;
-  }, [data]);
 
   return (
     <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
@@ -139,27 +180,68 @@ export default function IluOrderStatusPageClient() {
           </div>
         )}
 
-        {/* TOTAL QUANTITY ORDERED STAT CARD */}
+        {/* TOTAL QUANTITY ORDERED STAT CARD - STANDOUT SHOWCASE MILESTONE */}
         <section>
-          <div className="rounded-3xl bg-white border-2 border-slate-200/90 p-5 sm:p-7 md:p-8 shadow-xl shadow-slate-900/5 hover:shadow-2xl transition flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6 relative overflow-hidden">
-            <div className="flex items-center gap-3.5 sm:gap-5 w-full sm:w-auto">
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#ea183c]/10 via-[#f3631f]/10 to-[#faa70c]/10 text-[#ea183c] shrink-0 border border-[#ea183c]/15 shadow-sm">
-                <Soup className="w-8 h-8 sm:w-10 sm:h-10 stroke-[2.2]" />
-              </div>
-              <div>
-                <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
-                  Total Quantity Ordered
-                </p>
-              </div>
+          <div className="rounded-3xl bg-gradient-to-br from-[#700824] via-[#941334] via-[#b91c1c] to-[#c2410c] p-6 sm:p-8 md:p-9 shadow-2xl shadow-rose-950/25 border-2 border-white/20 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
+            {/* Top hairline border glow */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
+            {/* Slowly Faded Gradient Overlay increasing as numbers climb */}
+            <div
+              className="absolute inset-0 pointer-events-none transition-opacity duration-700 ease-out z-0"
+              style={{
+                opacity: overlayProgress,
+              }}
+            >
+              {/* Expanding warm light wash across the card */}
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-white/0 via-amber-200/15 to-white/20 transition-transform duration-500 ease-out"
+                style={{
+                  transform: `scaleX(${0.1 + overlayProgress * 0.9})`,
+                  transformOrigin: 'right center',
+                }}
+              />
+              {/* Luminous soft ambient radial glow behind the numbers */}
+              <div
+                className="absolute -right-16 -top-16 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-amber-300/30 blur-3xl pointer-events-none transition-transform duration-500 ease-out"
+                style={{
+                  transform: `scale(${0.6 + overlayProgress * 0.5})`,
+                  opacity: 0.3 + overlayProgress * 0.7,
+                }}
+              />
+              {/* Secondary deep glow */}
+              <div
+                className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-rose-400/20 blur-3xl pointer-events-none"
+              />
             </div>
 
-            <div className="w-full sm:w-auto text-left sm:text-right bg-slate-50 sm:bg-transparent p-3.5 sm:p-0 rounded-2xl sm:rounded-none border sm:border-0 border-slate-100">
-              <div className="text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
-                {loading ? '...' : `${data?.organizationTotalLiters ?? 0} L`}
+            {/* Left Content */}
+            <div className="relative z-10 max-w-xl space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-amber-200 text-[11px] sm:text-xs font-bold tracking-wider uppercase shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-300"></span>
+                </span>
+                <span>Total Quantity Ordered</span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1">
-                Live total from ILU Foundation
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                Together we achieved.
+              </h2>
+              <p className="text-xs sm:text-sm text-rose-100/90 font-medium">
+                Liters recorded across all participating clubs
               </p>
+            </div>
+
+            {/* Right Metric Showcase */}
+            <div className="w-full md:w-auto relative z-10 flex justify-start md:justify-end">
+              <div className="bg-black/25 md:bg-white/10 backdrop-blur-md px-6 py-4 sm:px-8 sm:py-5 rounded-2xl sm:rounded-3xl border border-white/25 shadow-xl flex items-baseline gap-2.5">
+                <span className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight drop-shadow-lg font-mono">
+                  {loading ? '...' : displayedCount.toLocaleString()}
+                </span>
+                <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-300 drop-shadow-sm">
+                  Liters
+                </span>
+              </div>
             </div>
           </div>
         </section>
@@ -218,9 +300,6 @@ export default function IluOrderStatusPageClient() {
                     <th scope="col" className="py-4 px-6 font-bold text-right">
                       Total Quantity
                     </th>
-                    <th scope="col" className="py-4 px-6 w-48 sm:w-60 font-bold">
-                      Progress
-                    </th>
                   </tr>
                 </thead>
 
@@ -238,14 +317,11 @@ export default function IluOrderStatusPageClient() {
                         <td className="py-4 px-6 text-right">
                           <div className="h-4 bg-amber-100 rounded w-16 ml-auto" />
                         </td>
-                        <td className="py-4 px-6">
-                          <div className="h-3 bg-slate-100 rounded-full w-full" />
-                        </td>
                       </tr>
                     ))
                   ) : filteredSummaries.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-slate-500 font-medium">
+                      <td colSpan={3} className="py-12 text-center text-slate-500 font-medium">
                         {searchQuery
                           ? `No clubs found matching "${searchQuery}"`
                           : 'No orders recorded yet.'}
@@ -253,11 +329,6 @@ export default function IluOrderStatusPageClient() {
                     </tr>
                   ) : (
                     filteredSummaries.map((summary) => {
-                      const percent = Math.min(
-                        100,
-                        Math.max(4, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
-                      );
-
                       const isFirst = summary.rank === 1;
                       const isSecond = summary.rank === 2;
                       const isThird = summary.rank === 3;
@@ -340,16 +411,6 @@ export default function IluOrderStatusPageClient() {
                               {summary.totalQuantityLiters} L
                             </span>
                           </td>
-
-                          {/* Progress */}
-                          <td className="py-4 px-6">
-                            <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                              <div
-                                className="bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] h-full rounded-full transition-all duration-500"
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </td>
                         </tr>
                       );
                     })
@@ -371,7 +432,6 @@ export default function IluOrderStatusPageClient() {
                       </div>
                       <div className="h-5 w-12 bg-amber-100 rounded" />
                     </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full" />
                   </div>
                 ))
               ) : filteredSummaries.length === 0 ? (
@@ -382,11 +442,6 @@ export default function IluOrderStatusPageClient() {
                 </div>
               ) : (
                 filteredSummaries.map((summary) => {
-                  const percent = Math.min(
-                    100,
-                    Math.max(4, Math.round((summary.totalQuantityLiters / maxLiters) * 100))
-                  );
-
                   const isFirst = summary.rank === 1;
                   const isSecond = summary.rank === 2;
                   const isThird = summary.rank === 3;
@@ -471,19 +526,6 @@ export default function IluOrderStatusPageClient() {
                             {summary.totalQuantityLiters} L
                           </span>
                         </div>
-                      </div>
-
-                      {/* Progress Bar with Percent */}
-                      <div className="mt-2.5 flex items-center gap-2">
-                        <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] h-full rounded-full transition-all duration-500"
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400 shrink-0">
-                          {percent}%
-                        </span>
                       </div>
                     </div>
                   );
