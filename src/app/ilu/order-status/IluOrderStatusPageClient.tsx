@@ -135,8 +135,8 @@ export default function IluOrderStatusPageClient() {
         <div className="absolute inset-0 bg-[#fffdf7]/40" />
       </div>
 
-      {/* HERO SECTION: FULL WIDTH BANNER WITH FESTIVAL GRADIENT BORDER */}
-      <section className="w-full relative z-10 shadow-md">
+      {/* HERO SECTION: FULL WIDTH BANNER WITH FESTIVAL GRADIENT BORDER (DESKTOP ONLY) */}
+      <section className="hidden sm:block w-full relative z-10 shadow-md">
         <div className="w-full relative">
           <picture>
             <source
@@ -182,7 +182,7 @@ export default function IluOrderStatusPageClient() {
 
         {/* TOTAL QUANTITY ORDERED STAT CARD - STANDOUT SHOWCASE MILESTONE */}
         <section>
-          <div className="rounded-3xl bg-gradient-to-br from-[#700824] via-[#941334] via-[#b91c1c] to-[#c2410c] p-6 sm:p-8 md:p-9 shadow-2xl shadow-rose-950/25 border-2 border-white/20 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
+          <div className="rounded-3xl bg-gradient-to-r from-[#800720] via-[#be123c] via-[#ea580c] to-[#f59e0b] p-5 sm:p-7 md:p-8 shadow-2xl shadow-rose-950/20 border-2 border-white/20 text-white relative overflow-hidden min-h-[140px] sm:min-h-[160px] flex flex-col justify-between">
             {/* Top hairline border glow */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
 
@@ -203,45 +203,31 @@ export default function IluOrderStatusPageClient() {
               />
               {/* Luminous soft ambient radial glow behind the numbers */}
               <div
-                className="absolute -right-16 -top-16 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-amber-300/30 blur-3xl pointer-events-none transition-transform duration-500 ease-out"
+                className="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform duration-500 ease-out"
                 style={{
-                  transform: `scale(${0.6 + overlayProgress * 0.5})`,
+                  transform: `scale(${0.7 + overlayProgress * 0.4})`,
                   opacity: 0.3 + overlayProgress * 0.7,
                 }}
-              />
-              {/* Secondary deep glow */}
-              <div
-                className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-rose-400/20 blur-3xl pointer-events-none"
-              />
+              >
+                <div className="w-96 h-96 rounded-full bg-amber-300/25 blur-3xl" />
+              </div>
             </div>
 
-            {/* Left Content */}
-            <div className="relative z-10 max-w-xl space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-amber-200 text-[11px] sm:text-xs font-bold tracking-wider uppercase shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-300"></span>
-                </span>
-                <span>Total Quantity Ordered</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-                Together we achieved.
+            {/* Top-left: Together we achieved */}
+            <div className="relative z-10 text-left">
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight drop-shadow-sm">
+                Together we achieved
               </h2>
-              <p className="text-xs sm:text-sm text-rose-100/90 font-medium">
-                Liters recorded across all participating clubs
-              </p>
             </div>
 
-            {/* Right Metric Showcase */}
-            <div className="w-full md:w-auto relative z-10 flex justify-start md:justify-end">
-              <div className="bg-black/25 md:bg-white/10 backdrop-blur-md px-6 py-4 sm:px-8 sm:py-5 rounded-2xl sm:rounded-3xl border border-white/25 shadow-xl flex items-baseline gap-2.5">
-                <span className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight drop-shadow-lg font-mono">
-                  {loading ? '...' : displayedCount.toLocaleString()}
-                </span>
-                <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-300 drop-shadow-sm">
-                  Liters
-                </span>
-              </div>
+            {/* Center: Big Highlighted Count + LTR */}
+            <div className="relative z-10 flex items-baseline justify-center gap-2 sm:gap-3 py-2 sm:py-3 my-auto">
+              <span className="text-5xl sm:text-7xl md:text-8xl font-black text-yellow-300 font-mono tracking-tight drop-shadow-[0_4px_16px_rgba(250,204,21,0.45)]">
+                {loading ? '...' : displayedCount.toLocaleString()}
+              </span>
+              <span className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-wider drop-shadow-md">
+                LTR
+              </span>
             </div>
           </div>
         </section>
