@@ -635,7 +635,7 @@ export default function IluOrderStatusPageClient() {
             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/25 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Order Page</span>
+            <span>Back to Order Submission</span>
           </Link>
         </section>
       </div>
