@@ -37,7 +37,7 @@ import {
 } from '@/lib/iluService';
 import { broadcastOrderPlaced, subscribeToOrderEvents } from '@/lib/iluSync';
 
-function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000) {
+function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000 / 3) {
   const [displayedCount, setDisplayedCount] = useState<number>(0);
   const [overlayProgress, setOverlayProgress] = useState<number>(0);
   const displayedCountRef = useRef<number>(0);
@@ -84,8 +84,8 @@ function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000) {
       return;
     }
 
-    // Advance at a steady rate of 3 counts per second, clamping the final step.
-    const stepSize = 3;
+    // Advance one count at a time, three times per second.
+    const stepSize = 1;
 
     // Clear any previous interval before starting the new stepping
     if (intervalRef.current) {
