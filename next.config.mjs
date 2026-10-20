@@ -23,6 +23,15 @@ const nextConfig = {
   experimental: {
     // serverActions: true,
   },
+
+  async headers() {
+    return [
+      {
+        source: '/ilu/sw.js',
+        headers: [{ key: 'Service-Worker-Allowed', value: '/ilu' }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

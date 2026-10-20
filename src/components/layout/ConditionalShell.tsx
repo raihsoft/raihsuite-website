@@ -7,6 +7,7 @@ import Navbar from '@/components/navbar/navbar';
 import PageTransition from '@/components/layout/PageTransition';
 import IluHeader from '@/components/ilu/IluHeader';
 import IluFooter from '@/components/ilu/IluFooter';
+import IluPwaInstallPrompt from '@/components/ilu/IluPwaInstallPrompt';
 
 export default function ConditionalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,6 +19,7 @@ export default function ConditionalShell({ children }: { children: React.ReactNo
         <IluHeader />
         <main className="flex-grow pt-20">{children}</main>
         <IluFooter />
+        <IluPwaInstallPrompt />
       </div>
     );
   }
