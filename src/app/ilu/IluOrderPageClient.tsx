@@ -35,49 +35,97 @@ import {
   fetchOrderStatusApi,
   OrderStatusResponse,
 } from '@/lib/iluService';
+import { broadcastOrderPlaced, subscribeToOrderEvents } from '@/lib/iluSync';
 
-function useAnimatedCount(targetNumber: number, duration: number = 2200) {
+function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000 / 3) {
   const [displayedCount, setDisplayedCount] = useState<number>(0);
   const [overlayProgress, setOverlayProgress] = useState<number>(0);
-  const prevTargetRef = useRef<number>(0);
+  const displayedCountRef = useRef<number>(0);
+  const isInitializedRef = useRef<boolean>(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // If targetNumber is not a positive number yet, hold current or zero
     if (!targetNumber || targetNumber <= 0) {
-      setDisplayedCount(0);
-      setOverlayProgress(0);
-      prevTargetRef.current = 0;
+      if (!isInitializedRef.current) {
+        setDisplayedCount(0);
+        displayedCountRef.current = 0;
+        setOverlayProgress(0);
+      }
       return;
     }
 
-    const startVal = prevTargetRef.current;
-    let startTimestamp: number | null = null;
-    let animationFrameId: number;
+    // On initial load: display current target immediately without delay
+    if (!isInitializedRef.current) {
+      setDisplayedCount(targetNumber);
+      displayedCountRef.current = targetNumber;
+      setOverlayProgress(1);
+      isInitializedRef.current = true;
+      return;
+    }
 
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const elapsed = timestamp - startTimestamp;
-      const rawProgress = Math.min(elapsed / duration, 1);
-      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+    const currentVal = displayedCountRef.current;
+    const diff = targetNumber - currentVal;
 
-      const current = Math.round(startVal + (targetNumber - startVal) * easedProgress);
-      setDisplayedCount(current);
-      setOverlayProgress(easedProgress);
+    // If target equals current value, nothing to do
+    if (diff === 0) {
+      return;
+    }
 
-      if (rawProgress < 1) {
-        animationFrameId = requestAnimationFrame(step);
-      } else {
-        setDisplayedCount(targetNumber);
-        setOverlayProgress(1);
-        prevTargetRef.current = targetNumber;
+    // If target decreased (e.g. data correction), update directly
+    if (diff < 0) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
+      setDisplayedCount(targetNumber);
+      displayedCountRef.current = targetNumber;
+      setOverlayProgress(1);
+      return;
+    }
+
+    // Keep the first and last 60 counts at three per second. Increase the
+    // middle section by three counts per second for every additional 100 counts.
+    const baseRate = 1000 / stepIntervalMs;
+    const middleRate = diff > 120 ? baseRate + 3 * Math.ceil((diff - 120) / 100) : baseRate;
+    const animationStart = currentVal;
+    const acceleratedMiddleCount = diff > 120 ? diff - 120 : 0;
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    setOverlayProgress(1);
+
+    const scheduleNextStep = () => {
+      const progressed = displayedCountRef.current - animationStart;
+      const isAcceleratedMiddle =
+        acceleratedMiddleCount > 0 && progressed >= 60 && progressed < 60 + acceleratedMiddleCount;
+      const interval = isAcceleratedMiddle ? 1000 / middleRate : stepIntervalMs;
+
+      timeoutRef.current = setTimeout(() => {
+        const nextVal = Math.min(targetNumber, displayedCountRef.current + 1);
+        displayedCountRef.current = nextVal;
+        setDisplayedCount(nextVal);
+
+        if (nextVal >= targetNumber) {
+          timeoutRef.current = null;
+        } else {
+          scheduleNextStep();
+        }
+      }, interval);
     };
 
-    animationFrameId = requestAnimationFrame(step);
+    scheduleNextStep();
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
-  }, [targetNumber, duration]);
+  }, [targetNumber, stepIntervalMs]);
 
   return { displayedCount, overlayProgress };
 }
@@ -138,7 +186,7 @@ export default function IluOrderPageClient() {
   const [orderStatusData, setOrderStatusData] = useState<OrderStatusResponse | null>(null);
   const [loadingOrderStatus, setLoadingOrderStatus] = useState<boolean>(true);
   const totalLiters = orderStatusData?.organizationTotalLiters ?? 0;
-  const { displayedCount, overlayProgress } = useAnimatedCount(loadingOrderStatus ? 0 : totalLiters);
+  const { displayedCount, overlayProgress } = useAnimatedCount(totalLiters);
 
   // Searchable dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -205,21 +253,56 @@ export default function IluOrderPageClient() {
     }
   };
 
-  const loadOrderStatusTotal = async () => {
+  const isFetchingOrderStatusRef = useRef(false);
+  const orderStatusRefreshQueuedRef = useRef(false);
+
+  const loadOrderStatusTotal = async (isSilent = false) => {
+    if (isFetchingOrderStatusRef.current) {
+      orderStatusRefreshQueuedRef.current = true;
+      return;
+    }
+
     try {
-      setLoadingOrderStatus(true);
+      isFetchingOrderStatusRef.current = true;
+      if (!isSilent) {
+        setLoadingOrderStatus(true);
+      }
       const res = await fetchOrderStatusApi();
-      setOrderStatusData(res);
+      if (res && typeof res.organizationTotalLiters === 'number') {
+        setOrderStatusData(res);
+      }
     } catch {
       // Keep graceful fallback
     } finally {
-      setLoadingOrderStatus(false);
+      if (!isSilent) {
+        setLoadingOrderStatus(false);
+      }
+      isFetchingOrderStatusRef.current = false;
+      if (orderStatusRefreshQueuedRef.current) {
+        orderStatusRefreshQueuedRef.current = false;
+        void loadOrderStatusTotal(true);
+      }
     }
   };
 
   useEffect(() => {
     loadClubs(false);
-    loadOrderStatusTotal();
+    loadOrderStatusTotal(false);
+
+    // Auto-fetch updated count every 10 seconds in the background
+    const pollInterval = setInterval(() => {
+      loadOrderStatusTotal(true);
+    }, 10000);
+
+    // Cross-tab real-time sync: when an order is placed in another tab, immediately update
+    const unsubscribe = subscribeToOrderEvents(() => {
+      loadOrderStatusTotal(true);
+    });
+
+    return () => {
+      clearInterval(pollInterval);
+      unsubscribe();
+    };
   }, []);
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -287,7 +370,11 @@ export default function IluOrderPageClient() {
       setSelectedClub(null);
       setQuantity('');
       setSecurityCode('');
-      loadOrderStatusTotal();
+      loadOrderStatusTotal(true);
+      broadcastOrderPlaced();
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'ഓർഡർ സമർപ്പിക്കുന്നതിൽ പിശക് സംഭവിച്ചു.';
       setValidationError(msg);
@@ -789,7 +876,7 @@ export default function IluOrderPageClient() {
 
         {/* SUCCESS MODAL */}
         {submittedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/20 animate-fade-in pointer-events-auto">
             <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-200 p-6 sm:p-8 shadow-2xl text-slate-900 text-center space-y-4">
               <div className="inline-flex p-3 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200">
                 <PartyPopper className="w-8 h-8 animate-bounce" />
@@ -854,7 +941,7 @@ export default function IluOrderPageClient() {
                   href="/ilu/order-status"
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 text-center"
                 >
-                  <span>Check Leader Board</span>
+                  <span>Leaderboard</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
