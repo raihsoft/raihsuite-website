@@ -13,49 +13,79 @@ import {
   Medal,
 } from 'lucide-react';
 import { OrderStatusResponse, fetchOrderStatusApi } from '@/lib/iluService';
+import { subscribeToOrderEvents } from '@/lib/iluSync';
 
-function useAnimatedCount(targetNumber: number, duration: number = 2200) {
+function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 250) {
   const [displayedCount, setDisplayedCount] = useState<number>(0);
   const [overlayProgress, setOverlayProgress] = useState<number>(0);
   const prevTargetRef = useRef<number>(0);
+  const isInitializedRef = useRef<boolean>(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
     if (!targetNumber || targetNumber <= 0) {
       setDisplayedCount(0);
       setOverlayProgress(0);
       prevTargetRef.current = 0;
+      isInitializedRef.current = false;
+      return;
+    }
+
+    // On initial load or reload: display current value immediately without delay
+    if (!isInitializedRef.current) {
+      setDisplayedCount(targetNumber);
+      setOverlayProgress(1);
+      prevTargetRef.current = targetNumber;
+      isInitializedRef.current = true;
+      return;
+    }
+
+    // If target hasn't changed, keep current value
+    if (targetNumber === prevTargetRef.current) {
       return;
     }
 
     const startVal = prevTargetRef.current;
-    let startTimestamp: number | null = null;
-    let animationFrameId: number;
+    const diff = targetNumber - startVal;
 
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const elapsed = timestamp - startTimestamp;
-      const rawProgress = Math.min(elapsed / duration, 1);
-      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+    // If target decreased (e.g. data correction), update directly
+    if (diff < 0) {
+      setDisplayedCount(targetNumber);
+      setOverlayProgress(1);
+      prevTargetRef.current = targetNumber;
+      return;
+    }
 
-      const current = Math.round(startVal + (targetNumber - startVal) * easedProgress);
-      setDisplayedCount(current);
-      setOverlayProgress(easedProgress);
+    // Step-by-step increment every 250ms until reaching targetNumber
+    const stepSize = diff <= 15 ? 1 : Math.max(1, Math.ceil(diff / 10));
+    let currentVal = startVal;
+    setOverlayProgress(1);
 
-      if (rawProgress < 1) {
-        animationFrameId = requestAnimationFrame(step);
-      } else {
-        setDisplayedCount(targetNumber);
-        setOverlayProgress(1);
+    intervalRef.current = setInterval(() => {
+      currentVal = Math.min(targetNumber, currentVal + stepSize);
+      setDisplayedCount(currentVal);
+
+      if (currentVal >= targetNumber) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         prevTargetRef.current = targetNumber;
       }
-    };
-
-    animationFrameId = requestAnimationFrame(step);
+    }, stepIntervalMs);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
-  }, [targetNumber, duration]);
+  }, [targetNumber, stepIntervalMs]);
 
   return { displayedCount, overlayProgress };
 }
@@ -68,28 +98,64 @@ export default function IluOrderStatusPageClient() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const isFetchingRef = useRef(false);
+  const refreshQueuedRef = useRef(false);
 
-  const loadOrderStatus = async (isRefresh = false) => {
+  const loadOrderStatus = async (mode: 'initial' | 'manual' | 'silent' | boolean = 'initial') => {
+    if (isFetchingRef.current) {
+      refreshQueuedRef.current = true;
+      return;
+    }
+    const resolvedMode = mode === true ? 'manual' : mode === false ? 'initial' : mode;
+
     try {
-      if (isRefresh) {
+      isFetchingRef.current = true;
+      if (resolvedMode === 'manual') {
         setRefreshing(true);
-      } else {
+      } else if (resolvedMode === 'initial') {
         setLoading(true);
       }
       setError(null);
       const res = await fetchOrderStatusApi();
-      setData(res);
+      if (res) {
+        setData(res);
+      }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'ഓർഡർ വിവരങ്ങൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.';
-      setError(msg);
+      if (resolvedMode !== 'silent') {
+        const msg = err instanceof Error ? err.message : 'ഓർഡർ വിവരങ്ങൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.';
+        setError(msg);
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (resolvedMode === 'manual') {
+        setRefreshing(false);
+      } else if (resolvedMode === 'initial') {
+        setLoading(false);
+      }
+      isFetchingRef.current = false;
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false;
+        void loadOrderStatus('silent');
+      }
     }
   };
 
   useEffect(() => {
-    loadOrderStatus();
+    loadOrderStatus('initial');
+
+    // Auto-fetch updated count every 10 seconds in the background
+    const pollInterval = setInterval(() => {
+      loadOrderStatus('silent');
+    }, 10000);
+
+    // Cross-tab real-time sync: when an order is placed anywhere, immediately refresh
+    const unsubscribe = subscribeToOrderEvents(() => {
+      loadOrderStatus('silent');
+    });
+
+    return () => {
+      clearInterval(pollInterval);
+      unsubscribe();
+    };
   }, []);
 
   const rankedSummaries = useMemo(() => {
