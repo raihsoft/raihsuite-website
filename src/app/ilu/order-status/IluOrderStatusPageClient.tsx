@@ -15,7 +15,7 @@ import {
 import { OrderStatusResponse, fetchOrderStatusApi } from '@/lib/iluService';
 import { subscribeToOrderEvents } from '@/lib/iluSync';
 
-function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 250) {
+function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000) {
   const [displayedCount, setDisplayedCount] = useState<number>(0);
   const [overlayProgress, setOverlayProgress] = useState<number>(0);
   const displayedCountRef = useRef<number>(0);
@@ -62,10 +62,8 @@ function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 250) {
       return;
     }
 
-    // Step-by-step increment every 250ms until reaching targetNumber
-    // For diff <= 50: full scroll 1-by-1 (+1 per tick, no short fixed-time compression)
-    // For diff > 50: 1:3 ratio (+3 per tick)
-    const stepSize = diff <= 50 ? 1 : Math.max(3, Math.ceil(diff / 100));
+    // Advance at a steady rate of 3 counts per second, clamping the final step.
+    const stepSize = 3;
 
     // Clear any previous interval before starting the new stepping
     if (intervalRef.current) {
