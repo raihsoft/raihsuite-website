@@ -42,7 +42,7 @@ function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000 / 
   const [overlayProgress, setOverlayProgress] = useState<number>(0);
   const displayedCountRef = useRef<number>(0);
   const isInitializedRef = useRef<boolean>(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // If targetNumber is not a positive number yet, hold current or zero
@@ -74,9 +74,9 @@ function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000 / 
 
     // If target decreased (e.g. data correction), update directly
     if (diff < 0) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
       setDisplayedCount(targetNumber);
       displayedCountRef.current = targetNumber;
@@ -84,34 +84,45 @@ function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000 / 
       return;
     }
 
-    // Advance one count at a time, three times per second.
-    const stepSize = 1;
+    // Keep the first and last 60 counts at three per second. Increase the
+    // middle section by three counts per second for every additional 100 counts.
+    const baseRate = 1000 / stepIntervalMs;
+    const middleRate = diff > 120 ? baseRate + 3 * Math.ceil((diff - 120) / 100) : baseRate;
+    const animationStart = currentVal;
+    const acceleratedMiddleCount = diff > 120 ? diff - 120 : 0;
 
-    // Clear any previous interval before starting the new stepping
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
 
     setOverlayProgress(1);
 
-    intervalRef.current = setInterval(() => {
-      const nextVal = Math.min(targetNumber, displayedCountRef.current + stepSize);
-      displayedCountRef.current = nextVal;
-      setDisplayedCount(nextVal);
+    const scheduleNextStep = () => {
+      const progressed = displayedCountRef.current - animationStart;
+      const isAcceleratedMiddle =
+        acceleratedMiddleCount > 0 && progressed >= 60 && progressed < 60 + acceleratedMiddleCount;
+      const interval = isAcceleratedMiddle ? 1000 / middleRate : stepIntervalMs;
 
-      if (nextVal >= targetNumber) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
+      timeoutRef.current = setTimeout(() => {
+        const nextVal = Math.min(targetNumber, displayedCountRef.current + 1);
+        displayedCountRef.current = nextVal;
+        setDisplayedCount(nextVal);
+
+        if (nextVal >= targetNumber) {
+          timeoutRef.current = null;
+        } else {
+          scheduleNextStep();
         }
-      }
-    }, stepIntervalMs);
+      }, interval);
+    };
+
+    scheduleNextStep();
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     };
   }, [targetNumber, stepIntervalMs]);
