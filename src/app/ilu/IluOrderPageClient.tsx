@@ -40,64 +40,73 @@ import { broadcastOrderPlaced, subscribeToOrderEvents } from '@/lib/iluSync';
 function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 250) {
   const [displayedCount, setDisplayedCount] = useState<number>(0);
   const [overlayProgress, setOverlayProgress] = useState<number>(0);
-  const prevTargetRef = useRef<number>(0);
+  const displayedCountRef = useRef<number>(0);
   const isInitializedRef = useRef<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // If targetNumber is not a positive number yet, hold current or zero
+    if (!targetNumber || targetNumber <= 0) {
+      if (!isInitializedRef.current) {
+        setDisplayedCount(0);
+        displayedCountRef.current = 0;
+        setOverlayProgress(0);
+      }
+      return;
+    }
+
+    // On initial load: display current target immediately without delay
+    if (!isInitializedRef.current) {
+      setDisplayedCount(targetNumber);
+      displayedCountRef.current = targetNumber;
+      setOverlayProgress(1);
+      isInitializedRef.current = true;
+      return;
+    }
+
+    const currentVal = displayedCountRef.current;
+    const diff = targetNumber - currentVal;
+
+    // If target equals current value, nothing to do
+    if (diff === 0) {
+      return;
+    }
+
+    // If target decreased (e.g. data correction), update directly
+    if (diff < 0) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setDisplayedCount(targetNumber);
+      displayedCountRef.current = targetNumber;
+      setOverlayProgress(1);
+      return;
+    }
+
+    // Step-by-step increment every 250ms until reaching targetNumber
+    // For diff <= 50: full scroll 1-by-1 (+1 per tick, no short fixed-time compression)
+    // For diff > 50: 1:3 ratio (+3 per tick)
+    const stepSize = diff <= 50 ? 1 : Math.max(3, Math.ceil(diff / 100));
+
+    // Clear any previous interval before starting the new stepping
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
 
-    if (!targetNumber || targetNumber <= 0) {
-      setDisplayedCount(0);
-      setOverlayProgress(0);
-      prevTargetRef.current = 0;
-      isInitializedRef.current = false;
-      return;
-    }
-
-    // On initial load or reload: display current value immediately without delay
-    if (!isInitializedRef.current) {
-      setDisplayedCount(targetNumber);
-      setOverlayProgress(1);
-      prevTargetRef.current = targetNumber;
-      isInitializedRef.current = true;
-      return;
-    }
-
-    // If target hasn't changed, keep current value
-    if (targetNumber === prevTargetRef.current) {
-      return;
-    }
-
-    const startVal = prevTargetRef.current;
-    const diff = targetNumber - startVal;
-
-    // If target decreased (e.g. data correction), update directly
-    if (diff < 0) {
-      setDisplayedCount(targetNumber);
-      setOverlayProgress(1);
-      prevTargetRef.current = targetNumber;
-      return;
-    }
-
-    // Step-by-step increment every 250ms until reaching targetNumber
-    const stepSize = diff <= 15 ? 1 : Math.max(1, Math.ceil(diff / 10));
-    let currentVal = startVal;
     setOverlayProgress(1);
 
     intervalRef.current = setInterval(() => {
-      currentVal = Math.min(targetNumber, currentVal + stepSize);
-      setDisplayedCount(currentVal);
+      const nextVal = Math.min(targetNumber, displayedCountRef.current + stepSize);
+      displayedCountRef.current = nextVal;
+      setDisplayedCount(nextVal);
 
-      if (currentVal >= targetNumber) {
+      if (nextVal >= targetNumber) {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
-        prevTargetRef.current = targetNumber;
       }
     }, stepIntervalMs);
 
@@ -168,7 +177,7 @@ export default function IluOrderPageClient() {
   const [orderStatusData, setOrderStatusData] = useState<OrderStatusResponse | null>(null);
   const [loadingOrderStatus, setLoadingOrderStatus] = useState<boolean>(true);
   const totalLiters = orderStatusData?.organizationTotalLiters ?? 0;
-  const { displayedCount, overlayProgress } = useAnimatedCount(loadingOrderStatus ? 0 : totalLiters);
+  const { displayedCount, overlayProgress } = useAnimatedCount(totalLiters);
 
   // Searchable dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -354,6 +363,9 @@ export default function IluOrderPageClient() {
       setSecurityCode('');
       loadOrderStatusTotal(true);
       broadcastOrderPlaced();
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'ഓർഡർ സമർപ്പിക്കുന്നതിൽ പിശക് സംഭവിച്ചു.';
       setValidationError(msg);
@@ -855,7 +867,7 @@ export default function IluOrderPageClient() {
 
         {/* SUCCESS MODAL */}
         {submittedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/20 animate-fade-in pointer-events-auto">
             <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-200 p-6 sm:p-8 shadow-2xl text-slate-900 text-center space-y-4">
               <div className="inline-flex p-3 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200">
                 <PartyPopper className="w-8 h-8 animate-bounce" />
