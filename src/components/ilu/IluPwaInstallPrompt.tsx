@@ -101,29 +101,30 @@ export default function IluPwaInstallPrompt() {
   if (!open || installed) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/45 p-3 sm:items-center sm:p-6" role="presentation">
+    <div className="fixed inset-x-0 top-0 z-[70] flex justify-center px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:inset-0 sm:items-center sm:bg-slate-950/45 sm:p-6" role="presentation">
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="ilu-install-title"
-        className="w-full max-w-sm rounded-3xl border border-white/70 bg-white p-5 shadow-2xl sm:p-6"
+        className="w-full max-w-md rounded-2xl border border-white/70 bg-white p-3 shadow-xl sm:max-w-sm sm:rounded-3xl sm:p-6 sm:shadow-2xl"
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-[#e60368]">
-            <Download aria-hidden="true" className="h-6 w-6" />
+        <div className="flex items-center gap-3 sm:mb-4 sm:items-start sm:justify-between">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-[#e60368] sm:h-12 sm:w-12 sm:rounded-2xl">
+            <Download aria-hidden="true" className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
-          <button type="button" onClick={dismiss} aria-label="Close install prompt" className="rounded-full p-2 text-slate-500 hover:bg-slate-100">
-            <X aria-hidden="true" className="h-5 w-5" />
+          <div className="min-w-0 flex-1">
+            <h2 id="ilu-install-title" className="text-sm font-bold text-slate-900 sm:text-xl">Install ILU Challenge</h2>
+            <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">
+              Add it to your home screen for quick access. The app stays up to date from the website.
+            </p>
+          </div>
+          <button type="button" onClick={dismiss} aria-label="Close install prompt" className="-mr-1 -mt-1 self-start rounded-full p-2 text-slate-500 hover:bg-slate-100">
+            <X aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
-        <h2 id="ilu-install-title" className="text-xl font-bold text-slate-900">Install ILU Challenge</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Add it to your home screen for quick access. The app stays up to date from the website.
-        </p>
-
         {showInstructions && (
-          <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm leading-5 text-slate-700">
+          <div className="mt-3 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-slate-700 sm:text-sm">
             {ios ? (
               <p>In Safari, tap <strong>Share</strong>, then choose <strong>Add to Home Screen</strong>.</p>
             ) : (
@@ -132,11 +133,11 @@ export default function IluPwaInstallPrompt() {
           </div>
         )}
 
-        <div className="mt-5 flex items-center justify-end gap-2">
-          <button type="button" onClick={dismiss} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+        <div className="mt-2 flex items-center justify-end gap-2 sm:mt-5">
+          <button type="button" onClick={dismiss} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm">
             Later
           </button>
-          <button type="button" onClick={install} className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700">
+          <button type="button" onClick={install} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm">
             {ios || showInstructions ? 'How to install' : 'Install app'}
           </button>
         </div>
