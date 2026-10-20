@@ -941,7 +941,7 @@ export default function IluOrderPageClient() {
                   href="/ilu/order-status"
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 text-center"
                 >
-                  <span>Check Leader Board</span>
+                  <span>Leaderboard</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
