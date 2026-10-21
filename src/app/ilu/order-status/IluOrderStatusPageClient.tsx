@@ -323,7 +323,7 @@ export default function IluOrderStatusPageClient() {
         {/* Live totals ribbon uses the same ten-second leaderboard refresh. */}
         <section
           aria-label="Live club totals"
-          className="flex items-center gap-3 overflow-hidden rounded-2xl border border-[#f3631f]/20 bg-white/90 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4"
+          className="flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/85 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4"
         >
           <div className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] px-3 py-2 text-white shadow-sm">
             <span className="h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden="true" />
@@ -353,17 +353,17 @@ export default function IluOrderStatusPageClient() {
                 {[0, 1].map((copy) => (
                   <div key={copy} className="flex shrink-0 items-center gap-3 pr-3">
                     {tickerSummaries.map((summary) => (
-                      <span
-                        key={`${copy}-${summary.clubId}`}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs sm:text-sm"
-                      >
-                        <span className="max-w-[12rem] truncate font-semibold text-slate-700">
-                          {summary.clubName}
+                      <React.Fragment key={`${copy}-${summary.clubId}`}>
+                        <span className="inline-flex shrink-0 items-center gap-2 py-2 text-xs sm:text-sm">
+                          <span className="max-w-[12rem] truncate font-semibold text-slate-700">
+                            {summary.clubName}
+                          </span>
+                          <span className="font-black tabular-nums text-amber-800">
+                            {summary.totalQuantityLiters.toLocaleString()} Ltr
+                          </span>
                         </span>
-                        <span className="font-black tabular-nums text-amber-800">
-                          {summary.totalQuantityLiters.toLocaleString()} Ltr
-                        </span>
-                      </span>
+                        <span className="text-slate-300" aria-hidden="true">•</span>
+                      </React.Fragment>
                     ))}
                   </div>
                 ))}
