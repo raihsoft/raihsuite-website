@@ -138,11 +138,11 @@ interface TimeLeft {
   isExpired: boolean;
 }
 
-// Challenge Day: 2026 November 8 (IST 00:00:00)
-const CHALLENGE_TARGET_TIMESTAMP = new Date('2026-11-08T00:00:00+05:30').getTime();
+// Order Submission Deadline: 2026 October 31 (IST 23:59:59)
+const ORDER_DEADLINE_TARGET_TIMESTAMP = new Date('2026-10-31T23:59:59+05:30').getTime();
 
 function calculateChallengeTimeLeft(): TimeLeft {
-  const diff = CHALLENGE_TARGET_TIMESTAMP - Date.now();
+  const diff = ORDER_DEADLINE_TARGET_TIMESTAMP - Date.now();
   if (diff <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true };
   }
@@ -784,7 +784,7 @@ export default function IluOrderPageClient() {
           </div>
         </section>
 
-        {/* CHALLENGE COUNTDOWN CARD - TARGET: 2026 NOVEMBER 8 */}
+        {/* ORDER SUBMISSION DEADLINE COUNTDOWN CARD - TARGET: 31/10/2026 */}
         <section>
           <div className="rounded-3xl bg-gradient-to-br from-[#fffbeb] via-[#fff7ed] to-[#fef2f2] border-2 border-amber-300/80 p-5 sm:p-7 md:p-8 shadow-xl shadow-amber-950/5 relative overflow-hidden">
             {/* Ambient Festive Radial Glows */}
@@ -793,14 +793,15 @@ export default function IluOrderPageClient() {
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
 
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
-              <p className="text-xs sm:text-sm font-medium text-slate-500 mb-3 sm:mb-4">
-                Time remaining until challenge day
+              <p className="text-xs sm:text-sm font-semibold text-slate-600 flex items-center justify-center gap-1.5 mb-3 sm:mb-4">
+                <Timer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0" />
+                <span>Last Date for Order Submission: 31/10/2026</span>
               </p>
 
               {timeLeft.isExpired ? (
-                <div className="py-4 px-6 rounded-2xl bg-amber-100/90 border border-amber-300 text-amber-950 font-black text-base sm:text-lg flex items-center justify-center gap-2">
-                  <PartyPopper className="w-5 h-5 text-amber-700 shrink-0" />
-                  <span>The Challenge Day is Here!</span>
+                <div className="py-4 px-6 rounded-2xl bg-rose-100/90 border border-rose-300 text-rose-950 font-black text-base sm:text-lg flex items-center justify-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-rose-700 shrink-0" />
+                  <span>Order Submissions Closed</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-4 gap-2 sm:gap-3.5 w-full max-w-xs sm:max-w-md md:max-w-lg mx-auto">
