@@ -333,7 +333,7 @@ export default function IluOrderStatusPageClient() {
           </div>
 
           {tickerSummaries.length > 0 ? (
-            <div className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
+            <div className="ilu-live-totals-viewport min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
               <ul className="sr-only">
                 {tickerSummaries.map((summary) => (
                   <li key={summary.clubId}>
@@ -700,6 +700,15 @@ export default function IluOrderStatusPageClient() {
         </section>
       </div>
       <style jsx>{`
+        .ilu-live-totals-viewport {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .ilu-live-totals-viewport::-webkit-scrollbar {
+          display: none;
+        }
+
         .ilu-live-totals-track {
           animation: ilu-live-totals-scroll var(--ilu-ticker-duration, 32s) linear infinite;
         }
