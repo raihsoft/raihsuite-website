@@ -200,6 +200,10 @@ export default function IluOrderStatusPageClient() {
     );
   }, [rankedSummaries, searchQuery]);
 
+  const tickerSummaries = rankedSummaries
+    .filter((summary) => summary.totalQuantityLiters > 0)
+    .slice(0, 10);
+
 
   return (
     <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
@@ -314,6 +318,62 @@ export default function IluOrderStatusPageClient() {
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Live totals ribbon uses the same ten-second leaderboard refresh. */}
+        <section
+          aria-label="Live club totals"
+          className="flex items-center gap-3 overflow-hidden rounded-2xl border border-[#f3631f]/20 bg-white/90 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4"
+        >
+          <div className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] px-3 py-2 text-white shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden="true" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wide sm:text-xs">
+              Live Club Totals
+            </span>
+          </div>
+
+          {tickerSummaries.length > 0 ? (
+            <div className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
+              <ul className="sr-only">
+                {tickerSummaries.map((summary) => (
+                  <li key={summary.clubId}>
+                    {summary.clubName}: {summary.totalQuantityLiters.toLocaleString()} liters total
+                  </li>
+                ))}
+              </ul>
+              <div
+                className="ilu-live-totals-track flex w-max"
+                style={
+                  {
+                    '--ilu-ticker-duration': `${Math.max(24, tickerSummaries.length * 4)}s`,
+                  } as React.CSSProperties
+                }
+                aria-hidden="true"
+              >
+                {[0, 1].map((copy) => (
+                  <div key={copy} className="flex shrink-0 items-center gap-3 pr-3">
+                    {tickerSummaries.map((summary) => (
+                      <span
+                        key={`${copy}-${summary.clubId}`}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs sm:text-sm"
+                      >
+                        <span className="max-w-[12rem] truncate font-semibold text-slate-700">
+                          {summary.clubName}
+                        </span>
+                        <span className="font-black tabular-nums text-amber-800">
+                          {summary.totalQuantityLiters.toLocaleString()} Ltr
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
+              {loading ? 'Loading club totals…' : 'No club totals available yet.'}
+            </p>
+          )}
         </section>
 
         {/* SEARCH & REFRESH TOOLBAR */}
@@ -639,6 +699,30 @@ export default function IluOrderStatusPageClient() {
           </Link>
         </section>
       </div>
+      <style jsx>{`
+        .ilu-live-totals-track {
+          animation: ilu-live-totals-scroll var(--ilu-ticker-duration, 32s) linear infinite;
+        }
+
+        .ilu-live-totals-track:hover {
+          animation-play-state: paused;
+        }
+
+        @keyframes ilu-live-totals-scroll {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ilu-live-totals-track {
+            animation: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
