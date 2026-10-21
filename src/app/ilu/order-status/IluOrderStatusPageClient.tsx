@@ -233,7 +233,7 @@ export default function IluOrderStatusPageClient() {
             />
             <img
               src="https://media.raihsuite.com/RS0001/web/ilu/order-status-banner.webp"
-              alt="ILU Foundation Payasam Challenge Order Status"
+              alt="ILU Foundation Palada Challenge Order Status"
               className="w-full h-auto object-cover block"
             />
           </picture>
