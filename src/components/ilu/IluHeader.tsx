@@ -7,7 +7,11 @@ import { ClipboardList, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function IluHeader() {
   const pathname = usePathname();
-  const isStatusPage = pathname === '/ilu/order-status';
+  const isSubPage =
+    pathname === '/ilu/order-status' ||
+    pathname === '/ilu/donate' ||
+    pathname === '/donation' ||
+    pathname === '/donate';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm text-slate-800">
@@ -36,7 +40,7 @@ export default function IluHeader() {
 
           {/* Right Action Pill Button with vibrant gradient */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {isStatusPage ? (
+            {isSubPage ? (
               <Link
                 href="/ilu"
                 className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
