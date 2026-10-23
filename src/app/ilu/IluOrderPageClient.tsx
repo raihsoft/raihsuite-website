@@ -784,7 +784,7 @@ export default function IluOrderPageClient() {
           </div>
         </section>
 
-        {/* DUAL ACTION SECTION: 1. DONATION (LEFT) & 2. LATEST ORDERS / LEADERBOARD (RIGHT) */}
+        {/* DUAL ACTION SECTION: 1. DONATION (LEFT) & 2. LATEST ORDERS / ORDER STATUS (RIGHT) */}
         <section id="donation-section" className="scroll-mt-24">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 items-stretch">
             {/* 1ST: DONATION SECTION (LEFT) */}
@@ -858,7 +858,7 @@ export default function IluOrderPageClient() {
                   href="/ilu/order-status"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 text-center whitespace-nowrap"
                 >
-                  <span>Leaderboard</span>
+                  <span>Order Status</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
 

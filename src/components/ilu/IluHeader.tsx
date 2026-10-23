@@ -29,12 +29,6 @@ export default function IluHeader() {
                 alt="ILU Foundation Logo"
                 className="h-8 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
               />
-              {/* Mobile screen only: Typography near the logo */}
-              <img
-                src="https://media.raihsuite.com/RS0001/web/ilu/typography.png"
-                alt="ILU Challenge Typography"
-                className="block sm:hidden h-6 xs:h-7 w-auto max-w-[120px] xs:max-w-[160px] object-contain"
-              />
             </Link>
           </div>
 
@@ -55,8 +49,8 @@ export default function IluHeader() {
                 className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
               >
                 <ClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
-                <span className="hidden xs:inline sm:inline">Leaderboard</span>
-                <span className="xs:hidden sm:hidden">Leaderboard</span>
+                <span className="hidden xs:inline sm:inline">Order Status</span>
+                <span className="xs:hidden sm:hidden">Order Status</span>
                 <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline" />
               </Link>
             )}
