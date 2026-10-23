@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'ILU Foundation Palada Challenge Order Status Portal - Powered By raihsoft.',
     description: 'Track the total palada quantity ordered by each club in the ILU Foundation Palada Challenge.',
-    images: ['https://media.raihsuite.com/RS0001/web/ilu/order-status-banner.webp'],
+    images: ['https://media.raihsuite.com/RS0001/web/ilu/orderstatus-page-banner.jpeg'],
   },
 };
 
