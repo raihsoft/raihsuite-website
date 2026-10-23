@@ -67,6 +67,8 @@ export interface ILUConfig {
   ORDERS_URL: string;
   ORDER_STATUS_URL: string;
   ZONE_REPORTS_URL: string;
+  FUNDRAISING_ITEMS_URL: string;
+  DONATIONS_URL: string;
 }
 
 export const ILU_CONFIG: ILUConfig = {
@@ -80,6 +82,8 @@ export const ILU_CONFIG: ILUConfig = {
   ORDERS_URL: `${API_URL}orders/orders/`,
   ORDER_STATUS_URL: `${API_URL}orders/order_status/`,
   ZONE_REPORTS_URL: `${API_URL}orders/zone_reports/`,
+  FUNDRAISING_ITEMS_URL: `${API_URL}orders/fundraising_items/`,
+  DONATIONS_URL: `${API_URL}orders/donations/`,
 };
 
 export interface BackendTenant {
@@ -119,79 +123,11 @@ function getResults<T>(data: unknown): T[] {
   return [];
 }
 
-let configPromise: Promise<ILUConfig> | undefined;
-
 /**
- * Loads tenant and fundraising details from the backend.
- * Falls back safely if backend metadata endpoints are restricted or unreachable.
+ * Returns configuration for ILU services based on environment and defaults.
  */
 export function getILUConfig(): Promise<ILUConfig> {
-  if (!configPromise) {
-    configPromise = loadILUConfig().catch(() => ILU_CONFIG);
-  }
-
-  return configPromise;
-}
-
-async function loadILUConfig(): Promise<ILUConfig> {
-  let resolvedTenantId = DEFAULT_TENANT_ID;
-  let resolvedTenantName = DEFAULT_TENANT_NAME;
-  let resolvedTenantCode = DEFAULT_TENANT_CODE;
-  let resolvedFundraisingId = DEFAULT_FUNDRAISING_ID;
-  let resolvedFundraisingName = DEFAULT_FUNDRAISING_NAME;
-
-  try {
-    const [tenantResponse, fundraisingResponse] = await Promise.all([
-      fetch(`${API_URL}tenants/tenants/`, {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      }).catch(() => null),
-      fetch(`${API_URL}orders/fundraising/`, {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      }).catch(() => null),
-    ]);
-
-    if (tenantResponse && tenantResponse.ok) {
-      const tenants = getResults<BackendTenant>(await tenantResponse.json().catch(() => null));
-      const matchedTenant = tenants.find(
-        (item) => String(item.code).trim().toLowerCase() === DEFAULT_TENANT_CODE.trim().toLowerCase()
-      );
-      if (matchedTenant) {
-        resolvedTenantId = matchedTenant.id;
-        resolvedTenantName = matchedTenant.name;
-        resolvedTenantCode = matchedTenant.code;
-      }
-    }
-
-    if (fundraisingResponse && fundraisingResponse.ok) {
-      const fundraisings = getResults<BackendFundraising>(
-        await fundraisingResponse.json().catch(() => null)
-      );
-      const matchedFundraising = fundraisings.find(
-        (item) => String(item.id) === DEFAULT_FUNDRAISING_ID
-      );
-      if (matchedFundraising) {
-        resolvedFundraisingId = matchedFundraising.id;
-        resolvedFundraisingName = matchedFundraising.name;
-      }
-    }
-  } catch {
-    // Graceful fallback to resolved defaults
-  }
-
-  return {
-    TENANT_ID: resolvedTenantId,
-    TENANT_NAME: resolvedTenantName,
-    TENANT_CODE: resolvedTenantCode,
-    FUNDRAISING_ID: resolvedFundraisingId,
-    FUNDRAISING_NAME: resolvedFundraisingName,
-    BASE_API_URL: API_URL,
-    ORGANIZATIONS_URL: `${API_URL}orders/organizations/`,
-    ORDERS_URL: `${API_URL}orders/orders/`,
-    ORDER_STATUS_URL: `${API_URL}orders/order_status/`,
-    ZONE_REPORTS_URL: `${API_URL}orders/zone_reports/`,
-  };
+  return Promise.resolve(ILU_CONFIG);
 }
 
 export interface BackendOrganization {
@@ -674,4 +610,131 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
     totalOrderCount: Number(rawStats.total_order ?? 0),
     raw: rawStats,
   };
+}
+
+export interface FundraisingItem {
+  id: string;
+  name: string;
+  tenant?: number | null;
+  fundraising?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DonationPayload {
+  tenant: number;
+  fundraising: string;
+  donor_type?: 'INDIVIDUAL' | 'ORGANIZATION';
+  organization?: string | null;
+  donation_type: 'CASH' | 'COMMODITY';
+  donor_name: string;
+  mobile: string;
+  donation_date?: string;
+  amount: string | null;
+  fundraising_item: string | null;
+  quantity: string | number | null;
+  notes: string;
+  security_code?: string | null;
+}
+
+export interface DonationResponse {
+  id: string;
+  tenant: number;
+  fundraising: string;
+  donor_type?: 'INDIVIDUAL' | 'ORGANIZATION';
+  organization?: string | null;
+  donation_type: 'CASH' | 'COMMODITY';
+  donor_name: string;
+  mobile: string;
+  donation_date: string;
+  amount: string | null;
+  fundraising_item: string | null;
+  quantity: string | number | null;
+  notes: string;
+  created_at?: string;
+}
+
+/**
+ * Fetches fundraising items from the backend for commodity donations.
+ */
+export async function fetchFundraisingItemsApi(): Promise<FundraisingItem[]> {
+  const config = await getILUConfig();
+  const tenantUrl = `${config.FUNDRAISING_ITEMS_URL}?tenant=${encodeURIComponent(
+    String(config.TENANT_ID)
+  )}&limit=100`;
+
+  const response = await fetch(tenantUrl, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  }).catch(() => null);
+
+  if (response && response.ok) {
+    const data = await response.json().catch(() => null);
+    const items = getResults<FundraisingItem>(data);
+    if (items.length > 0) {
+      return items;
+    }
+  }
+
+  // Fallback: fetch without tenant param in case tenant filter is omitted
+  const fallbackResponse = await fetch(config.FUNDRAISING_ITEMS_URL, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  }).catch(() => null);
+
+  if (fallbackResponse && fallbackResponse.ok) {
+    const fallbackData = await fallbackResponse.json().catch(() => null);
+    return getResults<FundraisingItem>(fallbackData);
+  }
+
+  return [];
+}
+
+/**
+ * Submits a new donation (CASH or COMMODITY) to the backend.
+ */
+export async function submitDonationApi(
+  payload: Omit<DonationPayload, 'tenant' | 'fundraising'>
+): Promise<DonationResponse> {
+  const config = await getILUConfig();
+  const fullPayload: DonationPayload = {
+    ...payload,
+    tenant: config.TENANT_ID,
+    fundraising: config.FUNDRAISING_ID,
+  };
+
+  // If INDIVIDUAL, organization must be null and security_code must never be sent
+  if (fullPayload.donor_type === 'INDIVIDUAL') {
+    fullPayload.organization = null;
+    delete fullPayload.security_code;
+  }
+
+  // If not an organization or security_code is null/empty/not provided, completely delete it from payload
+  if (fullPayload.donor_type !== 'ORGANIZATION' || !fullPayload.security_code) {
+    delete fullPayload.security_code;
+  }
+
+  const response = await fetch(config.DONATIONS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(fullPayload),
+  });
+
+  const responseData: any = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      normalizeApiError(
+        responseData,
+        `Donation submission failed (${response.status} ${response.statusText})`
+      )
+    );
+  }
+
+  return responseData as DonationResponse;
 }

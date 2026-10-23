@@ -23,6 +23,8 @@ import {
   Calendar,
   Timer,
   Sparkles,
+  Heart,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   Club,
@@ -402,24 +404,14 @@ export default function IluOrderPageClient() {
         <div className="absolute inset-0 bg-[#fffdf7]/40" />
       </div>
 
-      {/* HERO SECTION: FULL WIDTH BANNER (DESKTOP ONLY) */}
-      <section className="hidden sm:block w-full relative z-10">
+      {/* HERO SECTION: RESPONSIVE FULL WIDTH BANNER */}
+      <section className="w-full relative z-10 shadow-sm">
         <div className="w-full">
-          <picture>
-            <source
-              media="(max-width: 640px)"
-              srcSet="https://media.raihsuite.com/RS0001/web/ilu/ilu-banner-mobile.png"
-            />
-            <source
-              media="(min-width: 641px)"
-              srcSet="https://media.raihsuite.com/RS0001/web/ilu/hero-banner.webp"
-            />
-            <img
-              src="https://media.raihsuite.com/RS0001/web/ilu/hero-banner.webp"
-              alt="ILU Foundation Palada Payasam Challenge 2026"
-              className="w-full h-auto object-cover block shadow-md"
-            />
-          </picture>
+          <img
+            src="https://media.raihsuite.com/RS0001/web/ilu/hero-banner.webp"
+            alt="ILU Foundation Palada Challenge 2026"
+            className="w-full h-auto object-cover block"
+          />
         </div>
       </section>
 
@@ -488,10 +480,10 @@ export default function IluOrderPageClient() {
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Place Your Order
+                  Add Order Quantity
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
-                  Select your club/organization and enter the payasam quantity.
+                  Select your club/organization and enter the palada quantity.
                 </p>
               </div>
             </div>
@@ -505,10 +497,10 @@ export default function IluOrderPageClient() {
             )}
 
             {/* Form Fields Grid */}
-            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6" noValidate>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Field 1: Select Club (Searchable Combobox) */}
-                <div className="space-y-1.5 sm:space-y-2 relative md:col-span-2" ref={dropdownRef}>
+                <div className="space-y-1.5 relative md:col-span-2" ref={dropdownRef}>
                   <div className="flex items-center justify-between">
                     <label htmlFor="club-search-input" className="block text-xs sm:text-sm font-bold text-slate-800">
                       ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ <span className="text-rose-500">*</span>
@@ -617,57 +609,65 @@ export default function IluOrderPageClient() {
                         </div>
                       </div>
                     )}
+
+                    {/* Dropdown Popup List - Anchored immediately below the input with z-50 overlay */}
+                    {isDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-2xl bg-white border-2 border-amber-500 ring-4 ring-amber-500/15 shadow-2xl overflow-hidden text-slate-800">
+                        <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                          {filteredClubs.length === 0 ? (
+                            <div className="p-3.5 sm:p-4 text-center text-xs text-slate-500 space-y-1">
+                              <p>
+                                {clubSearchTerm
+                                  ? `"${clubSearchTerm}" എന്ന പേരിൽ ക്ലബ്ബുകൾ കണ്ടെത്തിയില്ല`
+                                  : 'ക്ലബ്ബുകൾ ലഭ്യമല്ല'}
+                              </p>
+                              <p className="text-[11px] text-slate-500">
+                                പുതിയ ക്ലബ് ചേർക്കാൻ:{' '}
+                                <a href="tel:+917907531608" className="text-amber-800 font-bold underline">
+                                  +91 79075 31608
+                                </a>
+                              </p>
+                            </div>
+                          ) : (
+                            filteredClubs.map((club) => {
+                              const isSelected = selectedClubId === club.id;
+                              return (
+                                <button
+                                  key={club.id}
+                                  type="button"
+                                  onClick={() => handleSelectClub(club)}
+                                  className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3 text-left text-xs sm:text-sm flex items-center justify-between group ${
+                                    isSelected
+                                      ? 'bg-slate-100 text-slate-900 font-bold'
+                                      : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                                  }`}
+                                >
+                                  <div className="space-y-0.5">
+                                    <div className="flex items-center gap-1.5 sm:gap-2">
+                                      <p className="font-semibold text-slate-900 group-hover:text-amber-800 text-xs sm:text-sm">
+                                        {club.name}
+                                      </p>
+                                      {club.location && (
+                                        <span className="text-[9px] sm:text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.2 rounded font-normal">
+                                          {club.location}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {isSelected && (
+                                    <Check className="w-4 h-4 text-amber-600 shrink-0" />
+                                  )}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Dropdown Popup List */}
-                  {isDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 sm:mt-2 z-50 rounded-2xl bg-white border-2 border-amber-500 ring-4 ring-amber-500/15 shadow-2xl overflow-hidden text-slate-800">
-                      <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
-                        {filteredClubs.length === 0 ? (
-                          <div className="p-3.5 sm:p-4 text-center text-xs text-slate-500">
-                            {clubSearchTerm
-                              ? `"${clubSearchTerm}" എന്ന പേരിൽ ക്ലബ്ബുകൾ കണ്ടെത്തിയില്ല`
-                              : 'ക്ലബ്ബുകൾ ലഭ്യമല്ല'}
-                          </div>
-                        ) : (
-                          filteredClubs.map((club) => {
-                            const isSelected = selectedClubId === club.id;
-                            return (
-                              <button
-                                key={club.id}
-                                type="button"
-                                onClick={() => handleSelectClub(club)}
-                                className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3 text-left text-xs sm:text-sm flex items-center justify-between group ${
-                                  isSelected
-                                    ? 'bg-slate-100 text-slate-900 font-bold'
-                                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                                }`}
-                              >
-                                <div className="space-y-0.5">
-                                  <div className="flex items-center gap-1.5 sm:gap-2">
-                                    <p className="font-semibold text-slate-900 group-hover:text-amber-800 text-xs sm:text-sm">
-                                      {club.name}
-                                    </p>
-                                    {club.location && (
-                                      <span className="text-[9px] sm:text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.2 rounded font-normal">
-                                        {club.location}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                {isSelected && (
-                                  <Check className="w-4 h-4 text-amber-600 shrink-0" />
-                                )}
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Notice for adding new club/organization */}
-                  <p className="pt-1.5 text-[11px] sm:text-xs md:text-sm text-slate-600 font-medium leading-relaxed break-words">
+                  {/* Notice for adding new club/organization - directly under input field, covered when dropdown opens */}
+                  <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
                     <span className="font-bold text-amber-950 bg-amber-100/70 px-1.5 py-0.5 rounded border border-amber-200/80">
                       പുതിയ ക്ലബ് / കൂട്ടായ്മ / കോർഡിനേറ്റർ
                     </span>
@@ -756,12 +756,12 @@ export default function IluOrderPageClient() {
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" />
-                      <span>ഓർഡർ സമർപ്പിക്കുന്നു...</span>
+                      <span>Submitting...</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-white" />
-                      <span>ഓർഡർ സമർപ്പിക്കുക</span>
+                      <span>Submit</span>
                     </>
                   )}
                 </button>
@@ -771,7 +771,7 @@ export default function IluOrderPageClient() {
               <div className="pt-2 sm:pt-3 text-center border-t border-slate-100 flex flex-wrap items-center justify-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium">
                 <span className="flex items-center gap-1.5 text-slate-500">
                   <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  Contact for any support :
+                  Contact for any support / പുതിയ ക്ലബ് ചേർക്കാൻ :
                 </span>
                 <a
                   href="tel:+917907531608"
@@ -781,6 +781,96 @@ export default function IluOrderPageClient() {
                 </a>
               </div>
             </form>
+          </div>
+        </section>
+
+        {/* DUAL ACTION SECTION: 1. DONATION (LEFT) & 2. LATEST ORDERS / ORDER STATUS (RIGHT) */}
+        <section id="donation-section" className="scroll-mt-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 items-stretch">
+            {/* 1ST: DONATION SECTION (LEFT) */}
+            <div className="rounded-3xl bg-gradient-to-br from-[#f0fdf4] via-[#f7fee7]/40 to-[#fffdf7] border-2 border-emerald-300/80 p-4 sm:p-5 lg:px-6 lg:py-4.5 shadow-md shadow-emerald-950/5 relative overflow-hidden flex flex-col justify-between h-full">
+              {/* Ambient Festive Glows */}
+              <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
+              <div className="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-teal-400/15 blur-3xl pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
+
+              <div className="relative z-10 space-y-1.5 sm:space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] sm:text-xs font-bold shadow-xs w-fit">
+                  <Heart className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
+                  <span>സംഭാവനകൾ രജിസ്റ്റർ ചെയ്യാം • Support ILU Mission</span>
+                </div>
+
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-snug">
+                  Support Our Noble Cause with a Donation
+                </h3>
+
+                <p className="text-xs sm:text-[13px] text-slate-600 leading-normal sm:leading-relaxed font-medium">
+                  Contribute directly with cash or essential commodities to support community welfare initiatives.
+                </p>
+              </div>
+
+              {/* Action Button & Donation Illustration */}
+              <div className="relative z-10 pt-3 sm:pt-4 flex items-center justify-between gap-4">
+                <Link
+                  href="/ilu/donate"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-700 hover:via-teal-700 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-md shadow-emerald-600/25 ring-2 ring-emerald-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 group whitespace-nowrap"
+                >
+                  <Heart className="w-3.5 h-3.5 fill-white shrink-0 group-hover:scale-110 transition-transform" />
+                  <span>Register Donation</span>
+                  <ArrowRight className="w-3.5 h-3.5 shrink-0 group-hover:translate-x-1 transition-transform" />
+                </Link>
+
+                <div className="relative shrink-0 w-16 sm:w-20 h-auto flex items-center justify-center">
+                  <img
+                    src="https://media.raihsuite.com/RS0001/web/ilu/donation.png"
+                    alt="Donation Box"
+                    className="w-full max-h-14 sm:max-h-16 object-contain drop-shadow-md"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 2ND: WANT TO SEE THE LATEST ORDERS? SECTION (RIGHT) */}
+            <div className="rounded-3xl bg-gradient-to-br from-rose-50/70 via-amber-50/50 to-orange-50/70 border-2 border-orange-200/80 p-4 sm:p-5 lg:px-6 lg:py-4.5 shadow-md shadow-orange-950/5 relative overflow-hidden flex flex-col justify-between h-full">
+              {/* Ambient Festive Glows */}
+              <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-orange-400/15 blur-3xl pointer-events-none" />
+              <div className="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-[#ea183c]/10 blur-3xl pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c]" />
+
+              <div className="relative z-10 space-y-1.5 sm:space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-[#ea183c]/15 via-[#f3631f]/15 to-[#faa70c]/15 text-[#ea183c] shadow-xs border border-[#ea183c]/20 shrink-0">
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-snug">
+                    Want to see the order status and club performance?
+                  </h3>
+                </div>
+
+                <p className="text-xs sm:text-[13px] text-slate-600 leading-normal sm:leading-relaxed font-medium">
+                  Check the total palada quantity ordered by each club and see how the challenge is progressing!
+                </p>
+              </div>
+
+              {/* Action Button & Palada Bowl */}
+              <div className="relative z-10 pt-3 sm:pt-4 flex items-center justify-between gap-4">
+                <Link
+                  href="/ilu/order-status"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 text-center whitespace-nowrap"
+                >
+                  <span>Order Status</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+
+                <div className="relative shrink-0 w-16 sm:w-20 h-auto flex items-center justify-center">
+                  <img
+                    src="https://media.raihsuite.com/RS0001/web/ilu/payasam-img.png"
+                    alt="Kerala Palada Bowl"
+                    className="w-full max-h-14 sm:max-h-16 object-contain drop-shadow-md"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -885,7 +975,7 @@ export default function IluOrderPageClient() {
 
               <h3 className="text-2xl font-black text-slate-900">Order Submitted!</h3>
               <p className="text-xs text-slate-600">
-                Your club's payasam order has been successfully recorded.
+                Your club's palada order has been successfully recorded.
               </p>
 
               <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-left space-y-2 text-xs">
@@ -921,43 +1011,6 @@ export default function IluOrderPageClient() {
             </div>
           </div>
         )}
-
-        {/* PROMO BANNER CARD */}
-        <section>
-          <div className="rounded-3xl bg-gradient-to-r from-rose-50/70 via-amber-50/50 to-orange-50/70 border border-orange-100/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-3 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-[#ea183c]/15 via-[#f3631f]/15 to-[#faa70c]/15 text-[#ea183c] shadow-sm border border-[#ea183c]/20">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Want to see the latest orders?
-                </h3>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-lg leading-relaxed font-medium">
-                Check the total payasam quantity ordered by each club and see how the challenge is progressing!
-              </p>
-              <div className="pt-1 w-full sm:w-auto">
-                <Link
-                  href="/ilu/order-status"
-                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 text-center"
-                >
-                  <span>Leaderboard</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Right Payasam Uruli Preview Photo */}
-            <div className="relative shrink-0 w-32 sm:w-44 h-auto flex items-center justify-center">
-              <img
-                src="https://media.raihsuite.com/RS0001/web/ilu/payasam-img.png"
-                alt="Kerala Payasam Bowl"
-                className="w-full h-auto object-contain drop-shadow-md"
-              />
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );

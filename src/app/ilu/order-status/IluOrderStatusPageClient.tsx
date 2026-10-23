@@ -229,11 +229,11 @@ export default function IluOrderStatusPageClient() {
             />
             <source
               media="(min-width: 641px)"
-              srcSet="https://media.raihsuite.com/RS0001/web/ilu/order-status-banner.webp"
+              srcSet="https://media.raihsuite.com/RS0001/web/ilu/orderstatus-page-banner.jpeg"
             />
             <img
-              src="https://media.raihsuite.com/RS0001/web/ilu/order-status-banner.webp"
-              alt="ILU Foundation Payasam Challenge Order Status"
+              src="https://media.raihsuite.com/RS0001/web/ilu/orderstatus-page-banner.jpeg"
+              alt="ILU Foundation Palada Challenge Order Status"
               className="w-full h-auto object-cover block"
             />
           </picture>
@@ -353,7 +353,7 @@ export default function IluOrderStatusPageClient() {
           </div>
         </section>
 
-        {/* ORDER SUMMARY TABLE & MOBILE LEADERBOARD */}
+        {/* ORDER SUMMARY TABLE & MOBILE ORDER STATUS */}
         <section>
           <div className="rounded-3xl bg-white border border-slate-200/90 overflow-hidden shadow-sm">
             {/* Desktop Table View (md and up) */}
@@ -489,7 +489,7 @@ export default function IluOrderStatusPageClient() {
               </table>
             </div>
 
-            {/* Mobile Leaderboard Cards View (screens < md) */}
+            {/* Mobile Order Status Cards View (screens < md) */}
             <div className="block md:hidden p-3 sm:p-4 space-y-2.5">
               {loading ? (
                 // Mobile Skeletons
