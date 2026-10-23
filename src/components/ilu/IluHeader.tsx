@@ -46,8 +46,8 @@ export default function IluHeader() {
                 className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
               >
                 <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="hidden xs:inline sm:inline">Back to Order Submission</span>
-                <span className="xs:hidden sm:hidden">Order Submission</span>
+                <span className="hidden xs:inline sm:inline">Submit New Orders</span>
+                <span className="xs:hidden sm:hidden">Submit New Orders</span>
               </Link>
             ) : (
               <Link

@@ -624,6 +624,8 @@ export interface FundraisingItem {
 export interface DonationPayload {
   tenant: number;
   fundraising: string;
+  donor_type?: 'INDIVIDUAL' | 'ORGANIZATION';
+  organization?: string | null;
   donation_type: 'CASH' | 'COMMODITY';
   donor_name: string;
   mobile: string;
@@ -632,12 +634,15 @@ export interface DonationPayload {
   fundraising_item: string | null;
   quantity: string | number | null;
   notes: string;
+  security_code?: string | null;
 }
 
 export interface DonationResponse {
   id: string;
   tenant: number;
   fundraising: string;
+  donor_type?: 'INDIVIDUAL' | 'ORGANIZATION';
+  organization?: string | null;
   donation_type: 'CASH' | 'COMMODITY';
   donor_name: string;
   mobile: string;
@@ -647,7 +652,6 @@ export interface DonationResponse {
   quantity: string | number | null;
   notes: string;
   created_at?: string;
-  [key: string]: unknown;
 }
 
 /**
@@ -700,6 +704,17 @@ export async function submitDonationApi(
     tenant: config.TENANT_ID,
     fundraising: config.FUNDRAISING_ID,
   };
+
+  // If INDIVIDUAL, organization must be null and security_code must never be sent
+  if (fullPayload.donor_type === 'INDIVIDUAL') {
+    fullPayload.organization = null;
+    delete fullPayload.security_code;
+  }
+
+  // If not an organization or security_code is null/empty/not provided, completely delete it from payload
+  if (fullPayload.donor_type !== 'ORGANIZATION' || !fullPayload.security_code) {
+    delete fullPayload.security_code;
+  }
 
   const response = await fetch(config.DONATIONS_URL, {
     method: 'POST',
