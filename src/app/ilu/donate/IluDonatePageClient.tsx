@@ -43,8 +43,8 @@ type DonorType = 'INDIVIDUAL' | 'ORGANIZATION';
 type DonationType = 'CASH' | 'COMMODITY';
 
 export default function IluDonatePageClient() {
-  // 1. Donor Type (firstly: Individual or Club)
-  const [donorType, setDonorType] = useState<DonorType>('INDIVIDUAL');
+  // 1. Donor Type (firstly: Club or Individual)
+  const [donorType, setDonorType] = useState<DonorType>('ORGANIZATION');
 
   // Club Dropdown State
   const [clubs, setClubs] = useState<Club[]>(FALLBACK_BACKEND_CLUBS);
@@ -167,33 +167,38 @@ export default function IluDonatePageClient() {
 
     // 1. Club validation
     if (donorType === 'ORGANIZATION') {
-      if (!selectedClubId) {
+      if (!selectedClubId || !selectedClub) {
         setErrorMessage('ദയവായി ക്ലബ്ബ് / സംഘടന തിരഞ്ഞെടുക്കുക (Please select a club/organization).');
         return;
       }
     }
 
-    // 2. Name validation
-    const trimmedName = donorName.trim();
-    if (!trimmedName) {
-      setErrorMessage(
-        donorType === 'ORGANIZATION'
-          ? 'ദയവായി പ്രതിനിധിയുടെ പേര് നൽകുക (Please enter coordinator/representative name).'
-          : 'ദയവായി ദാതാവിന്റെ പേര് നൽകുക (Please enter donor name).'
-      );
-      return;
+    // 2. Individual donor validation (Name & Mobile)
+    let finalDonorName = '';
+    let finalMobile = '';
+
+    if (donorType === 'INDIVIDUAL') {
+      const trimmedName = donorName.trim();
+      if (!trimmedName) {
+        setErrorMessage('ദയവായി ദാതാവിന്റെ പേര് നൽകുക (Please enter donor name).');
+        return;
+      }
+      finalDonorName = trimmedName;
+
+      const cleanMobile = mobile.trim();
+      if (!cleanMobile || cleanMobile.length < 10) {
+        setErrorMessage(
+          'ദയവായി ശരിയായ 10 അക്ക മൊബൈൽ നമ്പർ നൽകുക (Please enter a valid 10-digit mobile number).'
+        );
+        return;
+      }
+      finalMobile = cleanMobile;
+    } else {
+      finalDonorName = selectedClub?.name || 'Club Donation';
+      finalMobile = selectedClub?.mobileNumber || '';
     }
 
-    // 3. Mobile validation
-    const cleanMobile = mobile.trim();
-    if (!cleanMobile || cleanMobile.length < 10) {
-      setErrorMessage(
-        'ദയവായി ശരിയായ 10 അക്ക മൊബൈൽ നമ്പർ നൽകുക (Please enter a valid 10-digit mobile number).'
-      );
-      return;
-    }
-
-    // 4. Mode specific validation (Cash vs Commodity)
+    // 3. Mode specific validation (Cash vs Commodity)
     if (donationType === 'CASH') {
       const numAmount = Number(amount);
       if (!amount || Number.isNaN(numAmount) || numAmount <= 0) {
@@ -202,7 +207,7 @@ export default function IluDonatePageClient() {
       }
     } else {
       if (!fundraisingItem.trim()) {
-        setErrorMessage('ദയവായി സംഭാവന നൽകുന്ന ഇനം നൽകുക (Please enter a fundraising item).');
+        setErrorMessage('ദയവായി സംഭാവന നൽകുന്ന ഇനം നൽകുക (Please enter an item name).');
         return;
       }
 
@@ -212,7 +217,7 @@ export default function IluDonatePageClient() {
       }
     }
 
-    // 5. Security Code validation (only when Club is selected - last field)
+    // 4. Security Code validation (only when Club is selected - last field)
     if (donorType === 'ORGANIZATION') {
       const secValidation = validateSecurityCode(securityCode);
       if (!secValidation.isValid) {
@@ -233,8 +238,8 @@ export default function IluDonatePageClient() {
         donor_type: donorType,
         organization: donorType === 'ORGANIZATION' ? selectedClubId : null,
         donation_type: donationType,
-        donor_name: trimmedName,
-        mobile: cleanMobile,
+        donor_name: finalDonorName,
+        mobile: finalMobile,
         donation_date: todayStr,
         amount: donationType === 'CASH' ? Number(amount).toFixed(2) : null,
         fundraising_item: donationType === 'COMMODITY' ? fundraisingItem.trim() : null,
@@ -261,7 +266,7 @@ export default function IluDonatePageClient() {
 
   const handleResetForm = () => {
     setSubmittedDonation(null);
-    setDonorType('INDIVIDUAL');
+    setDonorType('ORGANIZATION');
     setSelectedClubId('');
     setSelectedClub(null);
     setClubSearchTerm('');
@@ -341,17 +346,19 @@ export default function IluDonatePageClient() {
                   </div>
                 )}
 
-                <div className="flex justify-between items-center py-1 border-b border-emerald-100">
-                  <span className="text-slate-500 font-medium">
-                    {donorType === 'ORGANIZATION' ? 'Representative Name:' : 'Donor Name:'}
-                  </span>
-                  <span className="font-bold text-slate-900">{submittedDonation.donor_name}</span>
-                </div>
+                {donorType === 'INDIVIDUAL' && (
+                  <>
+                    <div className="flex justify-between items-center py-1 border-b border-emerald-100">
+                      <span className="text-slate-500 font-medium">Donor Name:</span>
+                      <span className="font-bold text-slate-900">{submittedDonation.donor_name}</span>
+                    </div>
 
-                <div className="flex justify-between items-center py-1 border-b border-emerald-100">
-                  <span className="text-slate-500 font-medium">Mobile:</span>
-                  <span className="font-mono font-bold text-slate-800">{submittedDonation.mobile}</span>
-                </div>
+                    <div className="flex justify-between items-center py-1 border-b border-emerald-100">
+                      <span className="text-slate-500 font-medium">Mobile:</span>
+                      <span className="font-mono font-bold text-slate-800">{submittedDonation.mobile}</span>
+                    </div>
+                  </>
+                )}
 
                 <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                   <span className="text-slate-500 font-medium">Donation Type:</span>
@@ -484,12 +491,32 @@ export default function IluDonatePageClient() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6" noValidate>
-                {/* 1. FIRSTLY: CHOOSE INDIVIDUAL OR CLUB */}
+                {/* 1. FIRSTLY: CHOOSE CLUB OR INDIVIDUAL */}
                 <div className="space-y-2">
                   <label className="block text-xs sm:text-sm font-bold text-slate-800">
                     Donor Type / വിഭാഗം <span className="text-rose-500">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-100 border border-slate-200">
+                    {/* CLUB BUTTON */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDonorType('ORGANIZATION');
+                        setDonorName('');
+                        setMobile('');
+                        setErrorMessage(null);
+                      }}
+                      className={`py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        donorType === 'ORGANIZATION'
+                          ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/20 scale-[1.01]'
+                          : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Club / Organization (ക്ലബ്ബ്)</span>
+                      {donorType === 'ORGANIZATION' && <Check className="w-4 h-4" />}
+                    </button>
+
                     {/* INDIVIDUAL BUTTON */}
                     <button
                       type="button"
@@ -510,24 +537,6 @@ export default function IluDonatePageClient() {
                       <User className="w-4 h-4" />
                       <span>Individual (വ്യക്തിഗതം)</span>
                       {donorType === 'INDIVIDUAL' && <Check className="w-4 h-4" />}
-                    </button>
-
-                    {/* CLUB BUTTON */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDonorType('ORGANIZATION');
-                        setErrorMessage(null);
-                      }}
-                      className={`py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                        donorType === 'ORGANIZATION'
-                          ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/20 scale-[1.01]'
-                          : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                      }`}
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>Club / Organization (ക്ലബ്ബ്)</span>
-                      {donorType === 'ORGANIZATION' && <Check className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
@@ -683,53 +692,53 @@ export default function IluDonatePageClient() {
                   </div>
                 )}
 
-                {/* 3. DONOR / REPRESENTATIVE NAME */}
-                <div className="space-y-1.5">
-                  <label htmlFor="donor-name" className="block text-xs sm:text-sm font-bold text-slate-800">
-                    {donorType === 'ORGANIZATION' ? 'Representative / Coordinator Name' : 'Donor Name'} / പേര്{' '}
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative rounded-2xl shadow-xs">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                {/* 3. DONOR NAME & MOBILE (ONLY FOR INDIVIDUAL DONORS) */}
+                {donorType === 'INDIVIDUAL' && (
+                  <div className="space-y-4 animate-fade-in">
+                    {/* DONOR NAME */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="donor-name" className="block text-xs sm:text-sm font-bold text-slate-800">
+                        Donor Name / പേര് <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative rounded-2xl shadow-xs">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                          <User className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                        </div>
+                        <input
+                          type="text"
+                          id="donor-name"
+                          value={donorName}
+                          onChange={(e) => setDonorName(e.target.value)}
+                          placeholder="Enter donor name"
+                          required={donorType === 'INDIVIDUAL'}
+                          className="block w-full rounded-2xl border border-slate-300 bg-slate-50/80 hover:bg-white focus:bg-white pl-10 pr-4 py-2.5 sm:py-3 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 focus:outline-none transition"
+                        />
+                      </div>
                     </div>
-                    <input
-                      type="text"
-                      id="donor-name"
-                      value={donorName}
-                      onChange={(e) => setDonorName(e.target.value)}
-                      placeholder={
-                        donorType === 'ORGANIZATION'
-                          ? 'Enter coordinator / representative name'
-                          : 'Enter donor name'
-                      }
-                      required
-                      className="block w-full rounded-2xl border border-slate-300 bg-slate-50/80 hover:bg-white focus:bg-white pl-10 pr-4 py-2.5 sm:py-3 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 focus:outline-none transition"
-                    />
-                  </div>
-                </div>
 
-                {/* 4. MOBILE NUMBER */}
-                <div className="space-y-1.5">
-                  <label htmlFor="donor-mobile" className="block text-xs sm:text-sm font-bold text-slate-800">
-                    Mobile Number / ഫോൺ നമ്പർ <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative rounded-2xl shadow-xs">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                      <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {/* MOBILE */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="donor-mobile" className="block text-xs sm:text-sm font-bold text-slate-800">
+                        Mobile <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative rounded-2xl shadow-xs">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                          <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                        </div>
+                        <input
+                          type="tel"
+                          id="donor-mobile"
+                          value={mobile}
+                          onChange={handleMobileChange}
+                          placeholder="Enter 10-digit mobile number"
+                          maxLength={10}
+                          required={donorType === 'INDIVIDUAL'}
+                          className="block w-full rounded-2xl border border-slate-300 bg-slate-50/80 hover:bg-white focus:bg-white pl-10 pr-4 py-2.5 sm:py-3 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 focus:outline-none transition font-mono"
+                        />
+                      </div>
                     </div>
-                    <input
-                      type="tel"
-                      id="donor-mobile"
-                      value={mobile}
-                      onChange={handleMobileChange}
-                      placeholder="Enter 10-digit mobile number"
-                      maxLength={10}
-                      required
-                      className="block w-full rounded-2xl border border-slate-300 bg-slate-50/80 hover:bg-white focus:bg-white pl-10 pr-4 py-2.5 sm:py-3 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 focus:outline-none transition font-mono"
-                    />
                   </div>
-                </div>
+                )}
 
                 {/* 5. DONATION TYPE: CASH OR COMMODITY */}
                 <div className="space-y-2">
@@ -801,15 +810,15 @@ export default function IluDonatePageClient() {
                     </div>
                   </div>
                 ) : (
-                  /* COMMODITY MODE: FUNDRAISING_ITEM TEXT FIELD & QUANTITY */
+                  /* COMMODITY MODE: ITEM TEXT FIELD & QUANTITY */
                   <div className="space-y-4 animate-fade-in">
-                    {/* Fundraising Item Text Input */}
+                    {/* Item Text Input */}
                     <div className="space-y-1.5">
                       <label
-                        htmlFor="fundraising-item"
+                        htmlFor="commodity-item"
                         className="block text-xs sm:text-sm font-bold text-slate-800"
                       >
-                        Fundraising Item / വസ്‌തു <span className="text-rose-500">*</span>
+                        Item / വസ്‌തു <span className="text-rose-500">*</span>
                       </label>
                       <div className="relative rounded-2xl shadow-xs">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
@@ -817,10 +826,10 @@ export default function IluDonatePageClient() {
                         </div>
                         <input
                           type="text"
-                          id="fundraising-item"
+                          id="commodity-item"
                           value={fundraisingItem}
                           onChange={(e) => setFundraisingItem(e.target.value)}
-                          placeholder="Enter fundraising item name"
+                          placeholder="Enter item name"
                           required
                           className="block w-full rounded-2xl border border-slate-300 bg-slate-50/80 hover:bg-white focus:bg-white pl-10 pr-4 py-2.5 sm:py-3 text-slate-900 text-sm font-medium placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 focus:outline-none transition"
                         />
@@ -916,14 +925,12 @@ export default function IluDonatePageClient() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin shrink-0" />
-                        <span>Submitting Donation...</span>
+                        <span>Submitting...</span>
                       </>
                     ) : (
                       <>
                         <Heart className="w-5 h-5 fill-white shrink-0" />
-                        <span>
-                          Submit {donorType === 'ORGANIZATION' ? 'Club ' : ''}{donationType === 'CASH' ? 'Cash' : 'Commodity'} Donation
-                        </span>
+                        <span>Submit</span>
                         <Send className="w-4 h-4 shrink-0" />
                       </>
                     )}
