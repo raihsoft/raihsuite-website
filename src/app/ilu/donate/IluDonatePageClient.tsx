@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   Heart,
   ArrowLeft,
-  CheckCircle2,
   AlertCircle,
   Phone,
   User,
@@ -15,7 +14,6 @@ import {
   Loader2,
   Check,
   PartyPopper,
-  Sparkles,
   RefreshCw,
   Search,
   ChevronDown,
@@ -24,8 +22,6 @@ import {
   Eye,
   EyeOff,
   Building2,
-  FileText,
-  BadgeIndianRupee,
   QrCode,
   MessageCircle,
 } from 'lucide-react';
@@ -301,11 +297,21 @@ export default function IluDonatePageClient() {
       </div>
 
       <div className="py-6 sm:py-10 pb-16 relative z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8">
+          {/* Back Navigation Button */}
+          <div>
+            <Link
+              href="/ilu"
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-600 hover:text-emerald-700 transition group bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200 shadow-xs"
+            >
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+              <span>Back to Palada Challenge & Order Submission</span>
+            </Link>
+          </div>
+
           {/* SUCCESS CONFIRMATION RECEIPT */}
           {submittedDonation ? (
-            <div className="max-w-2xl mx-auto">
-              <div className="rounded-3xl bg-white border-2 border-emerald-500 shadow-2xl p-6 sm:p-10 text-center space-y-6 animate-fade-in relative overflow-hidden">
+            <div className="rounded-3xl bg-white border-2 border-emerald-500 shadow-2xl p-6 sm:p-10 text-center space-y-6 animate-fade-in relative overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
 
               <div className="inline-flex p-4 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -459,13 +465,8 @@ export default function IluDonatePageClient() {
                 </Link>
               </div>
             </div>
-            </div>
           ) : (
-            /* TWO-COLUMN LAYOUT: FORM (LEFT) AND QR SECTION (RIGHT) */
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-              {/* LEFT SECTION: MAIN DONATION FORM */}
-              <div className="lg:col-span-7">
-                <div className="rounded-3xl bg-white border-2 border-emerald-500 ring-4 ring-emerald-500/15 shadow-2xl p-5 sm:p-8 md:p-10 space-y-6 sm:space-y-7 relative">
+            <div className="rounded-3xl bg-white border-2 border-emerald-500 ring-4 ring-emerald-500/15 shadow-2xl p-5 sm:p-8 md:p-10 space-y-6 sm:space-y-7 relative">
               <div className="absolute inset-x-0 top-0 h-1.5 rounded-t-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
 
               {/* Form Header */}
@@ -937,52 +938,6 @@ export default function IluDonatePageClient() {
                   </button>
                 </div>
               </form>
-                </div>
-              </div>
-
-              {/* RIGHT SECTION: STANDALONE QR CODE PAYMENT SECTION */}
-              <div className="lg:col-span-5 lg:sticky lg:top-8">
-                <div className="rounded-3xl bg-white border border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-5 text-center relative overflow-hidden">
-                  <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
-
-                  <div className="space-y-1.5 max-w-md mx-auto">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
-                      <QrCode className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>Scan & Pay via UPI • ബാങ്ക് / UPI വഴി തുക നൽകാം</span>
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                      Payment QR Code / സംഭാവന ക്യുആർ കോഡ്
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                      Scan using Google Pay, PhonePe, Paytm or any UPI app
-                    </p>
-                  </div>
-
-                  <div className="bg-gradient-to-b from-slate-50 to-white p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-500/25 shadow-md inline-block mx-auto max-w-full">
-                    <img
-                      src="https://media.raihsuite.com/RS0001/web/ilu/Donation-QR.jpeg"
-                      alt="ILU Donation QR Code"
-                      className="w-56 sm:w-64 h-auto mx-auto rounded-xl object-contain block shadow-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-3 max-w-md mx-auto">
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs sm:text-sm leading-relaxed">
-                      തുക അയച്ച ശേഷം <span className="text-emerald-700 font-black">7907531608</span> എന്ന നമ്പറിലേക് സ്ക്രീൻ ഷോർട്ട് WhatsApp ചെയ്യുക
-                    </div>
-
-                    <a
-                      href="https://wa.me/917907531608?text=%E0%B4%A4%E0%B5%81%E0%B4%95%20%E0%B4%85%E0%B4%AF%E0%B4%9A%E0%B5%8D%E0%B4%9A%E0%B4%A4%E0%B4%BF%E0%B4%A8%E0%B5%8D%E0%B4%B1%E0%B5%86%20%E0%B4%B8%E0%B5%8D%E0%B4%95%E0%B5%8D%E0%B4%B0%E0%B5%80%E0%B4%A8%E0%B5%8D%E2%80%8D%20%E0%B4%B7%E0%B5%8B%E0%B4%9F%E0%B5%8D%E0%B4%9F%E0%B5%8D%20(Donation%20Screenshot)"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>WhatsApp Screenshot (+91 79075 31608)</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>
