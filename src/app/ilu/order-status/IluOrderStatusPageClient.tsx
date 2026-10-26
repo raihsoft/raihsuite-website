@@ -368,7 +368,7 @@ export default function IluOrderStatusPageClient() {
                       Club / Organization
                     </th>
                     <th scope="col" className="py-4 px-6 font-bold text-right">
-                      Total Quantity
+                      Quantity in Litres
                     </th>
                   </tr>
                 </thead>
@@ -478,7 +478,7 @@ export default function IluOrderStatusPageClient() {
                           {/* Quantity */}
                           <td className="py-4 px-6 text-right">
                             <span className={`font-black text-sm sm:text-base ${isFirst ? 'text-amber-950' : 'text-slate-900'}`}>
-                              {summary.totalQuantityLiters} L
+                              {summary.totalQuantityLiters}
                             </span>
                           </td>
                         </tr>
@@ -593,7 +593,7 @@ export default function IluOrderStatusPageClient() {
                         {/* Quantity Liters on Right */}
                         <div className="text-right shrink-0">
                           <span className={`text-sm sm:text-base font-black ${isFirst ? 'text-amber-950' : 'text-slate-900'}`}>
-                            {summary.totalQuantityLiters} L
+                            {summary.totalQuantityLiters}
                           </span>
                         </div>
                       </div>
@@ -620,7 +620,7 @@ export default function IluOrderStatusPageClient() {
                 <div className="text-right sm:text-right flex items-center justify-between sm:block">
                   <span className="text-xs sm:hidden text-slate-500 font-bold">Total:</span>
                   <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
-                    {data?.organizationTotalLiters ?? 0} L
+                    {data?.organizationTotalLiters ?? 0}
                   </span>
                 </div>
               </div>
