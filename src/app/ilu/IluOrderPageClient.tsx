@@ -811,14 +811,14 @@ export default function IluOrderPageClient() {
 
               {/* Action Button & Donation Illustration */}
               <div className="relative z-10 pt-3 sm:pt-4 flex items-center justify-between gap-4">
-                <Link
-                  href="/ilu/donate"
+                <a
+                  href="upi://pay?pa=getepay.esafbank136779@icici&pn=ILU%20FOUNDATION"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-700 hover:via-teal-700 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-md shadow-emerald-600/25 ring-2 ring-emerald-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 group whitespace-nowrap"
                 >
                   <Heart className="w-3.5 h-3.5 fill-white shrink-0 group-hover:scale-110 transition-transform" />
                   <span>Register Donation</span>
                   <ArrowRight className="w-3.5 h-3.5 shrink-0 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </a>
 
                 <div className="relative shrink-0 w-16 sm:w-20 h-auto flex items-center justify-center">
                   <img
