@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function DonateRedirectPage() {
-  redirect('/ilu/donate');
+  redirect('/ilu');
 }
