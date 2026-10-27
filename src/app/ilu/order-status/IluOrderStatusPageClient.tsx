@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   Search,
   RefreshCw,
-  ArrowLeft,
   AlertTriangle,
   BarChart3,
   X,
@@ -632,10 +631,9 @@ export default function IluOrderStatusPageClient() {
         <section className="pt-2 text-center">
           <Link
             href="/ilu"
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/25 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/25 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Order Submission</span>
+            <span>Submit New Orders</span>
           </Link>
         </section>
       </div>
