@@ -45,6 +45,12 @@ const DEFAULT_FUNDRAISING_NAME =
   process.env.NEXT_PUBLIC_FUNDRAISING_NAME ||
   'ilu payasam-challenge-2026';
 
+const DEFAULT_FUNDRAISING_CODE =
+  process.env.NEXT_PUBLIC_ILU_FUNDRAISING_CODE ||
+  process.env.NEXT_PUBLIC_FUNDRAISING_CODE ||
+  DEFAULT_TENANT_CODE ||
+  'ILU001';
+
 const explicitTenantId = Number(
   process.env.NEXT_PUBLIC_ILU_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID
 );
@@ -62,6 +68,7 @@ export interface ILUConfig {
   TENANT_CODE: string;
   FUNDRAISING_ID: string;
   FUNDRAISING_NAME: string;
+  FUNDRAISING_CODE: string;
   BASE_API_URL: string;
   ORGANIZATIONS_URL: string;
   ORDERS_URL: string;
@@ -77,6 +84,7 @@ export const ILU_CONFIG: ILUConfig = {
   TENANT_CODE: DEFAULT_TENANT_CODE,
   FUNDRAISING_ID: DEFAULT_FUNDRAISING_ID,
   FUNDRAISING_NAME: DEFAULT_FUNDRAISING_NAME,
+  FUNDRAISING_CODE: DEFAULT_FUNDRAISING_CODE,
   BASE_API_URL: API_URL,
   ORGANIZATIONS_URL: `${API_URL}orders/organizations/`,
   ORDERS_URL: `${API_URL}orders/orders/`,
@@ -521,6 +529,8 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
 
   const statusUrl = `${config.ORDER_STATUS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
+  )}&fundraising=${encodeURIComponent(
+    String(config.FUNDRAISING_CODE || config.TENANT_CODE || 'ILU001')
   )}`;
   const organizationsUrl = `${config.ORGANIZATIONS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
