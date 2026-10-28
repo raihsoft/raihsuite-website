@@ -34,11 +34,15 @@ import {
   DonationResponse,
   submitDonationApi,
 } from '@/lib/iluService';
+import IluPaymentBankDetails from '@/components/ilu/IluPaymentBankDetails';
 
 type DonorType = 'INDIVIDUAL' | 'ORGANIZATION';
 type DonationType = 'CASH' | 'COMMODITY';
 
 export default function IluDonatePageClient() {
+  // Set to true to restore the full donation registration form
+  const [showDonationForm] = useState(false);
+
   // 1. Donor Type (firstly: Club or Individual)
   const [donorType, setDonorType] = useState<DonorType>('ORGANIZATION');
 
@@ -309,8 +313,29 @@ export default function IluDonatePageClient() {
             </Link>
           </div>
 
-          {/* SUCCESS CONFIRMATION RECEIPT */}
-          {submittedDonation ? (
+          {/* TEMPORARILY HIDE FORM: DISPLAY ONLY QR CODE & BANK DETAILS SECTION */}
+          {!showDonationForm ? (
+            <div className="rounded-3xl bg-white border-2 border-emerald-500 ring-4 ring-emerald-500/15 shadow-2xl p-5 sm:p-8 md:p-10 space-y-6 sm:space-y-7 relative overflow-hidden">
+              <div className="absolute inset-x-0 top-0 h-1.5 rounded-t-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
+
+              {/* Header */}
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold w-fit">
+                  <Heart className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
+                  <span>സംഭാവനകൾ നൽകാം • Support ILU Mission</span>
+                </div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  Support ILU Foundation
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl">
+                  Scan the UPI QR code below, send money directly using Google Pay / PhonePe, or transfer to our bank account.
+                </p>
+              </div>
+
+              {/* Only QR Code & Bank Details Section */}
+              <IluPaymentBankDetails />
+            </div>
+          ) : submittedDonation ? (
             <div className="rounded-3xl bg-white border-2 border-emerald-500 shadow-2xl p-6 sm:p-10 text-center space-y-6 animate-fade-in relative overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
 
@@ -332,7 +357,7 @@ export default function IluDonatePageClient() {
                 <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                   <span className="text-slate-500 font-medium">Receipt Ref / ID:</span>
                   <span className="font-mono font-bold text-slate-900 break-all">
-                    {submittedDonation.id}
+                    {submittedDonation?.id}
                   </span>
                 </div>
 
@@ -356,12 +381,12 @@ export default function IluDonatePageClient() {
                   <>
                     <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                       <span className="text-slate-500 font-medium">Donor Name:</span>
-                      <span className="font-bold text-slate-900">{submittedDonation.donor_name}</span>
+                      <span className="font-bold text-slate-900">{submittedDonation?.donor_name}</span>
                     </div>
 
                     <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                       <span className="text-slate-500 font-medium">Mobile:</span>
-                      <span className="font-mono font-bold text-slate-800">{submittedDonation.mobile}</span>
+                      <span className="font-mono font-bold text-slate-800">{submittedDonation?.mobile}</span>
                     </div>
                   </>
                 )}
@@ -369,31 +394,31 @@ export default function IluDonatePageClient() {
                 <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                   <span className="text-slate-500 font-medium">Donation Type:</span>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-emerald-200 text-emerald-900">
-                    {submittedDonation.donation_type}
+                    {submittedDonation?.donation_type}
                   </span>
                 </div>
 
-                {submittedDonation.donation_type === 'CASH' && (
+                {submittedDonation?.donation_type === 'CASH' && (
                   <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                     <span className="text-slate-500 font-medium">Amount:</span>
                     <span className="text-base sm:text-lg font-black text-emerald-700 font-mono">
-                      ₹{submittedDonation.amount}
+                      ₹{submittedDonation?.amount}
                     </span>
                   </div>
                 )}
 
-                {submittedDonation.donation_type === 'COMMODITY' && (
+                {submittedDonation?.donation_type === 'COMMODITY' && (
                   <>
                     <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                       <span className="text-slate-500 font-medium">Item:</span>
                       <span className="font-bold text-slate-900">
-                        {submittedDonation.fundraising_item || fundraisingItem || 'Item'}
+                        {submittedDonation?.fundraising_item || fundraisingItem || 'Item'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-emerald-100">
                       <span className="text-slate-500 font-medium">Quantity:</span>
                       <span className="font-bold text-emerald-700">
-                        {submittedDonation.quantity}
+                        {submittedDonation?.quantity}
                       </span>
                     </div>
                   </>
@@ -401,7 +426,7 @@ export default function IluDonatePageClient() {
 
                 <div className="flex justify-between items-center py-1">
                   <span className="text-slate-500 font-medium">Date:</span>
-                  <span className="font-semibold text-slate-700">{submittedDonation.donation_date}</span>
+                  <span className="font-semibold text-slate-700">{submittedDonation?.donation_date}</span>
                 </div>
 
                 {submittedDonation.notes && (
@@ -412,38 +437,13 @@ export default function IluDonatePageClient() {
                 )}
               </div>
 
-              {/* QR Code in Success Confirmation if CASH */}
+              {/* QR Code & Bank Details in Success Confirmation if CASH */}
               {submittedDonation.donation_type === 'CASH' && (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 sm:p-5 text-center space-y-3">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
-                    <QrCode className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>Scan to Pay via UPI / QR കോഡ് സ്കാൻ ചെയ്യുക</span>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm inline-block mx-auto max-w-full">
-                    <img
-                      src="https://media.raihsuite.com/RS0001/web/ilu/Donation-QR.jpeg"
-                      alt="Donation UPI QR Code"
-                      className="w-44 sm:w-52 h-auto mx-auto rounded-xl object-contain block"
-                    />
-                  </div>
-
-                  <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-relaxed max-w-md mx-auto">
-                    തുക അയച്ച ശേഷം <span className="font-bold text-emerald-700">7907531608</span> എന്ന നമ്പറിലേക് സ്ക്രീൻ ഷോർട്ട് WhatsApp ചെയ്യുക
-                  </p>
-
-                  <a
-                    href={`https://wa.me/917907531608?text=${encodeURIComponent(
-                      `Donation Ref: ${submittedDonation.id}\nName: ${submittedDonation.donor_name}\nAmount: ₹${submittedDonation.amount || ''}\n(Donation Screenshot Attached)`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm transition transform hover:-translate-y-0.5 cursor-pointer"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>WhatsApp Screenshot (+91 79075 31608)</span>
-                  </a>
-                </div>
+                <IluPaymentBankDetails
+                  amount={submittedDonation.amount || amount}
+                  donationRef={submittedDonation.id}
+                  donorName={submittedDonation.donor_name}
+                />
               )}
 
               {/* Action Buttons */}
@@ -787,28 +787,36 @@ export default function IluDonatePageClient() {
 
                 {/* 6. MODE SPECIFIC FIELDS: CASH AMOUNT OR COMMODITY ITEM & QUANTITY */}
                 {donationType === 'CASH' ? (
-                  /* CASH MODE: AMOUNT ONLY */
-                  <div className="space-y-1.5 animate-fade-in">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="cash-amount" className="block text-xs sm:text-sm font-bold text-slate-800">
-                        Amount (₹) / തുക <span className="text-rose-500">*</span>
-                      </label>
-                      <span className="text-[11px] text-slate-400 font-medium">In Indian Rupees (INR)</span>
-                    </div>
-                    <div className="relative rounded-2xl shadow-xs">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 font-bold text-base sm:text-lg">
-                        ₹
+                  /* CASH MODE: AMOUNT & PAYMENT / BANK DETAILS */
+                  <div className="space-y-4 animate-fade-in">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="cash-amount" className="block text-xs sm:text-sm font-bold text-slate-800">
+                          Amount (₹) / തുക <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[11px] text-slate-400 font-medium">In Indian Rupees (INR)</span>
                       </div>
-                      <input
-                        type="text"
-                        id="cash-amount"
-                        value={amount}
-                        onChange={handleAmountChange}
-                        placeholder="Enter donation amount"
-                        required
-                        className="block w-full rounded-2xl border border-slate-300 bg-slate-50/80 hover:bg-white focus:bg-white pl-9 pr-4 py-2.5 sm:py-3 text-slate-900 text-base font-bold placeholder:text-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 focus:outline-none transition font-mono"
-                      />
+                      <div className="relative rounded-2xl shadow-xs">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500 font-bold text-base sm:text-lg">
+                          ₹
+                        </div>
+                        <input
+                          type="text"
+                          id="cash-amount"
+                          value={amount}
+                          onChange={handleAmountChange}
+                          placeholder="Enter donation amount"
+                          required
+                          className="block w-full rounded-2xl border border-slate-300 bg-slate-50/80 hover:bg-white focus:bg-white pl-9 pr-4 py-2.5 sm:py-3 text-slate-900 text-base font-bold placeholder:text-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 focus:outline-none transition font-mono"
+                        />
+                      </div>
                     </div>
+
+                    {/* QR Code, Bank Details & GPay Number */}
+                    <IluPaymentBankDetails
+                      amount={amount}
+                      donorName={donorName || selectedClub?.name}
+                    />
                   </div>
                 ) : (
                   /* COMMODITY MODE: ITEM TEXT FIELD & QUANTITY */

@@ -45,6 +45,12 @@ const DEFAULT_FUNDRAISING_NAME =
   process.env.NEXT_PUBLIC_FUNDRAISING_NAME ||
   'ilu payasam-challenge-2026';
 
+const DEFAULT_FUNDRAISING_CODE =
+  process.env.NEXT_PUBLIC_ILU_FUNDRAISING_CODE ||
+  process.env.NEXT_PUBLIC_FUNDRAISING_CODE ||
+  DEFAULT_TENANT_CODE ||
+  'ILU001';
+
 const explicitTenantId = Number(
   process.env.NEXT_PUBLIC_ILU_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID
 );
@@ -62,8 +68,10 @@ export interface ILUConfig {
   TENANT_CODE: string;
   FUNDRAISING_ID: string;
   FUNDRAISING_NAME: string;
+  FUNDRAISING_CODE: string;
   BASE_API_URL: string;
   ORGANIZATIONS_URL: string;
+  ORDER_BY_ORGANIZATION_URL: string;
   ORDERS_URL: string;
   ORDER_STATUS_URL: string;
   ZONE_REPORTS_URL: string;
@@ -77,8 +85,10 @@ export const ILU_CONFIG: ILUConfig = {
   TENANT_CODE: DEFAULT_TENANT_CODE,
   FUNDRAISING_ID: DEFAULT_FUNDRAISING_ID,
   FUNDRAISING_NAME: DEFAULT_FUNDRAISING_NAME,
+  FUNDRAISING_CODE: DEFAULT_FUNDRAISING_CODE,
   BASE_API_URL: API_URL,
   ORGANIZATIONS_URL: `${API_URL}orders/organizations/`,
+  ORDER_BY_ORGANIZATION_URL: `${API_URL}orders/order_by_organization/`,
   ORDERS_URL: `${API_URL}orders/orders/`,
   ORDER_STATUS_URL: `${API_URL}orders/order_status/`,
   ZONE_REPORTS_URL: `${API_URL}orders/zone_reports/`,
@@ -128,6 +138,25 @@ function getResults<T>(data: unknown): T[] {
  */
 export function getILUConfig(): Promise<ILUConfig> {
   return Promise.resolve(ILU_CONFIG);
+}
+
+export interface BackendOrderByOrganization {
+  organization_id: string;
+  organization_name: string;
+  last_ordered_at?: string | null;
+  total_order?: number;
+  total_order_quantity?: string | number;
+  total_approved?: string | number;
+  total_delivered?: string | number;
+  total_cancelled?: string | number;
+  total_initiated?: string | number;
+  orders?: Array<{
+    order_by_name?: string;
+    order_number?: string;
+    quantity?: number;
+    status?: string;
+    order_date?: string;
+  }>;
 }
 
 export interface BackendOrganization {
@@ -516,22 +545,76 @@ export async function submitOrderApi(
  * Fetches the order status report and organization summaries from the backend.
  * Errors are thrown instead of returning fabricated/demo totals.
  */
-export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
+export interface FetchOrderStatusOptions {
+  includeOrganizations?: boolean;
+}
+
+export async function fetchOrderStatusApi(
+  options: FetchOrderStatusOptions = {}
+): Promise<OrderStatusResponse> {
+  const { includeOrganizations = true } = options;
   const config = await getILUConfig();
+
+  const fundraisingParam =
+    config.FUNDRAISING_CODE ||
+    config.TENANT_CODE ||
+    config.FUNDRAISING_ID ||
+    'ILU001';
 
   const statusUrl = `${config.ORDER_STATUS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
-  )}`;
-  const organizationsUrl = `${config.ORGANIZATIONS_URL}?tenant=${encodeURIComponent(
+  )}&fundraising=${encodeURIComponent(fundraisingParam)}`;
+
+  if (!includeOrganizations) {
+    const statusResponse = await fetch(statusUrl, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (!statusResponse.ok) {
+      throw new Error(
+        `Failed to load order status (${statusResponse.status} ${statusResponse.statusText}).`
+      );
+    }
+
+    const rawStats = (await statusResponse.json()) as BackendOrderStatus;
+    const organizationTotal = Number(
+      rawStats.organization_total ||
+      rawStats.total_approved ||
+      rawStats.total_order ||
+      0
+    );
+    const grandTotal = Number(
+      rawStats.grand_total ||
+      rawStats.total_order ||
+      organizationTotal
+    );
+
+    return {
+      success: true,
+      orders: [],
+      summaries: [],
+      organizationTotalLiters: organizationTotal,
+      grandTotalLiters: grandTotal,
+      individualTotalLiters: Number(rawStats.individual_total ?? 0),
+      totalStock: Number(rawStats.total_stock ?? 0),
+      totalApproved: Number(rawStats.total_approved ?? 0),
+      totalDelivered: Number(rawStats.total_delivered ?? 0),
+      totalOrderCount: Number(rawStats.total_order ?? 0),
+      raw: rawStats,
+    };
+  }
+
+  const orderByOrgUrl = `${config.ORDER_BY_ORGANIZATION_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
-  )}&limit=500&offset=0`;
+  )}&fundraising=${encodeURIComponent(fundraisingParam)}&limit=500&offset=0`;
 
   const [statusResponse, organizationsResponse] = await Promise.all([
     fetch(statusUrl, {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     }),
-    fetch(organizationsUrl, {
+    fetch(orderByOrgUrl, {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     }),
@@ -545,35 +628,25 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
 
   if (!organizationsResponse.ok) {
     throw new Error(
-      `Failed to load organizations (${organizationsResponse.status} ${organizationsResponse.statusText}).`
+      `Failed to load organization orders (${organizationsResponse.status} ${organizationsResponse.statusText}).`
     );
   }
 
   const rawStats = (await statusResponse.json()) as BackendOrderStatus;
-  const organizations = getOrganizationResults(
-    await organizationsResponse.json()
-  );
+  const rawOrgData = await organizationsResponse.json();
+  const orgResults = getResults<BackendOrderByOrganization>(rawOrgData);
 
-  const summaries: ClubSummary[] = organizations
-    .filter((organization) => organization.is_active !== false)
-    .filter((organization) => {
-      if (organization.tenant === undefined || organization.tenant === null) {
-        // The backend has already received the tenant query parameter.
-        return true;
-      }
-
-      return String(organization.tenant) === String(config.TENANT_ID);
-    })
-    .map((organization) => ({
-      clubId: organization.id,
-      clubName: organization.organization_name,
-      contactPerson: organization.responsible_person_name?.trim() ?? '',
-      mobileNumber: organization.mobile?.trim() ?? '',
-      location: organization.place ?? '',
-      totalQuantityLiters: Number(organization.total_count || organization.approved_count || 0),
-      orderCount: Number(organization.approved_count || organization.total_count || 0),
-      lastOrderDate: '',
-      raw: organization,
+  const summaries: ClubSummary[] = orgResults
+    .map((org) => ({
+      clubId: String(org.organization_id || (org as any).id || ''),
+      clubName: String(org.organization_name || (org as any).name || ''),
+      contactPerson: String(org.orders?.[0]?.order_by_name?.trim() ?? ''),
+      mobileNumber: '',
+      location: (org as any).place || (org as any).location || '',
+      totalQuantityLiters: Number(org.total_approved ?? org.total_order_quantity ?? 0),
+      orderCount: Number(org.total_order ?? org.orders?.length ?? 0),
+      lastOrderDate: String(org.last_ordered_at || org.orders?.[0]?.order_date || ''),
+      raw: org as any,
     }))
     .sort(
       (a, b) => b.totalQuantityLiters - a.totalQuantityLiters

@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import IluDonatePageClient from './IluDonatePageClient';
 
 export const metadata: Metadata = {
-  title: 'Make a Donation – Support ILU Foundation | Palada Challenge',
-  description: 'Contribute directly to ILU Foundation initiatives. Every donation powers healthcare, child education, and humanitarian relief in our community.',
+  title: 'ILU Foundation - Donate • Support Community Welfare Initiatives',
+  description:
+    'Contribute directly with cash or essential commodities to support ILU Foundation community welfare initiatives.',
   openGraph: {
-    title: 'Make a Donation – Support ILU Foundation',
-    description: 'Contribute directly to ILU Foundation initiatives. Every donation powers healthcare, child education, and humanitarian relief.',
+    title: 'ILU Foundation - Donate • Support Community Welfare Initiatives',
+    description:
+      'Contribute directly with cash or essential commodities to support ILU Foundation community welfare initiatives.',
     images: ['https://media.raihsuite.com/RS0001/web/ilu/hero-banner.webp'],
   },
 };
@@ -14,3 +16,4 @@ export const metadata: Metadata = {
 export default function IluDonatePage() {
   return <IluDonatePageClient />;
 }
+
