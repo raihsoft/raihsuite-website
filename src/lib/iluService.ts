@@ -48,8 +48,7 @@ const DEFAULT_FUNDRAISING_NAME =
 const DEFAULT_FUNDRAISING_CODE =
   process.env.NEXT_PUBLIC_ILU_FUNDRAISING_CODE ||
   process.env.NEXT_PUBLIC_FUNDRAISING_CODE ||
-  DEFAULT_TENANT_CODE ||
-  'ILU001';
+  (isMainBranch ? 'ILU001' : 'ILU041');
 
 const explicitTenantId = Number(
   process.env.NEXT_PUBLIC_ILU_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID
@@ -557,9 +556,7 @@ export async function fetchOrderStatusApi(
 
   const fundraisingParam =
     config.FUNDRAISING_CODE ||
-    config.TENANT_CODE ||
-    config.FUNDRAISING_ID ||
-    'ILU001';
+    (isMainBranch ? 'ILU001' : 'ILU041');
 
   const statusUrl = `${config.ORDER_STATUS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
