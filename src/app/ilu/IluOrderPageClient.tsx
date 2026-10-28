@@ -269,7 +269,7 @@ export default function IluOrderPageClient() {
       if (!isSilent) {
         setLoadingOrderStatus(true);
       }
-      const res = await fetchOrderStatusApi();
+      const res = await fetchOrderStatusApi({ includeOrganizations: false });
       if (res && typeof res.organizationTotalLiters === 'number') {
         setOrderStatusData(res);
       }
