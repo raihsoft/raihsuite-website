@@ -149,6 +149,7 @@ export interface BackendOrderByOrganization {
   total_delivered?: string | number;
   total_cancelled?: string | number;
   total_initiated?: string | number;
+  status?: string;
   orders?: Array<{
     order_by_name?: string;
     order_number?: string;
@@ -213,6 +214,7 @@ export interface ClubSummary {
   totalQuantityLiters: number;
   orderCount: number;
   lastOrderDate: string;
+  status?: string;
   raw?: BackendOrganization;
 }
 
@@ -544,6 +546,46 @@ export async function submitOrderApi(
  * Fetches the order status report and organization summaries from the backend.
  * Errors are thrown instead of returning fabricated/demo totals.
  */
+/**
+ * Checks if an organization from order_by_organization is in INITIATED status.
+ * An organization is considered INITIATED if its status is 'INITIATED', or if all
+ * of its orders are 'INITIATED', or if it has only initiated orders and 0 approved/delivered.
+ */
+export function isInitiatedOrganization(org: BackendOrderByOrganization): boolean {
+  const directStatus = String(org.status || (org as any).order_status || '')
+    .trim()
+    .toUpperCase();
+  if (directStatus === 'INITIATED') {
+    return true;
+  }
+
+  // Check if all non-cancelled orders under this organization are INITIATED
+  if (Array.isArray(org.orders) && org.orders.length > 0) {
+    const nonCancelled = org.orders.filter(
+      (o) => String(o.status || '').trim().toUpperCase() !== 'CANCELLED'
+    );
+    if (
+      nonCancelled.length > 0 &&
+      nonCancelled.every(
+        (o) => String(o.status || '').trim().toUpperCase() === 'INITIATED'
+      )
+    ) {
+      return true;
+    }
+  }
+
+  // Check if only initiated orders are present (initiated > 0 while approved and delivered are 0)
+  const approved = Number(org.total_approved ?? 0);
+  const delivered = Number(org.total_delivered ?? 0);
+  const initiated = Number(org.total_initiated ?? 0);
+
+  if (initiated > 0 && approved <= 0 && delivered <= 0) {
+    return true;
+  }
+
+  return false;
+}
+
 export interface FetchOrderStatusOptions {
   includeOrganizations?: boolean;
 }
@@ -634,20 +676,47 @@ export async function fetchOrderStatusApi(
   const orgResults = getResults<BackendOrderByOrganization>(rawOrgData);
 
   const summaries: ClubSummary[] = orgResults
-    .map((org) => ({
-      clubId: String(org.organization_id || (org as any).id || ''),
-      clubName: String(org.organization_name || (org as any).name || ''),
-      contactPerson: String(org.orders?.[0]?.order_by_name?.trim() ?? ''),
-      mobileNumber: '',
-      location: (org as any).place || (org as any).location || '',
-      totalQuantityLiters: Number(org.total_approved ?? org.total_order_quantity ?? 0),
-      orderCount: Number(org.total_order ?? org.orders?.length ?? 0),
-      lastOrderDate: String(org.last_ordered_at || org.orders?.[0]?.order_date || ''),
-      raw: org as any,
-    }))
-    .sort(
-      (a, b) => b.totalQuantityLiters - a.totalQuantityLiters
-    );
+    .filter((org) => !isInitiatedOrganization(org))
+    .map((org) => {
+      const approvedCount = Number(org.total_approved ?? 0);
+      const deliveredCount = Number(org.total_delivered ?? 0);
+      const ordersApprovedSum = Array.isArray(org.orders)
+        ? org.orders
+            .filter((o) => {
+              const st = String(o.status || '').trim().toUpperCase();
+              return st === 'APPROVED' || st === 'DELIVERED' || st === 'CONFIRMED';
+            })
+            .reduce((acc, o) => acc + (Number(o.quantity) || 0), 0)
+        : 0;
+
+      const totalLiters =
+        approvedCount > 0
+          ? approvedCount + deliveredCount
+          : ordersApprovedSum > 0
+            ? ordersApprovedSum
+            : Number(org.total_approved ?? org.total_order_quantity ?? 0);
+
+      const status = String(
+        org.status || (org as any).order_status || org.orders?.[0]?.status || ''
+      )
+        .trim()
+        .toUpperCase();
+
+      return {
+        clubId: String(org.organization_id || (org as any).id || ''),
+        clubName: String(org.organization_name || (org as any).name || ''),
+        contactPerson: String(org.orders?.[0]?.order_by_name?.trim() ?? ''),
+        mobileNumber: '',
+        location: (org as any).place || (org as any).location || '',
+        totalQuantityLiters: totalLiters,
+        orderCount: Number(org.total_order ?? org.orders?.length ?? 0),
+        lastOrderDate: String(org.last_ordered_at || org.orders?.[0]?.order_date || ''),
+        status,
+        raw: org as any,
+      };
+    })
+    .filter((item) => item.status !== 'INITIATED' && item.totalQuantityLiters > 0)
+    .sort((a, b) => b.totalQuantityLiters - a.totalQuantityLiters);
 
   const calculatedSum = summaries.reduce(
     (acc, item) => acc + (item.totalQuantityLiters || 0),
