@@ -545,7 +545,14 @@ export async function submitOrderApi(
  * Fetches the order status report and organization summaries from the backend.
  * Errors are thrown instead of returning fabricated/demo totals.
  */
-export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
+export interface FetchOrderStatusOptions {
+  includeOrganizations?: boolean;
+}
+
+export async function fetchOrderStatusApi(
+  options: FetchOrderStatusOptions = {}
+): Promise<OrderStatusResponse> {
+  const { includeOrganizations = true } = options;
   const config = await getILUConfig();
 
   const fundraisingParam =
@@ -557,6 +564,46 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
   const statusUrl = `${config.ORDER_STATUS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
   )}&fundraising=${encodeURIComponent(fundraisingParam)}`;
+
+  if (!includeOrganizations) {
+    const statusResponse = await fetch(statusUrl, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (!statusResponse.ok) {
+      throw new Error(
+        `Failed to load order status (${statusResponse.status} ${statusResponse.statusText}).`
+      );
+    }
+
+    const rawStats = (await statusResponse.json()) as BackendOrderStatus;
+    const organizationTotal = Number(
+      rawStats.organization_total ||
+      rawStats.total_approved ||
+      rawStats.total_order ||
+      0
+    );
+    const grandTotal = Number(
+      rawStats.grand_total ||
+      rawStats.total_order ||
+      organizationTotal
+    );
+
+    return {
+      success: true,
+      orders: [],
+      summaries: [],
+      organizationTotalLiters: organizationTotal,
+      grandTotalLiters: grandTotal,
+      individualTotalLiters: Number(rawStats.individual_total ?? 0),
+      totalStock: Number(rawStats.total_stock ?? 0),
+      totalApproved: Number(rawStats.total_approved ?? 0),
+      totalDelivered: Number(rawStats.total_delivered ?? 0),
+      totalOrderCount: Number(rawStats.total_order ?? 0),
+      raw: rawStats,
+    };
+  }
 
   const orderByOrgUrl = `${config.ORDER_BY_ORGANIZATION_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)

@@ -107,19 +107,14 @@ export default function IluPaymentBankDetails({
               <button
                 type="button"
                 onClick={() => handleCopy(ILU_PAYMENT_INFO.gpayRawNumber, 'gpay')}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 text-xs font-bold border border-emerald-200 shadow-2xs transition cursor-pointer"
+                className="p-2 rounded-xl bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-emerald-200 shadow-xs transition cursor-pointer flex items-center justify-center"
                 title="Copy GPay number"
+                aria-label="Copy GPay number"
               >
                 {copiedKey === 'gpay' ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">Copied!</span>
-                  </>
+                  <Check className="w-4 h-4 text-emerald-600" />
                 ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Copy</span>
-                  </>
+                  <Copy className="w-4 h-4 text-slate-500" />
                 )}
               </button>
             </div>
