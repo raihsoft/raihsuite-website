@@ -177,7 +177,11 @@ export default function IluOrderStatusPageClient() {
 
   const rankedSummaries = useMemo(() => {
     if (!data?.summaries) return [];
-    const list = [...data.summaries];
+    const list = data.summaries.filter((s) => {
+      const status = String(s.status || (s.raw as any)?.status || '').trim().toUpperCase();
+      if (status === 'INITIATED') return false;
+      return (s.totalQuantityLiters || 0) > 0;
+    });
 
     // Strictly sort in descending order of total_count from the API
     list.sort((a, b) => (b.totalQuantityLiters || 0) - (a.totalQuantityLiters || 0));
