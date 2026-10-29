@@ -206,7 +206,6 @@ export default function IluOrderStatusPageClient() {
   const tickerOrders = (data?.latestClubOrders ?? [])
     .slice(0, 10);
 
-
   return (
     <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
       {/* Background Image Layer with Faded Effect */}
@@ -334,7 +333,9 @@ export default function IluOrderStatusPageClient() {
           </div>
 
           {tickerOrders.length > 0 ? (
-            <div className="ilu-live-totals-viewport min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
+            <div
+              className="ilu-live-totals-viewport min-w-0 flex-1 overflow-x-auto overscroll-x-contain"
+            >
               <ul className="sr-only">
                 {tickerOrders.map((order) => (
                   <li key={order.key}>
@@ -354,22 +355,23 @@ export default function IluOrderStatusPageClient() {
                 {[0, 1].map((copy) => (
                   <div key={copy} className="flex shrink-0 items-center gap-3 pr-3">
                     {tickerOrders.map((order, orderIndex) => (
-                      <React.Fragment key={`${copy}-${order.key}`}>
-                        <span className="inline-flex shrink-0 items-center gap-2 py-2 text-xs sm:text-sm">
-                          {copy === 0 && orderIndex === 0 && (
-                            <span
-                              className="h-2 w-2 shrink-0 rounded-[2px] bg-rose-500"
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span className="max-w-[12rem] truncate font-semibold text-slate-700">
-                            {order.clubName}
-                          </span>
-                          <span className="font-black tabular-nums text-amber-800">
-                            {order.quantityLiters.toLocaleString()} Ltr
-                          </span>
+                      <span
+                        key={`${copy}-${order.key}`}
+                        className="inline-flex shrink-0 items-center gap-2 py-2 text-xs sm:text-sm"
+                      >
+                        {copy === 0 && orderIndex === 0 && (
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-[2px] bg-rose-500"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <span className="max-w-[12rem] truncate font-semibold text-slate-700">
+                          {order.clubName}
                         </span>
-                      </React.Fragment>
+                        <span className="font-black tabular-nums text-amber-800">
+                          {order.quantityLiters.toLocaleString()} Ltr
+                        </span>
+                      </span>
                     ))}
                   </div>
                 ))}
@@ -716,10 +718,6 @@ export default function IluOrderStatusPageClient() {
 
         .ilu-live-totals-track {
           animation: ilu-live-totals-scroll var(--ilu-ticker-duration, 32s) linear infinite;
-        }
-
-        .ilu-live-totals-track:hover {
-          animation-play-state: paused;
         }
 
         @keyframes ilu-live-totals-scroll {
