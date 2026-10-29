@@ -45,6 +45,11 @@ const DEFAULT_FUNDRAISING_NAME =
   process.env.NEXT_PUBLIC_FUNDRAISING_NAME ||
   'ilu payasam-challenge-2026';
 
+const DEFAULT_FUNDRAISING_CODE =
+  process.env.NEXT_PUBLIC_ILU_FUNDRAISING_CODE ||
+  process.env.NEXT_PUBLIC_FUNDRAISING_CODE ||
+  (isMainBranch ? 'ILU001' : 'ILU041');
+
 const explicitTenantId = Number(
   process.env.NEXT_PUBLIC_ILU_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID
 );
@@ -62,11 +67,15 @@ export interface ILUConfig {
   TENANT_CODE: string;
   FUNDRAISING_ID: string;
   FUNDRAISING_NAME: string;
+  FUNDRAISING_CODE: string;
   BASE_API_URL: string;
   ORGANIZATIONS_URL: string;
+  ORDER_BY_ORGANIZATION_URL: string;
   ORDERS_URL: string;
   ORDER_STATUS_URL: string;
   ZONE_REPORTS_URL: string;
+  FUNDRAISING_ITEMS_URL: string;
+  DONATIONS_URL: string;
 }
 
 export const ILU_CONFIG: ILUConfig = {
@@ -75,11 +84,15 @@ export const ILU_CONFIG: ILUConfig = {
   TENANT_CODE: DEFAULT_TENANT_CODE,
   FUNDRAISING_ID: DEFAULT_FUNDRAISING_ID,
   FUNDRAISING_NAME: DEFAULT_FUNDRAISING_NAME,
+  FUNDRAISING_CODE: DEFAULT_FUNDRAISING_CODE,
   BASE_API_URL: API_URL,
   ORGANIZATIONS_URL: `${API_URL}orders/organizations/`,
+  ORDER_BY_ORGANIZATION_URL: `${API_URL}orders/order_by_organization/`,
   ORDERS_URL: `${API_URL}orders/orders/`,
   ORDER_STATUS_URL: `${API_URL}orders/order_status/`,
   ZONE_REPORTS_URL: `${API_URL}orders/zone_reports/`,
+  FUNDRAISING_ITEMS_URL: `${API_URL}orders/fundraising_items/`,
+  DONATIONS_URL: `${API_URL}orders/donations/`,
 };
 
 export interface BackendTenant {
@@ -119,79 +132,31 @@ function getResults<T>(data: unknown): T[] {
   return [];
 }
 
-let configPromise: Promise<ILUConfig> | undefined;
-
 /**
- * Loads tenant and fundraising details from the backend.
- * Falls back safely if backend metadata endpoints are restricted or unreachable.
+ * Returns configuration for ILU services based on environment and defaults.
  */
 export function getILUConfig(): Promise<ILUConfig> {
-  if (!configPromise) {
-    configPromise = loadILUConfig().catch(() => ILU_CONFIG);
-  }
-
-  return configPromise;
+  return Promise.resolve(ILU_CONFIG);
 }
 
-async function loadILUConfig(): Promise<ILUConfig> {
-  let resolvedTenantId = DEFAULT_TENANT_ID;
-  let resolvedTenantName = DEFAULT_TENANT_NAME;
-  let resolvedTenantCode = DEFAULT_TENANT_CODE;
-  let resolvedFundraisingId = DEFAULT_FUNDRAISING_ID;
-  let resolvedFundraisingName = DEFAULT_FUNDRAISING_NAME;
-
-  try {
-    const [tenantResponse, fundraisingResponse] = await Promise.all([
-      fetch(`${API_URL}tenants/tenants/`, {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      }).catch(() => null),
-      fetch(`${API_URL}orders/fundraising/`, {
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-      }).catch(() => null),
-    ]);
-
-    if (tenantResponse && tenantResponse.ok) {
-      const tenants = getResults<BackendTenant>(await tenantResponse.json().catch(() => null));
-      const matchedTenant = tenants.find(
-        (item) => String(item.code).trim().toLowerCase() === DEFAULT_TENANT_CODE.trim().toLowerCase()
-      );
-      if (matchedTenant) {
-        resolvedTenantId = matchedTenant.id;
-        resolvedTenantName = matchedTenant.name;
-        resolvedTenantCode = matchedTenant.code;
-      }
-    }
-
-    if (fundraisingResponse && fundraisingResponse.ok) {
-      const fundraisings = getResults<BackendFundraising>(
-        await fundraisingResponse.json().catch(() => null)
-      );
-      const matchedFundraising = fundraisings.find(
-        (item) => String(item.id) === DEFAULT_FUNDRAISING_ID
-      );
-      if (matchedFundraising) {
-        resolvedFundraisingId = matchedFundraising.id;
-        resolvedFundraisingName = matchedFundraising.name;
-      }
-    }
-  } catch {
-    // Graceful fallback to resolved defaults
-  }
-
-  return {
-    TENANT_ID: resolvedTenantId,
-    TENANT_NAME: resolvedTenantName,
-    TENANT_CODE: resolvedTenantCode,
-    FUNDRAISING_ID: resolvedFundraisingId,
-    FUNDRAISING_NAME: resolvedFundraisingName,
-    BASE_API_URL: API_URL,
-    ORGANIZATIONS_URL: `${API_URL}orders/organizations/`,
-    ORDERS_URL: `${API_URL}orders/orders/`,
-    ORDER_STATUS_URL: `${API_URL}orders/order_status/`,
-    ZONE_REPORTS_URL: `${API_URL}orders/zone_reports/`,
-  };
+export interface BackendOrderByOrganization {
+  organization_id: string;
+  organization_name: string;
+  last_ordered_at?: string | null;
+  total_order?: number;
+  total_order_quantity?: string | number;
+  total_approved?: string | number;
+  total_delivered?: string | number;
+  total_cancelled?: string | number;
+  total_initiated?: string | number;
+  status?: string;
+  orders?: Array<{
+    order_by_name?: string;
+    order_number?: string;
+    quantity?: number;
+    status?: string;
+    order_date?: string;
+  }>;
 }
 
 export interface BackendOrganization {
@@ -249,6 +214,7 @@ export interface ClubSummary {
   totalQuantityLiters: number;
   orderCount: number;
   lastOrderDate: string;
+  status?: string;
   raw?: BackendOrganization;
 }
 
@@ -580,22 +546,128 @@ export async function submitOrderApi(
  * Fetches the order status report and organization summaries from the backend.
  * Errors are thrown instead of returning fabricated/demo totals.
  */
-export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
+/**
+ * Checks if an organization from order_by_organization is in INITIATED status.
+ * An organization is considered INITIATED if its status is 'INITIATED', or if all
+ * of its orders are 'INITIATED', or if it has only initiated orders and 0 approved/delivered.
+ */
+export function isInitiatedOrganization(org: BackendOrderByOrganization): boolean {
+  const approved = Number(org.total_approved ?? 0);
+  const delivered = Number(org.total_delivered ?? 0);
+  const ordersApprovedSum = Array.isArray(org.orders)
+    ? org.orders
+        .filter((o) => {
+          const st = String(o.status || '').trim().toUpperCase();
+          return st === 'APPROVED' || st === 'DELIVERED' || st === 'CONFIRMED';
+        })
+        .reduce((acc, o) => acc + (Number(o.quantity) || 0), 0)
+    : 0;
+
+  // If the organization has approved or delivered quantity, it is NOT initiated
+  if (approved > 0 || delivered > 0 || ordersApprovedSum > 0) {
+    return false;
+  }
+
+  const directStatus = String(org.status || (org as any).order_status || '')
+    .trim()
+    .toUpperCase();
+  if (directStatus === 'INITIATED') {
+    return true;
+  }
+
+  // Check if all non-cancelled orders under this organization are INITIATED
+  if (Array.isArray(org.orders) && org.orders.length > 0) {
+    const nonCancelled = org.orders.filter(
+      (o) => String(o.status || '').trim().toUpperCase() !== 'CANCELLED'
+    );
+    if (
+      nonCancelled.length > 0 &&
+      nonCancelled.every(
+        (o) => String(o.status || '').trim().toUpperCase() === 'INITIATED'
+      )
+    ) {
+      return true;
+    }
+  }
+
+  // Check if only initiated orders are present (initiated > 0 while approved and delivered are 0)
+  const initiated = Number(org.total_initiated ?? 0);
+
+  if (initiated > 0 && approved <= 0 && delivered <= 0) {
+    return true;
+  }
+
+  return false;
+}
+
+export interface FetchOrderStatusOptions {
+  includeOrganizations?: boolean;
+}
+
+export async function fetchOrderStatusApi(
+  options: FetchOrderStatusOptions = {}
+): Promise<OrderStatusResponse> {
+  const { includeOrganizations = true } = options;
   const config = await getILUConfig();
+
+  const fundraisingParam =
+    config.FUNDRAISING_CODE ||
+    (isMainBranch ? 'ILU001' : 'ILU041');
 
   const statusUrl = `${config.ORDER_STATUS_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
-  )}`;
-  const organizationsUrl = `${config.ORGANIZATIONS_URL}?tenant=${encodeURIComponent(
+  )}&fundraising=${encodeURIComponent(fundraisingParam)}`;
+
+  if (!includeOrganizations) {
+    const statusResponse = await fetch(statusUrl, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    if (!statusResponse.ok) {
+      throw new Error(
+        `Failed to load order status (${statusResponse.status} ${statusResponse.statusText}).`
+      );
+    }
+
+    const rawStats = (await statusResponse.json()) as BackendOrderStatus;
+    const organizationTotal = Number(
+      rawStats.organization_total ||
+      rawStats.total_approved ||
+      rawStats.total_order ||
+      0
+    );
+    const grandTotal = Number(
+      rawStats.grand_total ||
+      rawStats.total_order ||
+      organizationTotal
+    );
+
+    return {
+      success: true,
+      orders: [],
+      summaries: [],
+      organizationTotalLiters: organizationTotal,
+      grandTotalLiters: grandTotal,
+      individualTotalLiters: Number(rawStats.individual_total ?? 0),
+      totalStock: Number(rawStats.total_stock ?? 0),
+      totalApproved: Number(rawStats.total_approved ?? 0),
+      totalDelivered: Number(rawStats.total_delivered ?? 0),
+      totalOrderCount: Number(rawStats.total_order ?? 0),
+      raw: rawStats,
+    };
+  }
+
+  const orderByOrgUrl = `${config.ORDER_BY_ORGANIZATION_URL}?tenant=${encodeURIComponent(
     String(config.TENANT_ID)
-  )}&limit=500&offset=0`;
+  )}&fundraising=${encodeURIComponent(fundraisingParam)}&limit=500&offset=0`;
 
   const [statusResponse, organizationsResponse] = await Promise.all([
     fetch(statusUrl, {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     }),
-    fetch(organizationsUrl, {
+    fetch(orderByOrgUrl, {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     }),
@@ -609,52 +681,81 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
 
   if (!organizationsResponse.ok) {
     throw new Error(
-      `Failed to load organizations (${organizationsResponse.status} ${organizationsResponse.statusText}).`
+      `Failed to load organization orders (${organizationsResponse.status} ${organizationsResponse.statusText}).`
     );
   }
 
   const rawStats = (await statusResponse.json()) as BackendOrderStatus;
-  const organizations = getOrganizationResults(
-    await organizationsResponse.json()
-  );
+  const rawOrgData = await organizationsResponse.json();
+  const orgResults = getResults<BackendOrderByOrganization>(rawOrgData);
 
-  const summaries: ClubSummary[] = organizations
-    .filter((organization) => organization.is_active !== false)
-    .filter((organization) => {
-      if (organization.tenant === undefined || organization.tenant === null) {
-        // The backend has already received the tenant query parameter.
-        return true;
-      }
+  const summaries: ClubSummary[] = orgResults
+    .filter((org) => !isInitiatedOrganization(org))
+    .map((org) => {
+      const approvedCount = Number(org.total_approved ?? 0);
+      const deliveredCount = Number(org.total_delivered ?? 0);
+      const approvedOrders = Array.isArray(org.orders)
+        ? org.orders.filter((o) => {
+            const st = String(o.status || '').trim().toUpperCase();
+            return st === 'APPROVED' || st === 'DELIVERED' || st === 'CONFIRMED';
+          })
+        : [];
+      const ordersApprovedSum = approvedOrders.reduce(
+        (acc, o) => acc + (Number(o.quantity) || 0),
+        0
+      );
 
-      return String(organization.tenant) === String(config.TENANT_ID);
+      // Compute total approved liters strictly from approved & delivered counts
+      const totalApprovedLiters =
+        approvedCount > 0 || deliveredCount > 0
+          ? approvedCount + deliveredCount
+          : ordersApprovedSum > 0
+            ? ordersApprovedSum
+            : 0;
+
+      // Organization with approved liters has status APPROVED
+      const status = totalApprovedLiters > 0 ? 'APPROVED' : 'INITIATED';
+
+      const latestApprovedOrder = approvedOrders[0] || org.orders?.[0];
+      const contactPerson = String(latestApprovedOrder?.order_by_name?.trim() ?? '');
+      const lastOrderDate = String(
+        org.last_ordered_at || latestApprovedOrder?.order_date || ''
+      );
+      const orderCount =
+        approvedOrders.length > 0
+          ? approvedOrders.length
+          : Number(org.total_order ?? org.orders?.length ?? 0);
+
+      return {
+        clubId: String(org.organization_id || (org as any).id || ''),
+        clubName: String(org.organization_name || (org as any).name || ''),
+        contactPerson,
+        mobileNumber: '',
+        location: (org as any).place || (org as any).location || '',
+        totalQuantityLiters: totalApprovedLiters,
+        orderCount,
+        lastOrderDate,
+        status,
+        raw: org as any,
+      };
     })
-    .map((organization) => ({
-      clubId: organization.id,
-      clubName: organization.organization_name,
-      contactPerson: organization.responsible_person_name?.trim() ?? '',
-      mobileNumber: organization.mobile?.trim() ?? '',
-      location: organization.place ?? '',
-      totalQuantityLiters: Number(organization.total_count || organization.approved_count || 0),
-      orderCount: Number(organization.approved_count || organization.total_count || 0),
-      lastOrderDate: '',
-      raw: organization,
-    }))
-    .sort(
-      (a, b) => b.totalQuantityLiters - a.totalQuantityLiters
-    );
+    .filter((item) => item.status === 'APPROVED' && item.totalQuantityLiters > 0)
+    .sort((a, b) => b.totalQuantityLiters - a.totalQuantityLiters);
 
   const calculatedSum = summaries.reduce(
     (acc, item) => acc + (item.totalQuantityLiters || 0),
     0
   );
 
-  const organizationTotal = Number(
-    rawStats.organization_total ||
-    rawStats.total_approved ||
-    rawStats.total_order ||
-    calculatedSum ||
-    0
-  );
+  const organizationTotal =
+    calculatedSum > 0
+      ? calculatedSum
+      : Number(
+          rawStats.organization_total ||
+          rawStats.total_approved ||
+          rawStats.total_order ||
+          0
+        );
   const grandTotal = Number(
     rawStats.grand_total ||
     rawStats.total_order ||
@@ -674,4 +775,131 @@ export async function fetchOrderStatusApi(): Promise<OrderStatusResponse> {
     totalOrderCount: Number(rawStats.total_order ?? 0),
     raw: rawStats,
   };
+}
+
+export interface FundraisingItem {
+  id: string;
+  name: string;
+  tenant?: number | null;
+  fundraising?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DonationPayload {
+  tenant: number;
+  fundraising: string;
+  donor_type?: 'INDIVIDUAL' | 'ORGANIZATION';
+  organization?: string | null;
+  donation_type: 'CASH' | 'COMMODITY';
+  donor_name: string;
+  mobile: string;
+  donation_date?: string;
+  amount: string | null;
+  fundraising_item: string | null;
+  quantity: string | number | null;
+  notes: string;
+  security_code?: string | null;
+}
+
+export interface DonationResponse {
+  id: string;
+  tenant: number;
+  fundraising: string;
+  donor_type?: 'INDIVIDUAL' | 'ORGANIZATION';
+  organization?: string | null;
+  donation_type: 'CASH' | 'COMMODITY';
+  donor_name: string;
+  mobile: string;
+  donation_date: string;
+  amount: string | null;
+  fundraising_item: string | null;
+  quantity: string | number | null;
+  notes: string;
+  created_at?: string;
+}
+
+/**
+ * Fetches fundraising items from the backend for commodity donations.
+ */
+export async function fetchFundraisingItemsApi(): Promise<FundraisingItem[]> {
+  const config = await getILUConfig();
+  const tenantUrl = `${config.FUNDRAISING_ITEMS_URL}?tenant=${encodeURIComponent(
+    String(config.TENANT_ID)
+  )}&limit=100`;
+
+  const response = await fetch(tenantUrl, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  }).catch(() => null);
+
+  if (response && response.ok) {
+    const data = await response.json().catch(() => null);
+    const items = getResults<FundraisingItem>(data);
+    if (items.length > 0) {
+      return items;
+    }
+  }
+
+  // Fallback: fetch without tenant param in case tenant filter is omitted
+  const fallbackResponse = await fetch(config.FUNDRAISING_ITEMS_URL, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  }).catch(() => null);
+
+  if (fallbackResponse && fallbackResponse.ok) {
+    const fallbackData = await fallbackResponse.json().catch(() => null);
+    return getResults<FundraisingItem>(fallbackData);
+  }
+
+  return [];
+}
+
+/**
+ * Submits a new donation (CASH or COMMODITY) to the backend.
+ */
+export async function submitDonationApi(
+  payload: Omit<DonationPayload, 'tenant' | 'fundraising'>
+): Promise<DonationResponse> {
+  const config = await getILUConfig();
+  const fullPayload: DonationPayload = {
+    ...payload,
+    tenant: config.TENANT_ID,
+    fundraising: config.FUNDRAISING_ID,
+  };
+
+  // If INDIVIDUAL, organization must be null and security_code must never be sent
+  if (fullPayload.donor_type === 'INDIVIDUAL') {
+    fullPayload.organization = null;
+    delete fullPayload.security_code;
+  }
+
+  // If not an organization or security_code is null/empty/not provided, completely delete it from payload
+  if (fullPayload.donor_type !== 'ORGANIZATION' || !fullPayload.security_code) {
+    delete fullPayload.security_code;
+  }
+
+  const response = await fetch(config.DONATIONS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(fullPayload),
+  });
+
+  const responseData: any = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      normalizeApiError(
+        responseData,
+        `Donation submission failed (${response.status} ${response.statusText})`
+      )
+    );
+  }
+
+  return responseData as DonationResponse;
 }
