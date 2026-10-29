@@ -203,6 +203,8 @@ export default function IluOrderStatusPageClient() {
     );
   }, [rankedSummaries, searchQuery]);
 
+  const tickerOrders = (data?.latestClubOrders ?? [])
+    .slice(0, 10);
 
   return (
     <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
@@ -317,6 +319,69 @@ export default function IluOrderStatusPageClient() {
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Latest individual orders; uses the existing ten-second leaderboard refresh. */}
+        <section
+          aria-label="Latest orders"
+          className="flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/85 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4"
+        >
+          <div className="hidden shrink-0 items-center rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] px-3 py-2 text-white shadow-sm sm:flex">
+            <span className="text-[10px] font-extrabold uppercase tracking-wide sm:text-xs">
+              Latest Orders
+            </span>
+          </div>
+
+          {tickerOrders.length > 0 ? (
+            <div
+              className="ilu-live-totals-viewport min-w-0 flex-1 overflow-x-auto overscroll-x-contain"
+            >
+              <ul className="sr-only">
+                {tickerOrders.map((order) => (
+                  <li key={order.key}>
+                    {order.clubName}: latest order {order.quantityLiters.toLocaleString()} liters
+                  </li>
+                ))}
+              </ul>
+              <div
+                className="ilu-live-totals-track flex w-max"
+                style={
+                  {
+                    '--ilu-ticker-duration': `${Math.max(24, tickerOrders.length * 4)}s`,
+                  } as React.CSSProperties
+                }
+                aria-hidden="true"
+              >
+                {[0, 1].map((copy) => (
+                  <div key={copy} className="flex shrink-0 items-center gap-3 pr-3">
+                    {tickerOrders.map((order, orderIndex) => (
+                      <span
+                        key={`${copy}-${order.key}`}
+                        className="inline-flex shrink-0 items-center gap-2 py-2 text-xs sm:text-sm"
+                      >
+                        {copy === 0 && orderIndex === 0 && (
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-[2px] bg-rose-500"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <span className="max-w-[12rem] truncate font-semibold text-slate-700">
+                          {order.clubName}
+                        </span>
+                        <span className="font-black tabular-nums text-amber-800">
+                          {order.quantityLiters.toLocaleString()} Ltr
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
+              {loading ? 'Loading latest orders…' : 'No latest club orders available yet.'}
+            </p>
+          )}
         </section>
 
         {/* SEARCH & REFRESH TOOLBAR */}
@@ -641,6 +706,35 @@ export default function IluOrderStatusPageClient() {
           </Link>
         </section>
       </div>
+      <style jsx>{`
+        .ilu-live-totals-viewport {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .ilu-live-totals-viewport::-webkit-scrollbar {
+          display: none;
+        }
+
+        .ilu-live-totals-track {
+          animation: ilu-live-totals-scroll var(--ilu-ticker-duration, 32s) linear infinite;
+        }
+
+        @keyframes ilu-live-totals-scroll {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ilu-live-totals-track {
+            animation: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
