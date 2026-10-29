@@ -552,6 +552,22 @@ export async function submitOrderApi(
  * of its orders are 'INITIATED', or if it has only initiated orders and 0 approved/delivered.
  */
 export function isInitiatedOrganization(org: BackendOrderByOrganization): boolean {
+  const approved = Number(org.total_approved ?? 0);
+  const delivered = Number(org.total_delivered ?? 0);
+  const ordersApprovedSum = Array.isArray(org.orders)
+    ? org.orders
+        .filter((o) => {
+          const st = String(o.status || '').trim().toUpperCase();
+          return st === 'APPROVED' || st === 'DELIVERED' || st === 'CONFIRMED';
+        })
+        .reduce((acc, o) => acc + (Number(o.quantity) || 0), 0)
+    : 0;
+
+  // If the organization has approved or delivered quantity, it is NOT initiated
+  if (approved > 0 || delivered > 0 || ordersApprovedSum > 0) {
+    return false;
+  }
+
   const directStatus = String(org.status || (org as any).order_status || '')
     .trim()
     .toUpperCase();
@@ -575,8 +591,6 @@ export function isInitiatedOrganization(org: BackendOrderByOrganization): boolea
   }
 
   // Check if only initiated orders are present (initiated > 0 while approved and delivered are 0)
-  const approved = Number(org.total_approved ?? 0);
-  const delivered = Number(org.total_delivered ?? 0);
   const initiated = Number(org.total_initiated ?? 0);
 
   if (initiated > 0 && approved <= 0 && delivered <= 0) {
@@ -680,42 +694,52 @@ export async function fetchOrderStatusApi(
     .map((org) => {
       const approvedCount = Number(org.total_approved ?? 0);
       const deliveredCount = Number(org.total_delivered ?? 0);
-      const ordersApprovedSum = Array.isArray(org.orders)
-        ? org.orders
-            .filter((o) => {
-              const st = String(o.status || '').trim().toUpperCase();
-              return st === 'APPROVED' || st === 'DELIVERED' || st === 'CONFIRMED';
-            })
-            .reduce((acc, o) => acc + (Number(o.quantity) || 0), 0)
-        : 0;
+      const approvedOrders = Array.isArray(org.orders)
+        ? org.orders.filter((o) => {
+            const st = String(o.status || '').trim().toUpperCase();
+            return st === 'APPROVED' || st === 'DELIVERED' || st === 'CONFIRMED';
+          })
+        : [];
+      const ordersApprovedSum = approvedOrders.reduce(
+        (acc, o) => acc + (Number(o.quantity) || 0),
+        0
+      );
 
-      const totalLiters =
-        approvedCount > 0
+      // Compute total approved liters strictly from approved & delivered counts
+      const totalApprovedLiters =
+        approvedCount > 0 || deliveredCount > 0
           ? approvedCount + deliveredCount
           : ordersApprovedSum > 0
             ? ordersApprovedSum
-            : Number(org.total_approved ?? org.total_order_quantity ?? 0);
+            : 0;
 
-      const status = String(
-        org.status || (org as any).order_status || org.orders?.[0]?.status || ''
-      )
-        .trim()
-        .toUpperCase();
+      // Organization with approved liters has status APPROVED
+      const status = totalApprovedLiters > 0 ? 'APPROVED' : 'INITIATED';
+
+      const latestApprovedOrder = approvedOrders[0] || org.orders?.[0];
+      const contactPerson = String(latestApprovedOrder?.order_by_name?.trim() ?? '');
+      const lastOrderDate = String(
+        org.last_ordered_at || latestApprovedOrder?.order_date || ''
+      );
+      const orderCount =
+        approvedOrders.length > 0
+          ? approvedOrders.length
+          : Number(org.total_order ?? org.orders?.length ?? 0);
 
       return {
         clubId: String(org.organization_id || (org as any).id || ''),
         clubName: String(org.organization_name || (org as any).name || ''),
-        contactPerson: String(org.orders?.[0]?.order_by_name?.trim() ?? ''),
+        contactPerson,
         mobileNumber: '',
         location: (org as any).place || (org as any).location || '',
-        totalQuantityLiters: totalLiters,
-        orderCount: Number(org.total_order ?? org.orders?.length ?? 0),
-        lastOrderDate: String(org.last_ordered_at || org.orders?.[0]?.order_date || ''),
+        totalQuantityLiters: totalApprovedLiters,
+        orderCount,
+        lastOrderDate,
         status,
         raw: org as any,
       };
     })
-    .filter((item) => item.status !== 'INITIATED' && item.totalQuantityLiters > 0)
+    .filter((item) => item.status === 'APPROVED' && item.totalQuantityLiters > 0)
     .sort((a, b) => b.totalQuantityLiters - a.totalQuantityLiters);
 
   const calculatedSum = summaries.reduce(
@@ -723,13 +747,15 @@ export async function fetchOrderStatusApi(
     0
   );
 
-  const organizationTotal = Number(
-    rawStats.organization_total ||
-    rawStats.total_approved ||
-    rawStats.total_order ||
-    calculatedSum ||
-    0
-  );
+  const organizationTotal =
+    calculatedSum > 0
+      ? calculatedSum
+      : Number(
+          rawStats.organization_total ||
+          rawStats.total_approved ||
+          rawStats.total_order ||
+          0
+        );
   const grandTotal = Number(
     rawStats.grand_total ||
     rawStats.total_order ||
