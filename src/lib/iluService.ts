@@ -159,6 +159,16 @@ export interface BackendOrderByOrganization {
   }>;
 }
 
+export interface LatestClubOrder {
+  key: string;
+  clubId: string;
+  clubName: string;
+  quantityLiters: number;
+  orderNumber: string;
+  orderDate: string;
+  orderSequence: number;
+}
+
 export interface BackendOrganization {
   id: string;
   place: string;
@@ -233,6 +243,7 @@ export interface OrderStatusResponse {
   success: boolean;
   orders: Order[];
   summaries: ClubSummary[];
+  latestClubOrders: LatestClubOrder[];
   organizationTotalLiters: number;
   grandTotalLiters: number;
   individualTotalLiters?: number;
@@ -647,6 +658,7 @@ export async function fetchOrderStatusApi(
       success: true,
       orders: [],
       summaries: [],
+      latestClubOrders: [],
       organizationTotalLiters: organizationTotal,
       grandTotalLiters: grandTotal,
       individualTotalLiters: Number(rawStats.individual_total ?? 0),
@@ -688,6 +700,48 @@ export async function fetchOrderStatusApi(
   const rawStats = (await statusResponse.json()) as BackendOrderStatus;
   const rawOrgData = await organizationsResponse.json();
   const orgResults = getResults<BackendOrderByOrganization>(rawOrgData);
+
+  const latestClubOrders: LatestClubOrder[] = orgResults
+    .flatMap((org) => {
+      const clubId = String(org.organization_id || '');
+      const clubName = String(org.organization_name || '').trim();
+
+      if (!clubId || !clubName) {
+        return [];
+      }
+
+      return (org.orders ?? []).flatMap((order, index) => {
+        const quantityLiters = Number(order.quantity);
+        const orderNumber = String(order.order_number || '').trim();
+        const orderDate = String(order.order_date || '').trim();
+        const sequenceMatch = orderNumber.match(/(\d+)$/);
+        const orderSequence = sequenceMatch ? Number(sequenceMatch[1]) : 0;
+        const status = String(order.status || '').trim().toUpperCase();
+
+        if (
+          status !== 'APPROVED' ||
+          !Number.isFinite(quantityLiters) ||
+          quantityLiters <= 0
+        ) {
+          return [];
+        }
+
+        return [{
+          key: `${clubId}:${orderNumber || `${orderDate}:${index}`}`,
+          clubId,
+          clubName,
+          quantityLiters,
+          orderNumber,
+          orderDate,
+          orderSequence,
+        }];
+      });
+    })
+    .sort((a, b) => {
+      const dateA = Date.parse(a.orderDate) || 0;
+      const dateB = Date.parse(b.orderDate) || 0;
+      return dateB - dateA || b.orderSequence - a.orderSequence;
+    });
 
   const summaries: ClubSummary[] = orgResults
     .filter((org) => !isInitiatedOrganization(org))
@@ -766,6 +820,7 @@ export async function fetchOrderStatusApi(
     success: true,
     orders: [],
     summaries,
+    latestClubOrders,
     organizationTotalLiters: organizationTotal,
     grandTotalLiters: grandTotal,
     individualTotalLiters: Number(rawStats.individual_total ?? 0),

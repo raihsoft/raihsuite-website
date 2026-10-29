@@ -203,8 +203,7 @@ export default function IluOrderStatusPageClient() {
     );
   }, [rankedSummaries, searchQuery]);
 
-  const tickerSummaries = rankedSummaries
-    .filter((summary) => summary.totalQuantityLiters > 0)
+  const tickerOrders = (data?.latestClubOrders ?? [])
     .slice(0, 10);
 
 
@@ -323,24 +322,23 @@ export default function IluOrderStatusPageClient() {
           </div>
         </section>
 
-        {/* Live totals ribbon uses the same ten-second leaderboard refresh. */}
+        {/* Latest individual orders; uses the existing ten-second leaderboard refresh. */}
         <section
-          aria-label="Live club totals"
+          aria-label="Latest orders"
           className="flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/85 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4"
         >
-          <div className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] px-3 py-2 text-white shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden="true" />
+          <div className="hidden shrink-0 items-center rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] px-3 py-2 text-white shadow-sm sm:flex">
             <span className="text-[10px] font-extrabold uppercase tracking-wide sm:text-xs">
-              Live Club Totals
+              Latest Orders
             </span>
           </div>
 
-          {tickerSummaries.length > 0 ? (
+          {tickerOrders.length > 0 ? (
             <div className="ilu-live-totals-viewport min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
               <ul className="sr-only">
-                {tickerSummaries.map((summary) => (
-                  <li key={summary.clubId}>
-                    {summary.clubName}: {summary.totalQuantityLiters.toLocaleString()} liters total
+                {tickerOrders.map((order) => (
+                  <li key={order.key}>
+                    {order.clubName}: latest order {order.quantityLiters.toLocaleString()} liters
                   </li>
                 ))}
               </ul>
@@ -348,24 +346,29 @@ export default function IluOrderStatusPageClient() {
                 className="ilu-live-totals-track flex w-max"
                 style={
                   {
-                    '--ilu-ticker-duration': `${Math.max(24, tickerSummaries.length * 4)}s`,
+                    '--ilu-ticker-duration': `${Math.max(24, tickerOrders.length * 4)}s`,
                   } as React.CSSProperties
                 }
                 aria-hidden="true"
               >
                 {[0, 1].map((copy) => (
                   <div key={copy} className="flex shrink-0 items-center gap-3 pr-3">
-                    {tickerSummaries.map((summary) => (
-                      <React.Fragment key={`${copy}-${summary.clubId}`}>
+                    {tickerOrders.map((order, orderIndex) => (
+                      <React.Fragment key={`${copy}-${order.key}`}>
                         <span className="inline-flex shrink-0 items-center gap-2 py-2 text-xs sm:text-sm">
+                          {copy === 0 && orderIndex === 0 && (
+                            <span
+                              className="h-2 w-2 shrink-0 rounded-[2px] bg-rose-500"
+                              aria-hidden="true"
+                            />
+                          )}
                           <span className="max-w-[12rem] truncate font-semibold text-slate-700">
-                            {summary.clubName}
+                            {order.clubName}
                           </span>
                           <span className="font-black tabular-nums text-amber-800">
-                            {summary.totalQuantityLiters.toLocaleString()} Ltr
+                            {order.quantityLiters.toLocaleString()} Ltr
                           </span>
                         </span>
-                        <span className="text-slate-300" aria-hidden="true">•</span>
                       </React.Fragment>
                     ))}
                   </div>
@@ -374,7 +377,7 @@ export default function IluOrderStatusPageClient() {
             </div>
           ) : (
             <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
-              {loading ? 'Loading club totals…' : 'No club totals available yet.'}
+              {loading ? 'Loading latest orders…' : 'No latest club orders available yet.'}
             </p>
           )}
         </section>
