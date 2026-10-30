@@ -204,7 +204,7 @@ export default function IluOrderStatusPageClient() {
   }, [rankedSummaries, searchQuery]);
 
   const tickerOrders = (data?.latestClubOrders ?? [])
-    .slice(0, 10);
+    .slice(0, 5);
 
   return (
     <div className="relative overflow-x-hidden bg-[#fffdf7] text-slate-800 min-h-screen font-sans selection:bg-amber-300 selection:text-amber-950">
@@ -251,18 +251,18 @@ export default function IluOrderStatusPageClient() {
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative z-10 space-y-8 sm:space-y-10">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-8 relative z-10 space-y-3.5 sm:space-y-6">
 
         {/* ERROR STATE */}
         {error && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between gap-4 text-sm shadow-sm">
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between gap-4 text-sm shadow-sm">
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
               <span className="font-medium">{error}</span>
             </div>
             <button
               onClick={() => loadOrderStatus(true)}
-              className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow"
+              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow"
             >
               Retry
             </button>
@@ -271,7 +271,7 @@ export default function IluOrderStatusPageClient() {
 
         {/* TOTAL QUANTITY ORDERED STAT CARD - STANDOUT SHOWCASE MILESTONE */}
         <section>
-          <div className="rounded-3xl bg-gradient-to-r from-[#800720] via-[#be123c] via-[#ea580c] to-[#f59e0b] p-5 sm:p-7 md:p-8 shadow-2xl shadow-rose-950/20 border-2 border-white/20 text-white relative overflow-hidden min-h-[140px] sm:min-h-[160px] flex flex-col justify-between">
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#800720] via-[#be123c] via-[#ea580c] to-[#f59e0b] p-4 sm:p-6 md:p-8 shadow-xl shadow-rose-950/20 border-2 border-white/20 text-white relative overflow-hidden min-h-[110px] sm:min-h-[150px] flex flex-col justify-between">
             {/* Top hairline border glow */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
 
@@ -304,13 +304,13 @@ export default function IluOrderStatusPageClient() {
 
             {/* Top-left: Together we achieved */}
             <div className="relative z-10 text-left">
-              <h2 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight drop-shadow-sm">
+              <h2 className="text-sm sm:text-lg md:text-xl font-bold text-white tracking-tight drop-shadow-sm">
                 Together we achieved
               </h2>
             </div>
 
             {/* Center: Big Highlighted Count + LTR */}
-            <div className="relative z-10 flex items-baseline justify-center gap-2 sm:gap-3 py-2 sm:py-3 my-auto">
+            <div className="relative z-10 flex items-baseline justify-center gap-2 sm:gap-3 py-1 sm:py-2.5 my-auto">
               <span className="text-5xl sm:text-7xl md:text-8xl font-black text-yellow-300 font-mono tracking-tight drop-shadow-[0_4px_16px_rgba(250,204,21,0.45)]">
                 {loading ? '...' : displayedCount.toLocaleString()}
               </span>
@@ -324,7 +324,7 @@ export default function IluOrderStatusPageClient() {
         {/* Latest individual orders; uses the existing ten-second leaderboard refresh. */}
         <section
           aria-label="Latest orders"
-          className="flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/85 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4"
+          className="flex items-center gap-3 overflow-hidden rounded-xl sm:rounded-2xl border border-amber-200/80 bg-amber-50/85 px-3 py-2 sm:py-2.5 shadow-sm backdrop-blur-sm sm:px-4"
         >
           <div className="hidden shrink-0 items-center rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] px-3 py-2 text-white shadow-sm sm:flex">
             <span className="text-[10px] font-extrabold uppercase tracking-wide sm:text-xs">
@@ -339,7 +339,7 @@ export default function IluOrderStatusPageClient() {
               <ul className="sr-only">
                 {tickerOrders.map((order) => (
                   <li key={order.key}>
-                    {order.clubName}: latest order {order.quantityLiters.toLocaleString()} liters
+                    {order.clubName}: latest order {order.quantityLiters.toLocaleString()}
                   </li>
                 ))}
               </ul>
@@ -347,29 +347,36 @@ export default function IluOrderStatusPageClient() {
                 className="ilu-live-totals-track flex w-max"
                 style={
                   {
-                    '--ilu-ticker-duration': `${Math.max(24, tickerOrders.length * 4)}s`,
+                    '--ilu-ticker-duration': `${Math.max(20, tickerOrders.length * 4)}s`,
                   } as React.CSSProperties
                 }
                 aria-hidden="true"
               >
                 {[0, 1].map((copy) => (
                   <div key={copy} className="flex shrink-0 items-center gap-3 pr-3">
+                    {/* Mobile screen: Latest Orders label moving inside the ribbon before organization names */}
+                    <span className="inline-flex sm:hidden shrink-0 items-center rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm">
+                      Latest Orders
+                    </span>
                     {tickerOrders.map((order, orderIndex) => (
                       <span
                         key={`${copy}-${order.key}`}
-                        className="inline-flex shrink-0 items-center gap-2 py-2 text-xs sm:text-sm"
+                        className="inline-flex shrink-0 items-center gap-2 py-1 sm:py-1.5 text-xs sm:text-sm"
                       >
                         {copy === 0 && orderIndex === 0 && (
                           <span
-                            className="h-2 w-2 shrink-0 rounded-[2px] bg-rose-500"
+                            className="hidden sm:inline-block h-2 w-2 shrink-0 rounded-[2px] bg-rose-500"
                             aria-hidden="true"
                           />
                         )}
-                        <span className="max-w-[12rem] truncate font-semibold text-slate-700">
+                        <span className="whitespace-nowrap font-semibold text-slate-700">
                           {order.clubName}
                         </span>
                         <span className="font-black tabular-nums text-amber-800">
-                          {order.quantityLiters.toLocaleString()} Ltr
+                          {order.quantityLiters.toLocaleString()}
+                        </span>
+                        <span className="text-slate-300 font-light select-none mx-1.5" aria-hidden="true">
+                          |
                         </span>
                       </span>
                     ))}
@@ -386,7 +393,7 @@ export default function IluOrderStatusPageClient() {
 
         {/* SEARCH & REFRESH TOOLBAR */}
         <section>
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
             {/* Search Input */}
             <div className="relative w-full sm:w-96">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -395,7 +402,7 @@ export default function IluOrderStatusPageClient() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by club name or location..."
-                className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl pl-10 pr-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium transition"
+                className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl pl-10 pr-9 py-2 sm:py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium transition"
               />
               {searchQuery && (
                 <button
@@ -407,12 +414,12 @@ export default function IluOrderStatusPageClient() {
               )}
             </div>
 
-            {/* Refresh Button with Brand Gradient */}
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Refresh Button with Brand Gradient (Desktop Only) */}
+            <div className="hidden sm:flex items-center gap-3 w-auto">
               <button
                 onClick={() => loadOrderStatus(true)}
                 disabled={refreshing}
-                className="w-full sm:w-auto justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/20 flex items-center gap-2 transition disabled:opacity-50 active:scale-95 text-center"
+                className="w-auto justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/20 flex items-center gap-2 transition disabled:opacity-50 active:scale-95 text-center"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 <span>Refresh Live</span>
@@ -423,7 +430,7 @@ export default function IluOrderStatusPageClient() {
 
         {/* ORDER SUMMARY TABLE & MOBILE ORDER STATUS */}
         <section>
-          <div className="rounded-3xl bg-white border border-slate-200/90 overflow-hidden shadow-sm">
+          <div className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 overflow-hidden shadow-sm">
             {/* Desktop Table View (md and up) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-800">
@@ -558,14 +565,14 @@ export default function IluOrderStatusPageClient() {
             </div>
 
             {/* Mobile Order Status Cards View (screens < md) */}
-            <div className="block md:hidden p-3 sm:p-4 space-y-2.5">
+            <div className="block md:hidden p-2.5 sm:p-4 space-y-2">
               {loading ? (
                 // Mobile Skeletons
                 [1, 2, 3, 4].map((idx) => (
-                  <div key={idx} className="p-3.5 rounded-2xl border border-slate-100 bg-white animate-pulse space-y-2.5">
+                  <div key={idx} className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 bg-white animate-pulse space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-slate-100" />
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100" />
                         <div className="h-4 w-28 bg-slate-100 rounded" />
                       </div>
                       <div className="h-5 w-12 bg-amber-100 rounded" />
@@ -573,7 +580,7 @@ export default function IluOrderStatusPageClient() {
                   </div>
                 ))
               ) : filteredSummaries.length === 0 ? (
-                <div className="py-10 text-center text-slate-500 text-xs font-medium">
+                <div className="py-8 text-center text-slate-500 text-xs font-medium">
                   {searchQuery
                     ? `No clubs found matching "${searchQuery}"`
                     : 'No orders recorded yet.'}
@@ -587,7 +594,7 @@ export default function IluOrderStatusPageClient() {
                   return (
                     <div
                       key={summary.clubId}
-                      className={`p-3.5 rounded-2xl border transition-all ${
+                      className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition-all ${
                         isFirst
                           ? 'bg-gradient-to-br from-amber-500/10 via-amber-50/70 to-white border-amber-300/90 shadow-md shadow-amber-500/10 ring-1 ring-amber-400/30'
                           : isSecond
@@ -598,32 +605,32 @@ export default function IluOrderStatusPageClient() {
                       }`}
                     >
                       {/* Top Header: Rank + Club Name + Quantity */}
-                      <div className="flex items-center justify-between gap-2.5">
-                        <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           {/* Rank Badge */}
                           {isFirst ? (
                             <div
-                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 shrink-0"
+                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 shrink-0"
                               title="1st Position"
                             >
-                              <Trophy className="w-4 h-4 text-amber-950 fill-amber-950/20" />
+                              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-950 fill-amber-950/20" />
                             </div>
                           ) : isSecond ? (
                             <div
-                              className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs flex items-center justify-center shadow-sm border border-slate-200 shrink-0"
+                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs flex items-center justify-center shadow-sm border border-slate-200 shrink-0"
                               title="2nd Position"
                             >
-                              <Medal className="w-4 h-4 text-slate-800" />
+                              <Medal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-800" />
                             </div>
                           ) : isThird ? (
                             <div
-                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs flex items-center justify-center shadow-sm border border-orange-300 shrink-0"
+                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs flex items-center justify-center shadow-sm border border-orange-300 shrink-0"
                               title="3rd Position"
                             >
-                              <Medal className="w-4 h-4 text-amber-100" />
+                              <Medal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-100" />
                             </div>
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/70">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/70">
                               #{summary.rank}
                             </div>
                           )}
@@ -673,13 +680,13 @@ export default function IluOrderStatusPageClient() {
 
             {/* Total Row */}
             {!loading && (
-              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-4 sm:p-5 px-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm shrink-0">
+              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-3 sm:p-4 px-3.5 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm shrink-0">
                     <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <span className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 block">
+                    <span className="font-extrabold text-xs sm:text-base md:text-lg text-slate-900 block">
                       Total Quantity Ordered
                     </span>
                   </div>
@@ -687,7 +694,7 @@ export default function IluOrderStatusPageClient() {
 
                 <div className="text-right sm:text-right flex items-center justify-between sm:block">
                   <span className="text-xs sm:hidden text-slate-500 font-bold">Total:</span>
-                  <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
+                  <span className="text-xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
                     {data?.organizationTotalLiters ?? 0}
                   </span>
                 </div>
@@ -697,10 +704,10 @@ export default function IluOrderStatusPageClient() {
         </section>
 
         {/* Back Button */}
-        <section className="pt-2 text-center">
+        <section className="pt-1 sm:pt-2 text-center">
           <Link
             href="/ilu"
-            className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/25 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-full bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/25 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <span>Submit New Orders</span>
           </Link>
