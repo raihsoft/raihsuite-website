@@ -140,8 +140,8 @@ interface TimeLeft {
   isExpired: boolean;
 }
 
-// Order Submission Deadline: 2026 October 31 (IST 23:59:59)
-const ORDER_DEADLINE_TARGET_TIMESTAMP = new Date('2026-10-31T23:59:59+05:30').getTime();
+// Order Submission Deadline: 2026 November 3 (IST 23:59:59)
+const ORDER_DEADLINE_TARGET_TIMESTAMP = new Date('2026-11-03T23:59:59+05:30').getTime();
 
 function calculateChallengeTimeLeft(): TimeLeft {
   const diff = ORDER_DEADLINE_TARGET_TIMESTAMP - Date.now();
@@ -158,7 +158,7 @@ function calculateChallengeTimeLeft(): TimeLeft {
 }
 
 export default function IluOrderPageClient() {
-  // Countdown State for 2026 November 8 Challenge
+  // Countdown State for 2026 November 3 Challenge
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calculateChallengeTimeLeft());
 
   useEffect(() => {
@@ -883,7 +883,7 @@ export default function IluOrderPageClient() {
           </div>
         </section>
 
-        {/* ORDER SUBMISSION DEADLINE COUNTDOWN CARD - TARGET: 31/10/2026 */}
+        {/* ORDER SUBMISSION DEADLINE COUNTDOWN CARD - TARGET: 03/11/2026 */}
         <section>
           <div className="rounded-3xl bg-gradient-to-br from-[#fffbeb] via-[#fff7ed] to-[#fef2f2] border-2 border-amber-300/80 p-5 sm:p-7 md:p-8 shadow-xl shadow-amber-950/5 relative overflow-hidden">
             {/* Ambient Festive Radial Glows */}
@@ -894,7 +894,7 @@ export default function IluOrderPageClient() {
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
               <p className="text-xs sm:text-sm font-semibold text-slate-600 flex items-center justify-center gap-1.5 mb-3 sm:mb-4">
                 <Timer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0" />
-                <span>Last Date for Order Submission: 31/10/2026</span>
+                <span>Last Date for Order Submission: 03/11/2026</span>
               </p>
 
               {timeLeft.isExpired ? (
