@@ -10,9 +10,18 @@ import {
   X,
   Trophy,
   Medal,
+  Download,
+  Share2,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react';
-import { OrderStatusResponse, fetchOrderStatusApi } from '@/lib/iluService';
+import { OrderStatusResponse, fetchOrderStatusApi, ClubSummary } from '@/lib/iluService';
 import { subscribeToOrderEvents } from '@/lib/iluSync';
+import {
+  generateWhatsAppStatusImage,
+  downloadStatusImage,
+  shareStatusImage,
+} from '@/lib/iluStatusImage';
 
 function useAnimatedCount(targetNumber: number, stepIntervalMs: number = 1000 / 3) {
   const [displayedCount, setDisplayedCount] = useState<number>(0);
@@ -117,6 +126,55 @@ export default function IluOrderStatusPageClient() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const isFetchingRef = useRef(false);
   const refreshQueuedRef = useRef(false);
+
+  // WhatsApp Status Modal state
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [statusGenerating, setStatusGenerating] = useState(false);
+  const [generatingClubId, setGeneratingClubId] = useState<string | null>(null);
+  const [activeStatusClub, setActiveStatusClub] = useState<(ClubSummary & { rank?: number }) | null>(null);
+  const [statusImageDataUrl, setStatusImageDataUrl] = useState<string | null>(null);
+  const [isCopiedOrShared, setIsCopiedOrShared] = useState(false);
+
+  const handleOpenStatusModal = async (summary: ClubSummary & { rank?: number }) => {
+    try {
+      setActiveStatusClub(summary);
+      setGeneratingClubId(summary.clubId);
+      setStatusGenerating(true);
+      setStatusModalOpen(true);
+      setStatusImageDataUrl(null);
+      setIsCopiedOrShared(false);
+
+      const dataUrl = await generateWhatsAppStatusImage({
+        clubName: summary.clubName,
+        quantity: summary.totalQuantityLiters,
+        location: summary.location,
+        rank: summary.rank,
+      });
+
+      setStatusImageDataUrl(dataUrl);
+      // Auto-trigger download so user receives file immediately
+      downloadStatusImage(dataUrl, summary.clubName);
+    } catch (err) {
+      console.error('Failed to generate status image:', err);
+    } finally {
+      setStatusGenerating(false);
+      setGeneratingClubId(null);
+    }
+  };
+
+  const handleManualDownload = () => {
+    if (statusImageDataUrl && activeStatusClub) {
+      downloadStatusImage(statusImageDataUrl, activeStatusClub.clubName);
+    }
+  };
+
+  const handleShareWhatsApp = async () => {
+    if (statusImageDataUrl && activeStatusClub) {
+      await shareStatusImage(statusImageDataUrl, activeStatusClub.clubName, activeStatusClub.totalQuantityLiters);
+      setIsCopiedOrShared(true);
+      setTimeout(() => setIsCopiedOrShared(false), 3000);
+    }
+  };
 
   const loadOrderStatus = async (mode: 'initial' | 'manual' | 'silent' | boolean = 'initial') => {
     if (isFetchingRef.current) {
@@ -430,7 +488,7 @@ export default function IluOrderStatusPageClient() {
 
         {/* ORDER SUMMARY TABLE & MOBILE ORDER STATUS */}
         <section>
-          <div className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 overflow-hidden shadow-sm">
+          <div className="rounded-3xl bg-white border border-slate-200/90 overflow-hidden shadow-sm">
             {/* Desktop Table View (md and up) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-800">
@@ -552,9 +610,29 @@ export default function IluOrderStatusPageClient() {
 
                           {/* Quantity */}
                           <td className="py-4 px-6 text-right">
-                            <span className={`font-black text-sm sm:text-base ${isFirst ? 'text-amber-950' : 'text-slate-900'}`}>
-                              {summary.totalQuantityLiters}
-                            </span>
+                            <div className="flex items-center justify-end gap-2.5">
+                              <span
+                                className={`font-black text-sm sm:text-base ${
+                                  isFirst ? 'text-amber-950' : 'text-slate-900'
+                                }`}
+                              >
+                                {summary.totalQuantityLiters}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenStatusModal(summary)}
+                                disabled={generatingClubId === summary.clubId}
+                                title={`Download WhatsApp Status for ${summary.clubName}`}
+                                aria-label={`Download WhatsApp Status for ${summary.clubName}`}
+                                className="group relative inline-flex items-center justify-center p-1.5 rounded-lg border border-amber-200/80 bg-gradient-to-b from-amber-50 to-amber-100/70 text-amber-800 hover:text-amber-950 hover:bg-amber-100 hover:border-amber-300 active:scale-95 transition shadow-xs disabled:opacity-60"
+                              >
+                                {generatingClubId === summary.clubId ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                                ) : (
+                                  <Download className="w-3.5 h-3.5 text-amber-700 group-hover:text-amber-900 transition" />
+                                )}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -565,14 +643,14 @@ export default function IluOrderStatusPageClient() {
             </div>
 
             {/* Mobile Order Status Cards View (screens < md) */}
-            <div className="block md:hidden p-2.5 sm:p-4 space-y-2">
+            <div className="block md:hidden p-3 sm:p-4 space-y-2.5">
               {loading ? (
                 // Mobile Skeletons
                 [1, 2, 3, 4].map((idx) => (
-                  <div key={idx} className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100 bg-white animate-pulse space-y-2">
+                  <div key={idx} className="p-3.5 rounded-2xl border border-slate-100 bg-white animate-pulse space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100" />
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-slate-100" />
                         <div className="h-4 w-28 bg-slate-100 rounded" />
                       </div>
                       <div className="h-5 w-12 bg-amber-100 rounded" />
@@ -580,7 +658,7 @@ export default function IluOrderStatusPageClient() {
                   </div>
                 ))
               ) : filteredSummaries.length === 0 ? (
-                <div className="py-8 text-center text-slate-500 text-xs font-medium">
+                <div className="py-10 text-center text-slate-500 text-xs font-medium">
                   {searchQuery
                     ? `No clubs found matching "${searchQuery}"`
                     : 'No orders recorded yet.'}
@@ -594,7 +672,7 @@ export default function IluOrderStatusPageClient() {
                   return (
                     <div
                       key={summary.clubId}
-                      className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition-all ${
+                      className={`p-3.5 rounded-2xl border transition-all ${
                         isFirst
                           ? 'bg-gradient-to-br from-amber-500/10 via-amber-50/70 to-white border-amber-300/90 shadow-md shadow-amber-500/10 ring-1 ring-amber-400/30'
                           : isSecond
@@ -605,32 +683,32 @@ export default function IluOrderStatusPageClient() {
                       }`}
                     >
                       {/* Top Header: Rank + Club Name + Quantity */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
                           {/* Rank Badge */}
                           {isFirst ? (
                             <div
-                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 shrink-0"
+                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 shrink-0"
                               title="1st Position"
                             >
-                              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-950 fill-amber-950/20" />
+                              <Trophy className="w-4 h-4 text-amber-950 fill-amber-950/20" />
                             </div>
                           ) : isSecond ? (
                             <div
-                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs flex items-center justify-center shadow-sm border border-slate-200 shrink-0"
+                              className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs flex items-center justify-center shadow-sm border border-slate-200 shrink-0"
                               title="2nd Position"
                             >
-                              <Medal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-800" />
+                              <Medal className="w-4 h-4 text-slate-800" />
                             </div>
                           ) : isThird ? (
                             <div
-                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs flex items-center justify-center shadow-sm border border-orange-300 shrink-0"
+                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs flex items-center justify-center shadow-sm border border-orange-300 shrink-0"
                               title="3rd Position"
                             >
-                              <Medal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-100" />
+                              <Medal className="w-4 h-4 text-amber-100" />
                             </div>
                           ) : (
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/70">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/70">
                               #{summary.rank}
                             </div>
                           )}
@@ -666,10 +744,24 @@ export default function IluOrderStatusPageClient() {
                         </div>
 
                         {/* Quantity Liters on Right */}
-                        <div className="text-right shrink-0">
+                        <div className="text-right shrink-0 flex items-center gap-2">
                           <span className={`text-sm sm:text-base font-black ${isFirst ? 'text-amber-950' : 'text-slate-900'}`}>
                             {summary.totalQuantityLiters}
                           </span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStatusModal(summary)}
+                            disabled={generatingClubId === summary.clubId}
+                            title={`Download WhatsApp Status for ${summary.clubName}`}
+                            aria-label={`Download WhatsApp Status for ${summary.clubName}`}
+                            className="inline-flex items-center justify-center p-1.5 rounded-lg border border-amber-200/80 bg-gradient-to-b from-amber-50 to-amber-100/70 text-amber-800 hover:text-amber-950 active:scale-95 transition shadow-xs disabled:opacity-60"
+                          >
+                            {generatingClubId === summary.clubId ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                            ) : (
+                              <Download className="w-3.5 h-3.5 text-amber-700" />
+                            )}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -680,13 +772,13 @@ export default function IluOrderStatusPageClient() {
 
             {/* Total Row */}
             {!loading && (
-              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-3 sm:p-4 px-3.5 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-                <div className="flex items-center gap-2.5 sm:gap-3">
-                  <div className="p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm shrink-0">
+              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-4 sm:p-5 px-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm shrink-0">
                     <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <span className="font-extrabold text-xs sm:text-base md:text-lg text-slate-900 block">
+                    <span className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 block">
                       Total Quantity Ordered
                     </span>
                   </div>
@@ -694,7 +786,7 @@ export default function IluOrderStatusPageClient() {
 
                 <div className="text-right sm:text-right flex items-center justify-between sm:block">
                   <span className="text-xs sm:hidden text-slate-500 font-bold">Total:</span>
-                  <span className="text-xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
+                  <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
                     {data?.organizationTotalLiters ?? 0}
                   </span>
                 </div>
@@ -713,6 +805,111 @@ export default function IluOrderStatusPageClient() {
           </Link>
         </section>
       </div>
+
+      {/* WHATSAPP STATUS IMAGE DOWNLOAD & PREVIEW MODAL */}
+      {statusModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setStatusModalOpen(false);
+          }}
+        >
+          <div className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 p-4 sm:p-6 shadow-2xl text-slate-900 flex flex-col max-h-[92vh] overflow-hidden animate-scale-in">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#f3631f] to-[#faa70c] flex items-center justify-center text-white shadow-sm shrink-0">
+                  <Download className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-snug truncate">
+                    WhatsApp Status Card
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium truncate">
+                    {activeStatusClub?.clubName} • {activeStatusClub?.totalQuantityLiters}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setStatusModalOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition shrink-0"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body: Preview */}
+            <div className="flex-1 overflow-y-auto py-3 sm:py-4 flex flex-col items-center justify-center min-h-[260px]">
+              {statusGenerating ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+                  <div className="relative">
+                    <div className="w-14 h-14 rounded-full border-4 border-amber-200 border-t-[#ea183c] animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Download className="w-5 h-5 text-[#ea183c]" />
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-slate-800">
+                    Designing Status Card...
+                  </p>
+                  <p className="text-xs text-slate-500 max-w-xs">
+                    Customizing the official ILU Palada Challenge poster with your club name and quantity.
+                  </p>
+                </div>
+              ) : statusImageDataUrl ? (
+                <div className="w-full flex flex-col items-center">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-rose-950 max-h-[50vh] sm:max-h-[54vh] flex items-center justify-center">
+                    <img
+                      src={statusImageDataUrl}
+                      alt={`WhatsApp status card for ${activeStatusClub?.clubName}`}
+                      className="w-auto h-auto max-h-[50vh] sm:max-h-[54vh] object-contain block"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-2 text-center flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Poster ready! File auto-downloaded to your device.</span>
+                  </p>
+                </div>
+              ) : (
+                <div className="py-8 text-center text-xs text-rose-600 font-medium">
+                  Failed to generate status image. Please try again.
+                </div>
+              )}
+            </div>
+
+            {/* Actions Footer */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5">
+              <button
+                type="button"
+                onClick={handleManualDownload}
+                disabled={statusGenerating || !statusImageDataUrl}
+                className="w-full sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/20 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Poster</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShareWhatsApp}
+                disabled={statusGenerating || !statusImageDataUrl}
+                className="w-full sm:flex-1 py-2.5 sm:py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#25D366]/20 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>{isCopiedOrShared ? 'Shared!' : 'Share on WhatsApp'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusModalOpen(false)}
+                className="w-full sm:w-auto py-2.5 sm:py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-xs sm:text-sm transition text-center"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <style jsx>{`
         .ilu-live-totals-viewport {
           scrollbar-width: none;
