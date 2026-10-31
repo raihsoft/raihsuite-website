@@ -54,55 +54,93 @@ function wrapText(
   return lines.length > 0 ? lines : [text];
 }
 
+import { STATUS_BANNER_BASE64 } from './iluStatusBannerData';
+
 export const STATUS_BANNER_IMAGE_URL = 'https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp';
+
+let cachedTemplateImg: HTMLImageElement | null = null;
+
+function loadImageFromSource(src: string, isCrossOrigin = false): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    if (isCrossOrigin) {
+      image.crossOrigin = 'anonymous';
+    }
+    image.onload = () => resolve(image);
+    image.onerror = (e) => reject(e);
+    image.src = src;
+  });
+}
 
 /**
  * Loads the template image directly from the specified image link:
- * 1. Fetches from the provided image link (https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp)
- * 2. If direct browser CORS blocks it, fetches through the server proxy (/api/ilu/status-banner)
- * 
- * Using URL.createObjectURL(blob) guarantees the image is recognized as strictly same-origin
- * by the browser, which 100% prevents canvas tainting and SecurityError on toDataURL()!
+ * 1. If in-memory cache is available, returns it immediately.
+ * 2. Fetches via server proxy (/api/ilu/status-banner) which injects CORS headers and caches at edge.
+ * 3. Attempts direct fetch with CORS if available.
+ * 4. Fallback: Loads the embedded STATUS_BANNER_BASE64 (identical to https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp).
+ *    This ensures 100% reliability in staging, production, offline, or environments without edge API routes.
  */
 async function loadTemplateImage(customUrl?: string): Promise<{ img: HTMLImageElement; cleanup: () => void }> {
+  const isDefaultUrl = !customUrl || customUrl === STATUS_BANNER_IMAGE_URL;
+
+  // Return in-memory cached image if available for instantaneous generation
+  if (isDefaultUrl && cachedTemplateImg) {
+    return { img: cachedTemplateImg, cleanup: () => {} };
+  }
+
   const directUrl = customUrl || STATUS_BANNER_IMAGE_URL;
   const proxyUrl = `/api/ilu/status-banner?url=${encodeURIComponent(directUrl)}`;
 
-  // Candidate URLs driven purely by the remote image link
-  const candidateUrls = [directUrl, proxyUrl];
+  // Candidate URLs to try across network
+  const candidateUrls = [proxyUrl, directUrl];
 
   for (const url of candidateUrls) {
     try {
-      const res = await fetch(url);
+      // Abort controller with 3s timeout to avoid blocking if network is slow
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(url, {
+        signal: controller.signal,
+        cache: 'force-cache',
+      }).finally(() => clearTimeout(timeoutId));
+
       if (!res.ok) continue;
       const blob = await res.blob();
       if (!blob || blob.size === 0) continue;
 
       const blobUrl = URL.createObjectURL(blob);
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = (e) => reject(e);
-        image.src = blobUrl;
-      });
+      const img = await loadImageFromSource(blobUrl);
+
+      if (isDefaultUrl) {
+        cachedTemplateImg = img;
+      }
 
       return {
         img,
-        cleanup: () => URL.revokeObjectURL(blobUrl)
+        cleanup: () => {
+          if (!isDefaultUrl) {
+            URL.revokeObjectURL(blobUrl);
+          }
+        },
       };
     } catch (e) {
-      console.warn(`[iluStatusImage] Candidate url failed: ${url}`, e);
+      console.warn(`[iluStatusImage] Network candidate failed: ${url}`, e);
     }
   }
 
-  // Fallback: direct HTMLImageElement via proxy
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = 'anonymous';
-    image.onload = () => resolve({ img: image, cleanup: () => {} });
-    image.onerror = () => reject(new Error('Failed to load status banner image: ' + directUrl));
-    image.src = proxyUrl;
-  });
+  // Final Fail-Safe: Load embedded base64 of the status-banner.webp image
+  // This guarantees zero-failure even if network/CORS fails or on staging before API deploy
+  try {
+    const img = await loadImageFromSource(STATUS_BANNER_BASE64);
+    if (isDefaultUrl) {
+      cachedTemplateImg = img;
+    }
+    return { img, cleanup: () => {} };
+  } catch (err) {
+    console.error('[iluStatusImage] Fallback base64 load failed:', err);
+    throw new Error('Failed to load status banner image: ' + directUrl);
+  }
 }
 
 /**
@@ -225,8 +263,26 @@ export async function generateWhatsAppStatusImage(options: StatusImageOptions): 
     ctx.fillText(formattedQty, centerX, countY);
     ctx.restore();
 
-    // Return Data URL
-    return canvas.toDataURL('image/png', 0.95);
+    // Return Data URL (with graceful downscale fallback if mobile memory restricts high-res PNG)
+    try {
+      return canvas.toDataURL('image/png', 0.95);
+    } catch (toDataUrlErr) {
+      console.warn('[iluStatusImage] High-res PNG export failed, falling back to JPEG/scaled:', toDataUrlErr);
+      try {
+        return canvas.toDataURL('image/jpeg', 0.92);
+      } catch {
+        const scale = 1080 / width;
+        const smallCanvas = document.createElement('canvas');
+        smallCanvas.width = 1080;
+        smallCanvas.height = Math.round(height * scale);
+        const sCtx = smallCanvas.getContext('2d');
+        if (sCtx) {
+          sCtx.drawImage(canvas, 0, 0, smallCanvas.width, smallCanvas.height);
+          return smallCanvas.toDataURL('image/jpeg', 0.92);
+        }
+        throw toDataUrlErr;
+      }
+    }
   } finally {
     cleanup();
   }
