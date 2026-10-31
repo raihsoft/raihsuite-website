@@ -5,6 +5,7 @@ export interface StatusImageOptions {
   quantity: number | string;
   location?: string;
   rank?: number;
+  imageUrl?: string;
 }
 
 function drawRoundedRect(
@@ -53,150 +54,182 @@ function wrapText(
   return lines.length > 0 ? lines : [text];
 }
 
+export const STATUS_BANNER_IMAGE_URL = 'https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp';
+
+/**
+ * Loads the template image directly from the specified image link:
+ * 1. Fetches from the provided image link (https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp)
+ * 2. If direct browser CORS blocks it, fetches through the server proxy (/api/ilu/status-banner)
+ * 
+ * Using URL.createObjectURL(blob) guarantees the image is recognized as strictly same-origin
+ * by the browser, which 100% prevents canvas tainting and SecurityError on toDataURL()!
+ */
+async function loadTemplateImage(customUrl?: string): Promise<{ img: HTMLImageElement; cleanup: () => void }> {
+  const directUrl = customUrl || STATUS_BANNER_IMAGE_URL;
+  const proxyUrl = `/api/ilu/status-banner?url=${encodeURIComponent(directUrl)}`;
+
+  // Candidate URLs driven purely by the remote image link
+  const candidateUrls = [directUrl, proxyUrl];
+
+  for (const url of candidateUrls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      if (!blob || blob.size === 0) continue;
+
+      const blobUrl = URL.createObjectURL(blob);
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = (e) => reject(e);
+        image.src = blobUrl;
+      });
+
+      return {
+        img,
+        cleanup: () => URL.revokeObjectURL(blobUrl)
+      };
+    } catch (e) {
+      console.warn(`[iluStatusImage] Candidate url failed: ${url}`, e);
+    }
+  }
+
+  // Fallback: direct HTMLImageElement via proxy
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve({ img: image, cleanup: () => {} });
+    image.onerror = () => reject(new Error('Failed to load status banner image: ' + directUrl));
+    image.src = proxyUrl;
+  });
+}
+
 /**
  * Generates a high-resolution WhatsApp status image by composing
  * the official ILU template with dynamic club name and quantity.
  */
-export function generateWhatsAppStatusImage(options: StatusImageOptions): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const { clubName, quantity, location, rank } = options;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
+export async function generateWhatsAppStatusImage(options: StatusImageOptions): Promise<string> {
+  const { clubName, quantity, location, imageUrl } = options;
+  const { img, cleanup } = await loadTemplateImage(imageUrl);
 
-    img.onload = () => {
-      try {
-        const width = img.naturalWidth || 3375;
-        const height = img.naturalHeight || 4219;
+  try {
+    const width = img.naturalWidth || 3375;
+    const height = img.naturalHeight || 4219;
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas 2d context'));
-          return;
-        }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Failed to get canvas 2d context');
+    }
 
-        // 1. Draw background template
-        ctx.drawImage(img, 0, 0, width, height);
+    // 1. Draw background template
+    ctx.drawImage(img, 0, 0, width, height);
 
-        const centerX = width / 2; // 1687.5
+    const centerX = width / 2; // 1687.5
 
-        // 2. Organization Name - Ultra-Bold directly on cream card background (No box)
-        const nameLen = clubName.trim().length;
-        let fontSize = 230;
-        if (nameLen > 10) fontSize = 200;
-        if (nameLen > 16) fontSize = 170;
-        if (nameLen > 24) fontSize = 145;
-        if (nameLen > 36) fontSize = 120;
-        if (nameLen > 50) fontSize = 100;
+    // 2. Organization Name - Ultra-Bold directly on cream card background (No box)
+    const nameLen = clubName.trim().length;
+    let fontSize = 230;
+    if (nameLen > 10) fontSize = 200;
+    if (nameLen > 16) fontSize = 170;
+    if (nameLen > 24) fontSize = 145;
+    if (nameLen > 36) fontSize = 120;
+    if (nameLen > 50) fontSize = 100;
 
-        const maxNameWidth = 2650;
-        ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        let lines = wrapText(ctx, clubName, maxNameWidth);
+    const maxNameWidth = 2650;
+    ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    let lines = wrapText(ctx, clubName, maxNameWidth);
 
-        // If wrapping produced more than 2 lines, scale down font slightly to keep proportions tight
-        if (lines.length > 2 && fontSize > 95) {
-          fontSize = Math.max(90, Math.round(fontSize * 0.85));
-          ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-          lines = wrapText(ctx, clubName, maxNameWidth);
-        }
+    // If wrapping produced more than 2 lines, scale down font slightly to keep proportions tight
+    if (lines.length > 2 && fontSize > 95) {
+      fontSize = Math.max(90, Math.round(fontSize * 0.85));
+      ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      lines = wrapText(ctx, clubName, maxNameWidth);
+    }
 
-        const lineHeight = fontSize * 1.22;
-        // Positioned at 1880px (moved down further for balanced centering)
-        const nameStartY = 1880;
+    const lineHeight = fontSize * 1.22;
+    // Positioned at 1880px (moved down further for balanced centering)
+    const nameStartY = 1880;
 
-        // Render Club Name directly on template (no background)
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.fillStyle = '#0f172a'; // rich deep slate
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 3;
+    // Render Club Name directly on template (no background)
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = '#0f172a'; // rich deep slate
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
 
-        lines.forEach((line, i) => {
-          ctx.fillText(line, centerX, nameStartY + i * lineHeight);
-        });
+    lines.forEach((line, i) => {
+      ctx.fillText(line, centerX, nameStartY + i * lineHeight);
+    });
 
-        let currentY = nameStartY + lines.length * lineHeight;
+    let currentY = nameStartY + lines.length * lineHeight;
 
-        // Location subtitle (if available)
-        const hasLocation = Boolean(location && location.trim());
-        if (hasLocation) {
-          ctx.font = '600 52px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillStyle = '#64748b'; // slate-500
-          ctx.fillText(`📍 ${location!.trim()}`, centerX, currentY + 14);
-          currentY += 76;
-        }
-        ctx.restore();
+    // Location subtitle (if available)
+    const hasLocation = Boolean(location && location.trim());
+    if (hasLocation) {
+      ctx.font = '600 52px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#64748b'; // slate-500
+      ctx.fillText(`📍 ${location!.trim()}`, centerX, currentY + 14);
+      currentY += 76;
+    }
+    ctx.restore();
 
-        // 3. Quantity Count Only - Heroic & Maximum Impact Size
-        const formattedQty = Number(quantity).toLocaleString('en-IN');
-        const qtyLen = formattedQty.length;
+    // 3. Quantity Count Only - Heroic & Maximum Impact Size
+    const formattedQty = Number(quantity).toLocaleString('en-IN');
+    const qtyLen = formattedQty.length;
 
-        // Scaled quantity numeral font size:
-        let numFontSize = 480;
-        if (qtyLen <= 3) numFontSize = 480;       // e.g. "25", "100" -> 480px!
-        else if (qtyLen <= 4) numFontSize = 420;  // e.g. "500", "999" -> 420px!
-        else if (qtyLen <= 6) numFontSize = 360;  // e.g. "1,250", "9,999" -> 360px!
-        else if (qtyLen <= 8) numFontSize = 300;  // e.g. "25,000", "99,999" -> 300px!
-        else numFontSize = 260;
+    // Scaled quantity numeral font size:
+    let numFontSize = 480;
+    if (qtyLen <= 3) numFontSize = 480;       // e.g. "25", "100" -> 480px!
+    else if (qtyLen <= 4) numFontSize = 420;  // e.g. "500", "999" -> 420px!
+    else if (qtyLen <= 6) numFontSize = 360;  // e.g. "1,250", "9,999" -> 360px!
+    else if (qtyLen <= 8) numFontSize = 300;  // e.g. "25,000", "99,999" -> 300px!
+    else numFontSize = 260;
 
-        // Shifted down further to 2220px to sit harmoniously centered below the club name
-        const countY = Math.max(currentY + 60, 2220);
+    // Shifted down further to 2220px to sit harmoniously centered below the club name
+    const countY = Math.max(currentY + 60, 2220);
 
-        // Safety clamp ensuring the numeral never touches the "Order Completed" badge at y=2720
-        if (countY + numFontSize > 2710) {
-          numFontSize = Math.max(240, 2710 - countY);
-        }
+    // Safety clamp ensuring the numeral never touches the "Order Completed" badge at y=2720
+    if (countY + numFontSize > 2710) {
+      numFontSize = Math.max(240, 2710 - countY);
+    }
 
-        ctx.save();
-        // Soft ambient radial glow directly on the canvas behind the count
-        const glowCenterY = countY + numFontSize * 0.45;
-        const radialGlow = ctx.createRadialGradient(centerX, glowCenterY, 30, centerX, glowCenterY, 650);
-        radialGlow.addColorStop(0, 'rgba(251, 191, 36, 0.4)');
-        radialGlow.addColorStop(0.6, 'rgba(245, 158, 11, 0.12)');
-        radialGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = radialGlow;
-        ctx.beginPath();
-        ctx.arc(centerX, glowCenterY, 650, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+    ctx.save();
+    // Soft ambient radial glow directly on the canvas behind the count
+    const glowCenterY = countY + numFontSize * 0.45;
+    const radialGlow = ctx.createRadialGradient(centerX, glowCenterY, 30, centerX, glowCenterY, 650);
+    radialGlow.addColorStop(0, 'rgba(251, 191, 36, 0.4)');
+    radialGlow.addColorStop(0.6, 'rgba(245, 158, 11, 0.12)');
+    radialGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = radialGlow;
+    ctx.beginPath();
+    ctx.arc(centerX, glowCenterY, 650, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
-        // Render Massive Count Numeral (Directly on canvas)
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.font = `900 ${numFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.fillStyle = '#ea183c'; // vibrant signature crimson
-        ctx.shadowColor = 'rgba(234, 24, 60, 0.35)';
-        ctx.shadowBlur = 40;
-        ctx.shadowOffsetY = 12;
-        ctx.fillText(formattedQty, centerX, countY);
-        ctx.restore();
+    // Render Massive Count Numeral (Directly on canvas)
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = `900 ${numFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = '#ea183c'; // vibrant signature crimson
+    ctx.shadowColor = 'rgba(234, 24, 60, 0.35)';
+    ctx.shadowBlur = 40;
+    ctx.shadowOffsetY = 12;
+    ctx.fillText(formattedQty, centerX, countY);
+    ctx.restore();
 
-        // Return Data URL
-        const dataUrl = canvas.toDataURL('image/png', 0.95);
-        resolve(dataUrl);
-      } catch (err) {
-        reject(err);
-      }
-    };
-
-    img.onerror = () => {
-      // If local /ilu/status-banner.webp failed, try media.raihsuite.com
-      if (!img.src.includes('media.raihsuite.com')) {
-        img.src = 'https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp';
-      } else {
-        reject(new Error('Failed to load status-banner.webp template image'));
-      }
-    };
-
-    // Load from local public directory first (zero CORS issues)
-    img.src = '/ilu/status-banner.webp';
-  });
+    // Return Data URL
+    return canvas.toDataURL('image/png', 0.95);
+  } finally {
+    cleanup();
+  }
 }
 
 /**
