@@ -2,7 +2,7 @@ import { STATUS_BANNER_BASE64 } from '@/lib/iluStatusBannerData';
 
 export const runtime = 'edge';
 
-const DEFAULT_BANNER_URL = 'https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp';
+const DEFAULT_BANNER_URL = 'https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status.webp';
 
 function getFallbackResponse(): Response {
   const base64Data = STATUS_BANNER_BASE64.split(',')[1] || STATUS_BANNER_BASE64;

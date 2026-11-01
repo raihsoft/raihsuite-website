@@ -56,7 +56,7 @@ function wrapText(
 
 import { STATUS_BANNER_BASE64 } from './iluStatusBannerData';
 
-export const STATUS_BANNER_IMAGE_URL = 'https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp';
+export const STATUS_BANNER_IMAGE_URL = 'https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status.webp';
 
 let cachedTemplateImg: HTMLImageElement | null = null;
 
@@ -77,7 +77,7 @@ function loadImageFromSource(src: string, isCrossOrigin = false): Promise<HTMLIm
  * 1. If in-memory cache is available, returns it immediately.
  * 2. Fetches via server proxy (/api/ilu/status-banner) which injects CORS headers and caches at edge.
  * 3. Attempts direct fetch with CORS if available.
- * 4. Fallback: Loads the embedded STATUS_BANNER_BASE64 (identical to https://media.raihsuite.com/RS0001/web/ilu/status-banner.webp).
+ * 4. Fallback: Loads the embedded STATUS_BANNER_BASE64 (identical to https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status.webp).
  *    This ensures 100% reliability in staging, production, offline, or environments without edge API routes.
  */
 async function loadTemplateImage(customUrl?: string): Promise<{ img: HTMLImageElement; cleanup: () => void }> {
@@ -129,7 +129,7 @@ async function loadTemplateImage(customUrl?: string): Promise<{ img: HTMLImageEl
     }
   }
 
-  // Final Fail-Safe: Load embedded base64 of the status-banner.webp image
+  // Final Fail-Safe: Load embedded base64 of the wtsapp-status.webp image
   // This guarantees zero-failure even if network/CORS fails or on staging before API deploy
   try {
     const img = await loadImageFromSource(STATUS_BANNER_BASE64);
@@ -152,8 +152,9 @@ export async function generateWhatsAppStatusImage(options: StatusImageOptions): 
   const { img, cleanup } = await loadTemplateImage(imageUrl);
 
   try {
-    const width = img.naturalWidth || 3375;
-    const height = img.naturalHeight || 4219;
+    // Canonical 3375x4219 layout coordinate space (4:5 vertical WhatsApp status)
+    const width = 3375;
+    const height = 4219;
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
