@@ -6,7 +6,6 @@ import {
   Search,
   RefreshCw,
   AlertTriangle,
-  BarChart3,
   X,
   Trophy,
   Medal,
@@ -586,18 +585,18 @@ export default function IluOrderStatusPageClient() {
                                 {summary.clubName}
                               </span>
                               {isFirst && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 border border-amber-400 shadow-xs">
-                                  1st Place
+                                <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 border border-amber-400 shadow-xs leading-none">
+                                  1<sup className="text-[0.65em] font-bold lowercase ml-0.5">st</sup>
                                 </span>
                               )}
                               {isSecond && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200/90 text-slate-800 border border-slate-300 shadow-xs">
-                                  2nd Place
+                                <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-slate-200/90 text-slate-800 border border-slate-300 shadow-xs leading-none">
+                                  2<sup className="text-[0.65em] font-bold lowercase ml-0.5">nd</sup>
                                 </span>
                               )}
                               {isThird && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-200/90 text-orange-950 border border-orange-300 shadow-xs">
-                                  3rd Place
+                                <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-orange-200/90 text-orange-950 border border-orange-300 shadow-xs leading-none">
+                                  3<sup className="text-[0.65em] font-bold lowercase ml-0.5">rd</sup>
                                 </span>
                               )}
                               {summary.location && (
@@ -720,18 +719,18 @@ export default function IluOrderStatusPageClient() {
                                 {summary.clubName}
                               </span>
                               {isFirst && (
-                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300 shrink-0">
-                                  1st
+                                <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300 shrink-0 leading-none">
+                                  1<sup className="text-[0.65em] font-bold lowercase ml-0.5">st</sup>
                                 </span>
                               )}
                               {isSecond && (
-                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 shrink-0">
-                                  2nd
+                                <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 shrink-0 leading-none">
+                                  2<sup className="text-[0.65em] font-bold lowercase ml-0.5">nd</sup>
                                 </span>
                               )}
                               {isThird && (
-                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-orange-200 text-orange-950 border border-orange-300 shrink-0">
-                                  3rd
+                                <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-orange-200 text-orange-950 border border-orange-300 shrink-0 leading-none">
+                                  3<sup className="text-[0.65em] font-bold lowercase ml-0.5">rd</sup>
                                 </span>
                               )}
                             </div>
@@ -770,28 +769,6 @@ export default function IluOrderStatusPageClient() {
               )}
             </div>
 
-            {/* Total Row */}
-            {!loading && (
-              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-4 sm:p-5 px-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm shrink-0">
-                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 block">
-                      Total Quantity Ordered
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right sm:text-right flex items-center justify-between sm:block">
-                  <span className="text-xs sm:hidden text-slate-500 font-bold">Total:</span>
-                  <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
-                    {data?.organizationTotalLiters ?? 0}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </section>
 
