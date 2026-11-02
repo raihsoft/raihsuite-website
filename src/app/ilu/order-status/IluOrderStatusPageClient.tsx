@@ -6,7 +6,6 @@ import {
   Search,
   RefreshCw,
   AlertTriangle,
-  BarChart3,
   X,
   Trophy,
   Medal,
@@ -770,28 +769,6 @@ export default function IluOrderStatusPageClient() {
               )}
             </div>
 
-            {/* Total Row */}
-            {!loading && (
-              <div className="bg-gradient-to-r from-[#ea183c]/5 via-[#f3631f]/10 to-[#faa70c]/10 border-t border-[#f3631f]/20 p-4 sm:p-5 px-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-sm shrink-0">
-                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 block">
-                      Total Quantity Ordered
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right sm:text-right flex items-center justify-between sm:block">
-                  <span className="text-xs sm:hidden text-slate-500 font-bold">Total:</span>
-                  <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] bg-clip-text text-transparent tracking-tight">
-                    {data?.organizationTotalLiters ?? 0}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </section>
 
