@@ -56,7 +56,9 @@ function wrapText(
 
 import { STATUS_BANNER_BASE64 } from './iluStatusBannerData';
 
-export const STATUS_BANNER_IMAGE_URL = 'https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status.webp';
+export const STATUS_BANNER_IMAGE_URL = 'https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status-3.webp';
+
+const STATUS_FONT_FAMILY = '"Noto Sans Malayalam", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 let cachedTemplateImg: HTMLImageElement | null = null;
 
@@ -77,7 +79,7 @@ function loadImageFromSource(src: string, isCrossOrigin = false): Promise<HTMLIm
  * 1. If in-memory cache is available, returns it immediately.
  * 2. Fetches via server proxy (/api/ilu/status-banner) which injects CORS headers and caches at edge.
  * 3. Attempts direct fetch with CORS if available.
- * 4. Fallback: Loads the embedded STATUS_BANNER_BASE64 (identical to https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status.webp).
+ * 4. Fallback: Loads the embedded STATUS_BANNER_BASE64 (identical to https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status-3.webp).
  *    This ensures 100% reliability in staging, production, offline, or environments without edge API routes.
  */
 async function loadTemplateImage(customUrl?: string): Promise<{ img: HTMLImageElement; cleanup: () => void }> {
@@ -129,7 +131,7 @@ async function loadTemplateImage(customUrl?: string): Promise<{ img: HTMLImageEl
     }
   }
 
-  // Final Fail-Safe: Load embedded base64 of the wtsapp-status.webp image
+  // Final Fail-Safe: Load embedded base64 of the wtsapp-status-3.webp image
   // This guarantees zero-failure even if network/CORS fails or on staging before API deploy
   try {
     const img = await loadImageFromSource(STATUS_BANNER_BASE64);
@@ -179,13 +181,13 @@ export async function generateWhatsAppStatusImage(options: StatusImageOptions): 
     if (nameLen > 50) fontSize = 100;
 
     const maxNameWidth = 2650;
-    ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.font = `bold ${fontSize}px ${STATUS_FONT_FAMILY}`;
     let lines = wrapText(ctx, clubName, maxNameWidth);
 
     // If wrapping produced more than 2 lines, scale down font slightly to keep proportions tight
     if (lines.length > 2 && fontSize > 95) {
       fontSize = Math.max(90, Math.round(fontSize * 0.85));
-      ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.font = `bold ${fontSize}px ${STATUS_FONT_FAMILY}`;
       lines = wrapText(ctx, clubName, maxNameWidth);
     }
 
@@ -193,18 +195,28 @@ export async function generateWhatsAppStatusImage(options: StatusImageOptions): 
     // Positioned at 1880px (moved down further for balanced centering)
     const nameStartY = 1880;
 
-    // Render Club Name directly on template (no background)
+    // Render Club Name directly on template with bold stroke + fill
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.font = `900 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.font = `bold ${fontSize}px ${STATUS_FONT_FAMILY}`;
     ctx.fillStyle = '#0f172a'; // rich deep slate
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetY = 3;
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = Math.max(5, Math.round(fontSize * 0.04));
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
 
     lines.forEach((line, i) => {
-      ctx.fillText(line, centerX, nameStartY + i * lineHeight);
+      const lineY = nameStartY + i * lineHeight;
+      // 1. Stroke outline with subtle soft shadow for bold weight
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 4;
+      ctx.strokeText(line, centerX, lineY);
+
+      // 2. Fill text over stroke for crisp interior
+      ctx.shadowColor = 'transparent';
+      ctx.fillText(line, centerX, lineY);
     });
 
     let currentY = nameStartY + lines.length * lineHeight;
@@ -212,8 +224,9 @@ export async function generateWhatsAppStatusImage(options: StatusImageOptions): 
     // Location subtitle (if available)
     const hasLocation = Boolean(location && location.trim());
     if (hasLocation) {
-      ctx.font = '600 52px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = '#64748b'; // slate-500
+      ctx.font = `bold 54px ${STATUS_FONT_FAMILY}`;
+      ctx.fillStyle = '#475569'; // slate-600
+      ctx.shadowColor = 'transparent';
       ctx.fillText(`📍 ${location!.trim()}`, centerX, currentY + 14);
       currentY += 76;
     }
@@ -243,8 +256,8 @@ export async function generateWhatsAppStatusImage(options: StatusImageOptions): 
     // Soft ambient radial glow directly on the canvas behind the count
     const glowCenterY = countY + numFontSize * 0.45;
     const radialGlow = ctx.createRadialGradient(centerX, glowCenterY, 30, centerX, glowCenterY, 650);
-    radialGlow.addColorStop(0, 'rgba(251, 191, 36, 0.4)');
-    radialGlow.addColorStop(0.6, 'rgba(245, 158, 11, 0.12)');
+    radialGlow.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
+    radialGlow.addColorStop(0.6, 'rgba(245, 158, 11, 0.15)');
     radialGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
     ctx.fillStyle = radialGlow;
     ctx.beginPath();
@@ -252,15 +265,25 @@ export async function generateWhatsAppStatusImage(options: StatusImageOptions): 
     ctx.fill();
     ctx.restore();
 
-    // Render Massive Count Numeral (Directly on canvas)
+    // Render Massive Count Numeral - Extra Heavy Bold
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.font = `900 ${numFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.font = `bold ${numFontSize}px ${STATUS_FONT_FAMILY}`;
     ctx.fillStyle = '#ea183c'; // vibrant signature crimson
-    ctx.shadowColor = 'rgba(234, 24, 60, 0.35)';
+    ctx.strokeStyle = '#ea183c';
+    ctx.lineWidth = Math.max(10, Math.round(numFontSize * 0.045));
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+
+    // Stroke with crimson glow/shadow
+    ctx.shadowColor = 'rgba(234, 24, 60, 0.4)';
     ctx.shadowBlur = 40;
     ctx.shadowOffsetY = 12;
+    ctx.strokeText(formattedQty, centerX, countY);
+
+    // Fill on top with crisp surface
+    ctx.shadowColor = 'transparent';
     ctx.fillText(formattedQty, centerX, countY);
     ctx.restore();
 

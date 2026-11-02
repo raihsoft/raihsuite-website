@@ -586,18 +586,18 @@ export default function IluOrderStatusPageClient() {
                                 {summary.clubName}
                               </span>
                               {isFirst && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 border border-amber-400 shadow-xs">
-                                  1st Place
+                                <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 border border-amber-400 shadow-xs leading-none">
+                                  1<sup className="text-[0.65em] font-bold lowercase ml-0.5">st</sup>
                                 </span>
                               )}
                               {isSecond && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200/90 text-slate-800 border border-slate-300 shadow-xs">
-                                  2nd Place
+                                <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-slate-200/90 text-slate-800 border border-slate-300 shadow-xs leading-none">
+                                  2<sup className="text-[0.65em] font-bold lowercase ml-0.5">nd</sup>
                                 </span>
                               )}
                               {isThird && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-200/90 text-orange-950 border border-orange-300 shadow-xs">
-                                  3rd Place
+                                <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-orange-200/90 text-orange-950 border border-orange-300 shadow-xs leading-none">
+                                  3<sup className="text-[0.65em] font-bold lowercase ml-0.5">rd</sup>
                                 </span>
                               )}
                               {summary.location && (
@@ -720,18 +720,18 @@ export default function IluOrderStatusPageClient() {
                                 {summary.clubName}
                               </span>
                               {isFirst && (
-                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300 shrink-0">
-                                  1st
+                                <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300 shrink-0 leading-none">
+                                  1<sup className="text-[0.65em] font-bold lowercase ml-0.5">st</sup>
                                 </span>
                               )}
                               {isSecond && (
-                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 shrink-0">
-                                  2nd
+                                <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 shrink-0 leading-none">
+                                  2<sup className="text-[0.65em] font-bold lowercase ml-0.5">nd</sup>
                                 </span>
                               )}
                               {isThird && (
-                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-orange-200 text-orange-950 border border-orange-300 shrink-0">
-                                  3rd
+                                <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-orange-200 text-orange-950 border border-orange-300 shrink-0 leading-none">
+                                  3<sup className="text-[0.65em] font-bold lowercase ml-0.5">rd</sup>
                                 </span>
                               )}
                             </div>
