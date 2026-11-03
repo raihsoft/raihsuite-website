@@ -9,6 +9,8 @@ export default function IluHeader() {
   const pathname = usePathname();
   const isSubPage =
     pathname === '/ilu/order-status' ||
+    pathname === '/ilu/delivery-status' ||
+    pathname === '/delivery-status' ||
     pathname === '/ilu/donate' ||
     pathname === '/donation' ||
     pathname === '/donate';
