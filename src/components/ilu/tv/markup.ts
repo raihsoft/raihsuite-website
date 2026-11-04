@@ -161,7 +161,7 @@ export const TV_SHELL_HTML = String.raw`
         </div>
         <div class="rs-why">
           <div class="rs-counters">
-            <div class="rs-card rs-counter a-pop" style="--d:3"><span class="big rs-grad"><span data-count="15">0</span>+</span><p>Years of industry-leading engineering experience</p></div>
+            <div class="rs-card rs-counter a-pop" style="--d:3"><span class="big rs-grad">ERP</span><p>RaihSuite runs this live Palada Challenge display: orders, delivery &amp; stock in one platform</p></div>
             <div class="rs-card rs-counter a-pop" style="--d:5"><span class="big rs-grad"><span data-count="100">0</span>%</span><p>Client-centric delivery &amp; strategic alignment</p></div>
           </div>
           <div class="rs-feats">

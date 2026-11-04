@@ -13,7 +13,8 @@ const RAIHSOFT_URL = 'https://www.raihsoft.com';
 
 /**
  * Full-screen TV display for the ILU Palada Challenge.
- * URL options: ?demo=1 (sample data), ?seconds=18 (time per screen), ?adEvery=4 (Raihsoft ad after N screens, 0 = never).
+ * URL options: ?demo=1 (sample data), ?seconds=18 (time per screen), ?adEvery=N (Raihsoft ad break after N screens; default after every full rotation, 0 = never),
+ * ?adSeconds=N (length of one Raihsoft ad break; default about 15 s, minimum 8).
  *
  * The shell markup is written once on mount and then owned by the engine, so React never
  * re-renders (and resets) it. Only the QR code is rendered by React, through a portal.
@@ -32,6 +33,7 @@ export default function TvDisplay() {
     const seconds = Number(params.get('seconds'));
     const adEveryParam = params.get('adEvery');
     const adEvery = adEveryParam != null && adEveryParam !== '' ? Number(adEveryParam) : NaN;
+    const adSeconds = Number(params.get('adSeconds'));
 
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -39,6 +41,7 @@ export default function TvDisplay() {
       source: demo ? createDemoSource() : createLiveSource(),
       screenMs: Number.isFinite(seconds) && seconds >= 5 ? seconds * 1000 : undefined,
       adEvery: Number.isFinite(adEvery) && adEvery >= 0 ? adEvery : undefined,
+      adMs: Number.isFinite(adSeconds) && adSeconds > 0 ? Math.max(8, adSeconds) * 1000 : undefined,
     });
     setQrTarget(root.querySelector<HTMLElement>('#rsQR'));
 

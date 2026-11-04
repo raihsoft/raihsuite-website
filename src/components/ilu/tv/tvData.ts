@@ -39,6 +39,8 @@ export interface TvAd {
   contact?: string;
   image?: string;
   house?: boolean;
+  /** Built-in animated card instead of a text or image ad. */
+  kind?: 'townshop';
 }
 
 export interface TvTotals {
@@ -69,6 +71,9 @@ export interface TvSource {
 }
 
 export const HOURS_SHOWN = 11;
+
+/** Our own townshop.in card, always part of the side-ad rotation. */
+export const TOWNSHOP_AD: TvAd = { id: 'townshop', kind: 'townshop', title: 'townshop.in', house: true };
 
 /** Shown when the ads table is empty or cannot be reached. */
 export const HOUSE_ADS: TvAd[] = [

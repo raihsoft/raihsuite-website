@@ -4,12 +4,14 @@
  * It drives the static markup from markup.ts inside `root`.
  */
 import type { TvAd, TvClub, TvSnapshot, TvSource } from './tvData';
-import { HOUSE_ADS } from './tvData';
+import { HOUSE_ADS, TOWNSHOP_AD } from './tvData';
 
 export interface TvEngineOptions {
   source: TvSource;
   screenMs?: number;
   adEvery?: number;
+  /** Total length of one Raihsoft ad break in ms; the two pages share it in their natural proportion. */
+  adMs?: number;
 }
 
 type D = Record<string, number>;
@@ -61,7 +63,8 @@ const hashTone = (id: string) => {
 export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => void {
   const { source } = opts;
   const SCREEN_MS = opts.screenMs ?? 18000;
-  const ADS_EVERY = opts.adEvery ?? 4;
+  // undefined = play the Raihsoft ad once after every full rotation of the live screens
+  const ADS_EVERY = opts.adEvery;
   const $ = <T extends HTMLElement = HTMLElement>(sel: string) => root.querySelector(sel) as T;
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const intervals = new Set<ReturnType<typeof setInterval>>();
@@ -85,7 +88,8 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   };
   let D: D = {};
   let zones: { name: string; o: number; d: number }[] = [];
-  let ads: TvAd[] = HOUSE_ADS;
+  const withOwnAds = (list: TvAd[]) => [TOWNSHOP_AD, ...list];
+  let ads: TvAd[] = withOwnAds(HOUSE_ADS);
   let adPtr = 0;
   const events: { text: string; color: string }[] = [];
   let offline = false;
@@ -171,6 +175,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   /* ---------------- ads ---------------- */
   const nextAd = () => ads[adPtr++ % ads.length];
   function adHTML(ad: TvAd, tall: boolean, d: number) {
+    if (ad.kind === 'townshop') return townshopAdHTML(tall, d);
     if (ad.image) {
       return `<div class="ad ad-img${tall ? ' tall' : ''}" style="--d:${d}"><img src="${esc(ad.image)}" alt="${esc(ad.title || 'Sponsor advertisement')}"><span class="ad-tag">AD</span></div>`;
     }
@@ -178,8 +183,80 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       <span class="chip">${ad.house ? 'FROM ILU' : 'SPONSORED'}</span><h3>${esc(ad.title)}</h3>${ad.body ? `<p>${esc(ad.body)}</p>` : ''}<div class="sp"></div>
       ${ad.contact ? `<div class="contact">${svgIcon(ICON.phone, 24, 'currentColor')}${esc(ad.contact)}</div>` : ''}</div>`;
   }
+  /** Animated card for our own product, townshop.in (pin + shopfront logo, Outfit wordmark). */
+  function townshopAdHTML(tall: boolean, d: number) {
+    const pin = (w: number) => `<svg class="ts-pin" width="${w}" height="${w}" viewBox="0 0 120 120" aria-hidden="true"><path d="M60 114 C46 98 18 70 18 46 A42 42 0 0 1 102 46 C102 70 74 98 60 114 Z" fill="#fff"/><rect x="38" y="36" width="44" height="30" rx="3" fill="#2247C6"/><rect x="54" y="48" width="12" height="18" rx="2" fill="#fff"/><path class="ts-awn" d="M34 26 H86 V36 a6.5 6.5 0 0 1 -13 0 a6.5 6.5 0 0 1 -13 0 a6.5 6.5 0 0 1 -13 0 a6.5 6.5 0 0 1 -13 0 Z" fill="#FFB22E"/></svg>`;
+    const chat = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.5L3 21l2-5.6A8.4 8.4 0 1 1 21 11.5z"/></svg>';
+    const phone = tall
+      ? `<div class="ts-phone" aria-hidden="true"><div class="ts-ph-top">${pin(26)}<b>Pandikkad</b></div>
+          ${['Fresh vegetables', 'Bakery &amp; sweets', 'Mobile accessories'].map((n, i) => `<div class="ts-shop" style="--i:${i}"><i></i><div><b>${n}</b><span>Open now · near you</span></div></div>`).join('')}
+          <div class="ts-wa">${chat}Order on WhatsApp</div></div>`
+      : '';
+    return `<div class="ad ad-ts${tall ? ' tall' : ''}" style="--d:${d}" aria-label="townshop.in: local shops near you">
+      <div class="ts-map" aria-hidden="true"><i class="rd1"></i><i class="rd2"></i><i class="rd3"></i><i class="ring"></i></div><div class="shine" aria-hidden="true"></div>
+      <span class="ts-chip">FROM RAIHSOFT</span>
+      <div class="ts-brand"><span class="ts-pinwrap">${pin(tall ? 112 : 84)}<i class="ts-pulse"></i></span>
+        <div class="ts-word"><b>town<em>shop</em>.in</b><small>Local shops, near you</small></div></div>
+      <div class="ts-lines"><span>Discover local shops</span><span>Browse their products</span><span>Order on WhatsApp</span></div>
+      ${phone}
+      <div class="ts-live"><span class="ts-now"><i></i>Live now · Pandikkad</span></div>
+      <div class="ts-soon"><small>Soon</small><span style="--i:0">Wandoor</span><span style="--i:1">Manjeri</span><span style="--i:2">Malappuram</span></div>
+      <div class="sp"></div>
+      <div class="ts-foot"><span class="ts-cta">${chat}Order on WhatsApp</span><b>townshop.in</b></div>
+    </div>`;
+  }
+  /** Second townshop.in design for tall slots: aimed at shop owners, three looping scenes (15 s). */
+  function townshopShopsHTML(d: number) {
+    const pin = (w: number, body = '#2247C6', inner = '#fff') => `<svg width="${w}" height="${w}" viewBox="0 0 120 120" aria-hidden="true"><path d="M60 114 C46 98 18 70 18 46 A42 42 0 0 1 102 46 C102 70 74 98 60 114 Z" fill="${body}"/><rect x="38" y="36" width="44" height="30" rx="3" fill="${inner}"/><rect x="54" y="48" width="12" height="18" rx="2" fill="${body}"/><path d="M34 26 H86 V36 a6.5 6.5 0 0 1 -13 0 a6.5 6.5 0 0 1 -13 0 a6.5 6.5 0 0 1 -13 0 a6.5 6.5 0 0 1 -13 0 Z" fill="#FFB22E"/></svg>`;
+    const chat = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.5L3 21l2-5.6A8.4 8.4 0 1 1 21 11.5z"/></svg>';
+    const scallops = Array.from({ length: 6 }, (_, i) => `<path d="M${40 + i * 40} 96 a20 20 0 0 0 40 0 Z" fill="${i % 2 ? '#FFFFFF' : '#FFB22E'}"/>`).join('');
+    const shopfront = `<svg class="tsb-front" width="300" height="250" viewBox="0 0 320 260" aria-hidden="true">
+      <g class="tsb-body"><rect x="44" y="96" width="232" height="150" rx="10" fill="#fff" stroke="#2247C6" stroke-width="5"/>
+        <rect x="70" y="128" width="72" height="56" rx="6" fill="#DCE4FB"/><rect x="178" y="128" width="72" height="118" rx="6" fill="#2247C6"/>
+        <circle cx="236" cy="190" r="5" fill="#FFB22E"/><rect x="30" y="242" width="260" height="10" rx="5" fill="#0E1B4D" opacity=".15"/></g>
+      <g class="tsb-awn"><rect x="40" y="56" width="240" height="40" rx="6" fill="#FFB22E"/>${scallops}</g>
+      <g class="tsb-sign"><line x1="92" y1="196" x2="106" y2="214" stroke="#0E1B4D" stroke-width="3"/><line x1="120" y1="196" x2="106" y2="214" stroke="#0E1B4D" stroke-width="3"/>
+        <rect x="74" y="212" width="64" height="26" rx="6" fill="#0f9f6e"/><text x="106" y="230" text-anchor="middle" font-family="Outfit,sans-serif" font-size="15" font-weight="800" fill="#fff">OPEN</text></g>
+    </svg>`;
+    const tiles = [['Mobiles', '#2247C6'], ['Fashion', '#FF7A45'], ['Groceries', '#0f9f6e'], ['Gifts', '#FFB22E']]
+      .map(([n, c], i) => `<div class="tsb-tile" style="--k:${i}"><i style="background:${c}"></i><b>${n}</b><span>In stock nearby</span></div>`).join('');
+    return `<div class="ad ad-tsb tall" style="--d:${d}" aria-label="townshop.in: list your shop for free">
+      <div class="tsb-dots" aria-hidden="true"></div>
+      <span class="tsb-chip">FOR SHOP OWNERS</span>
+      <div class="tsb-brand">${pin(64)}<b>town<em>shop</em><small>.in</small></b></div>
+      <div class="tsb-stage">
+        <section class="tsb-sc" style="--s:0">
+          <h3 class="tsb-h"><span>Have a shop</span><span>in town?</span></h3>
+          ${shopfront}
+          <p class="tsb-p">List it on <b>townshop.in</b> for free.</p>
+        </section>
+        <section class="tsb-sc" style="--s:1">
+          <h3 class="tsb-h"><span>Customers nearby</span><span>find your products</span></h3>
+          <span class="tsb-near">${pin(26, '#0E1B4D')}Pandikkad · within 1 km</span>
+          <div class="tsb-tiles">${tiles}</div>
+        </section>
+        <section class="tsb-sc" style="--s:2">
+          <h3 class="tsb-h"><span>Orders come</span><span>on WhatsApp</span></h3>
+          <div class="tsb-chat">
+            <div class="tsb-b in" style="--k:0">Hi! Is this available today?</div>
+            <div class="tsb-b out" style="--k:1">Yes, it's in stock. Come pick it up!</div>
+            <div class="tsb-b in" style="--k:2">Great, ordering now</div>
+            <div class="tsb-note" style="--k:3">${chat}New order on WhatsApp</div>
+          </div>
+        </section>
+      </div>
+      <div class="tsb-prog" aria-hidden="true"><i style="--s:0"></i><i style="--s:1"></i><i style="--s:2"></i></div>
+      <div class="tsb-foot">
+        <div><small>List your shop free</small><b>townshop.in</b></div>
+        <span class="tsb-cta">${chat}Enquire on WhatsApp</span>
+      </div>
+    </div>`;
+  }
+  let tallTurn = 0;
+  // Every other tall slot shows the shop-owner townshop card; the rest follow the normal ad rotation.
+  const tallAd = () => (tallTurn++ % 2 === 0 ? townshopShopsHTML(0) : adHTML(nextAd(), true, 0));
   const asideHTML = (slots: 1 | 2) =>
-    slots === 1 ? `<aside class="aside">${adHTML(nextAd(), true, 0)}</aside>` : `<aside class="aside">${adHTML(nextAd(), false, 0)}${adHTML(nextAd(), false, 1)}</aside>`;
+    slots === 1 ? `<aside class="aside">${tallAd()}</aside>` : `<aside class="aside">${adHTML(nextAd(), false, 0)}${adHTML(nextAd(), false, 1)}</aside>`;
 
   /* ---------------- screens ---------------- */
   const sortedClubs = () => S.clubs.slice().sort((a, b) => b.ordered - a.ordered);
@@ -759,10 +836,10 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   async function pollAds() {
     try {
       const list = await source.loadAds();
-      ads = list.length ? list : HOUSE_ADS;
+      ads = withOwnAds(list.length ? list : HOUSE_ADS);
     } catch (err) {
       console.warn('[tv-display] ads unavailable, showing house ads', err);
-      ads = HOUSE_ADS;
+      ads = withOwnAds(HOUSE_ADS);
     }
   }
 
@@ -773,6 +850,8 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   let sinceAd = 0;
   let pendingMs: number | null = null;
   let adDone: (() => void) | null = null;
+  // Each break plays one scene (rotating through them) and then the final call-to-action scene.
+  let nextAdScene = 0;
   function playAd(done?: () => void) {
     if (adPlaying) return;
     adPlaying = true;
@@ -781,36 +860,43 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
     $('#toast').classList.remove('show');
     const ad = $('#rsAd');
     const scenes = [...ad.querySelectorAll<HTMLElement>('.rs-scene')];
+    const last = scenes.length - 1;
+    const order = last > 0 ? [nextAdScene % last, last] : [0];
+    if (last > 0) nextAdScene = (nextAdScene + 1) % last;
+    const natural = order.map((k) => RS_DURS[k]);
+    const scale = opts.adMs ? opts.adMs / natural.reduce((a, b) => a + b, 0) : 1;
+    const durs = natural.map((ms) => Math.round(ms * scale));
     const segs = $('#rsSegs');
-    segs.innerHTML = RS_DURS.map(() => '<i><b></b></i>').join('');
+    segs.innerHTML = order.map(() => '<i><b></b></i>').join('');
     ad.classList.add('show');
     ad.setAttribute('aria-hidden', 'false');
     $('#bAd').setAttribute('aria-pressed', 'true');
-    const total = RS_DURS.reduce((a, b) => a + b, 0);
+    const total = durs.reduce((a, b) => a + b, 0);
     const t0 = Date.now();
     const upd = () => { $('#rsCount').textContent = `${Math.max(0, Math.ceil((total - (Date.now() - t0)) / 1000))}s`; };
     upd();
     adTick = every(upd, 500);
-    let i = -1;
+    let j = -1;
     const step = () => {
-      if (i >= 0) {
-        const p = scenes[i];
+      if (j >= 0) {
+        const p = scenes[order[j]];
         p.classList.remove('on');
         p.classList.add('off');
         later(() => p.classList.remove('off'), 700);
-        (segs.children[i] as HTMLElement).className = 'done';
+        (segs.children[j] as HTMLElement).className = 'done';
       }
-      i++;
-      if (i >= scenes.length) { endAd(); return; }
+      j++;
+      if (j >= order.length) { endAd(); return; }
+      const i = order[j];
       const s = scenes[i];
       s.classList.add('on');
       ad.dataset.scene = String(i);
       const sw = $('#rsSweep');
       sw.classList.remove('go');
       void sw.offsetWidth;
-      if (i > 0) sw.classList.add('go');
-      const seg = segs.children[i] as HTMLElement;
-      seg.style.setProperty('--dur', `${RS_DURS[i]}ms`);
+      if (j > 0) sw.classList.add('go');
+      const seg = segs.children[j] as HTMLElement;
+      seg.style.setProperty('--dur', `${durs[j]}ms`);
       seg.className = 'run';
       if (i === 2) {
         $('#rsTvPct').textContent = `${Math.round(D.pct || 0)}%`;
@@ -819,7 +905,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         later(() => r.setAttribute('stroke-dasharray', `${((477.5 * clamp(D.pct || 0, 0, 100)) / 100).toFixed(1)} 477.5`), 900);
       }
       if (i === 5) s.querySelectorAll<NumEl>('[data-count]').forEach((el) => tween(el, 0, Number(el.dataset.count), 0, 1600, 600));
-      adT = later(step, RS_DURS[i]);
+      adT = later(step, durs[j]);
     };
     step();
   }
@@ -841,7 +927,8 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   }
   function autoNext() {
     sinceAd++;
-    if (ADS_EVERY > 0 && sinceAd >= ADS_EVERY) playAd(() => show(indexOfCurrent() + 1));
+    const due = ADS_EVERY === undefined ? sinceAd >= active.length : ADS_EVERY > 0 && sinceAd >= ADS_EVERY;
+    if (due) playAd(() => show(indexOfCurrent() + 1));
     else show(indexOfCurrent() + 1);
   }
 

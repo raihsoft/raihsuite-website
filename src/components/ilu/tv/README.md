@@ -1,6 +1,6 @@
 # ILU Palada Challenge – TV display
 
-Route: **`/ilu/tv-display`**. A full-screen 1920×1080 kiosk page (scaled to any screen) that rotates 8 live screens, shows sponsor ads beside them, and plays a full-screen Raihsoft video ad between rotations.
+Route: **`/ilu/tv-display`**. A full-screen 1920×1080 kiosk page (scaled to any screen) that rotates 8 live screens, shows sponsor ads beside them, and plays a short full-screen Raihsoft ad break between rotations. Each break shows one Raihsoft scene (the next one each time) followed by the final call-to-action scene with the QR code, about 15 s in total.
 
 ## URL options
 
@@ -8,7 +8,8 @@ Route: **`/ilu/tv-display`**. A full-screen 1920×1080 kiosk page (scaled to any
 |---|---|---|
 | `demo=1` | off | Run on sample data that changes every 7 s (shows the demo-only control buttons). |
 | `seconds=18` | 18 | Seconds per screen (minimum 5). |
-| `adEvery=4` | 4 | Play the Raihsoft ad after every N screens. `0` turns it off. |
+| `adSeconds=N` | about 15 | Length of one Raihsoft ad break in seconds (minimum 8). Both pages of the break are stretched or shortened to fit. |
+| `adEvery=N` | all screens | Play a Raihsoft ad break after every N screens. By default it plays once after every full rotation of the live screens. `0` turns it off. |
 
 Keyboard: ← / → change screen, Space pause, F fullscreen, A play/skip the Raihsoft ad. Mouse movement shows the control bar; it and the cursor hide after 3.5 s.
 
@@ -39,6 +40,6 @@ Polled every 15 s with the same tenant/fundraising config as the order pages (`g
 
 Screens without data are skipped automatically (no zones → no zone screen, no deliveries yet → no "Just delivered" / hourly screens).
 
-**Ads.** Fetched every 5 min from `NEXT_PUBLIC_ILU_TV_ADS_URL`, default `{BASE_API_URL}orders/advertisements/?tenant=…`. Accepted fields: `id`, `title`/`name`, `description`/`body`/`content`, `contact`/`phone`/`mobile`, `image`/`image_url`/`banner`/`file`, `is_active`, `sort_order`, `start_date`, `end_date`. A row with an image is shown as a full-card image only; otherwise as a coloured text card. When the endpoint is empty or unavailable, two ILU house ads are shown.
+**Ads.** Fetched every 5 min from `NEXT_PUBLIC_ILU_TV_ADS_URL`, default `{BASE_API_URL}orders/advertisements/?tenant=…`. Accepted fields: `id`, `title`/`name`, `description`/`body`/`content`, `contact`/`phone`/`mobile`, `image`/`image_url`/`banner`/`file`, `is_active`, `sort_order`, `start_date`, `end_date`. A row with an image is shown as a full-card image only; otherwise as a coloured text card. When the endpoint is empty or unavailable, two ILU house ads are shown. Our own animated townshop.in card (`TOWNSHOP_AD` in `tvData.ts`, markup in `townshopAdHTML()` in `engine.ts`) is always added to the front of the rotation, in both the short and the tall ad slot. Every other tall ad slot shows a second townshop.in design aimed at shop owners (`townshopShopsHTML()`): three looping scenes, 15 s in total.
 
 If the API is unreachable the last data stays on screen with an "Offline" badge, and polling continues.
