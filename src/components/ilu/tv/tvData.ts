@@ -86,6 +86,8 @@ const num = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 const str = (v: unknown): string => (v == null ? '' : String(v).trim());
+/** Reads a field the shared API types do not declare (e.g. total_pending_delivery). */
+const extra = (o: object, key: string): unknown => (o as Record<string, unknown>)[key];
 
 function results<T>(data: unknown): T[] {
   if (Array.isArray(data)) return data as T[];
@@ -239,8 +241,11 @@ export function createLiveSource(): TvSource {
         .map((o) => {
           const id = str(o.organization_id);
           const info = orgInfo.get(id);
-          const approved = num(o.total_approved);
+          // The API's total_approved already includes delivered litres, so "ready" is
+          // approved minus delivered (total_pending_delivery when the API sends it).
+          const confirmed = num(o.total_approved);
           const delivered = num(o.total_delivered);
+          const approved = extra(o, 'total_pending_delivery') != null ? num(extra(o, 'total_pending_delivery')) : Math.max(0, confirmed - delivered);
           const pending = num(o.total_initiated);
           const orders = (o.orders ?? []) as ApiOrder[];
           const name = str(o.organization_name) || str(info?.organization_name);
@@ -255,7 +260,7 @@ export function createLiveSource(): TvSource {
             name,
             place,
             zone: str(info?.zone_name) || str(info?.zone),
-            ordered: approved + delivered + pending,
+            ordered: Math.max(confirmed, delivered) + pending,
             delivered,
             approved,
             pending,
@@ -270,7 +275,11 @@ export function createLiveSource(): TvSource {
       const indL = num(stats.individual_total);
       const ordered = num(stats.grand_total) || clubOrdered + indL;
       const delivered = num(stats.total_delivered);
-      const approved = num(stats.total_approved);
+      // Ready to deliver = approved but not yet delivered (total_approved includes delivered).
+      const approved =
+        extra(stats, 'total_pending_delivery') != null
+          ? num(extra(stats, 'total_pending_delivery'))
+          : Math.max(0, num(stats.total_approved) - delivered);
 
       apiDeliveries.sort((a, b) => b.time - a.time);
       const useApiTimes = apiDeliveries.length > 0;
