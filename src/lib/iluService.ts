@@ -761,10 +761,11 @@ export async function fetchOrderStatusApi(
         0
       );
 
-      // Directly use approved quantity from API (fallback to approved order items sum)
+      // total_approved already includes delivered litres, so adding the two counts
+      // delivered litres twice. Take the larger in case delivered is ever reported alone.
       const totalApprovedLiters =
-        approvedCount > 0
-          ? approvedCount
+        approvedCount > 0 || deliveredCount > 0
+          ? Math.max(approvedCount, deliveredCount)
           : ordersApprovedSum > 0
             ? ordersApprovedSum
             : 0;

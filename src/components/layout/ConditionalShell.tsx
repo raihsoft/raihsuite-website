@@ -13,6 +13,11 @@ export default function ConditionalShell({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const isIluRoute = pathname?.startsWith('/ilu');
 
+  // The TV display is a full-screen kiosk page: no site header, footer or install prompt.
+  if (pathname?.startsWith('/ilu/tv-display')) {
+    return <>{children}</>;
+  }
+
   if (isIluRoute) {
     return (
       <div className="bg-[#fffdf7] text-slate-900 min-h-screen flex flex-col font-sans selection:bg-amber-300 selection:text-amber-950">
