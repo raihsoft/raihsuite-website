@@ -14,7 +14,6 @@ import {
   ChevronDown,
   ChevronUp,
   PackageCheck,
-  Building2,
   Calendar,
   Hash,
 } from 'lucide-react';
@@ -296,18 +295,13 @@ export default function IluDeliveryStatusPageClient() {
 
             {/* Top Header Row */}
             <div className="relative z-10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 sm:p-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-emerald-200">
-                  <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-100" />
-                </div>
-                <div>
-                  <h2 className="text-sm sm:text-lg md:text-xl font-bold text-white tracking-tight drop-shadow-sm">
-                    Total Palada Delivered
-                  </h2>
-                  <p className="text-[11px] sm:text-xs text-emerald-100/90 font-medium">
-                    വിതരണം പൂർത്തിയായ ആകെ അളവ്
-                  </p>
-                </div>
+              <div>
+                <h2 className="text-sm sm:text-lg md:text-xl font-bold text-white tracking-tight drop-shadow-sm">
+                  Total Palada Delivered
+                </h2>
+                <p className="text-[11px] sm:text-xs text-emerald-100/90 font-medium">
+                  വിതരണം പൂർത്തിയായ ആകെ അളവ്
+                </p>
               </div>
 
               {/* Live Status Pill */}
@@ -336,22 +330,6 @@ export default function IluDeliveryStatusPageClient() {
               <span className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-wider drop-shadow-md">
                 LTR
               </span>
-            </div>
-
-            {/* Bottom Quick Metric Pills */}
-            <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-2 border-t border-white/15 text-xs text-white/95">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/20 backdrop-blur-xs">
-                <Building2 className="w-3.5 h-3.5 text-emerald-300" />
-                <span>
-                  Delivered Clubs: <strong>{data?.totalDeliveredOrganizations ?? 0}</strong>
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/20 backdrop-blur-xs">
-                <PackageCheck className="w-3.5 h-3.5 text-emerald-300" />
-                <span>
-                  Delivered Orders: <strong>{data?.totalOrdersDeliveredCount ?? 0}</strong>
-                </span>
-              </div>
             </div>
           </div>
         </section>

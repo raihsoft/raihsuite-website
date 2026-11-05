@@ -1039,17 +1039,14 @@ export async function fetchDeliveryStatusApi(
 
   const summaries: DeliveryClubSummary[] = orgResults
     .map((org) => {
-      const deliveredLiters = Number(org.total_delivered ?? 0);
-      const deliveredOrders = Array.isArray(org.orders)
-        ? org.orders.filter(
-            (o) => String(o.status || '').trim().toUpperCase() === 'DELIVERED'
-          )
-        : [];
-      const ordersDeliveredSum = deliveredOrders.reduce(
-        (acc, o) => acc + (Number(o.quantity) || 0),
-        0
-      );
-      const totalDelivered = Math.max(deliveredLiters, ordersDeliveredSum);
+      // Directly read backend total_delivered from API
+      const totalDelivered = Number(org.total_delivered ?? 0);
+      const deliveredOrders =
+        totalDelivered > 0 && Array.isArray(org.orders)
+          ? org.orders.filter(
+              (o) => String(o.status || '').trim().toUpperCase() === 'DELIVERED'
+            )
+          : [];
 
       const latestDeliveredOrder = deliveredOrders[0] || org.orders?.[0];
       const lastOrderDate = String(
@@ -1077,13 +1074,10 @@ export async function fetchDeliveryStatusApi(
       rank: index + 1,
     }));
 
-  const calculatedDeliveredSum = summaries.reduce(
-    (acc, item) => acc + (item.totalDeliveredLiters || 0),
-    0
-  );
-  const totalDeliveredLiters = Math.max(
-    Number(statusStats?.total_delivered ?? 0),
-    calculatedDeliveredSum
+  // Directly read total_delivered from backend order_status API (no frontend recalculation)
+  const totalDeliveredLiters = Number(
+    statusStats?.total_delivered ??
+      summaries.reduce((acc, item) => acc + (item.totalDeliveredLiters || 0), 0)
   );
 
   const totalDeliveredOrganizations = summaries.filter(
