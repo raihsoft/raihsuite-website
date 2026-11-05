@@ -18,12 +18,7 @@ export const viewport: Viewport = {
 };
 
 export default function IluLayout({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <>
-      <head>
-        <link rel="apple-touch-icon" href="/ilu/icons/icon-192.png" />
-      </head>
-      {children}
-    </>
-  );
+  // The apple-touch-icon comes from `metadata.icons.apple` above. A <head> element here
+  // would render inside <body> and break hydration on every /ilu page.
+  return <>{children}</>;
 }
