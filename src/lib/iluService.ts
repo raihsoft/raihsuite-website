@@ -746,7 +746,9 @@ export async function fetchOrderStatusApi(
   const summaries: ClubSummary[] = orgResults
     .filter((org) => !isInitiatedOrganization(org))
     .map((org) => {
-      const approvedCount = Number(org.total_approved ?? 0);
+      const approvedCount = Number(
+        org.total_approved ?? org.total_order_quantity ?? 0
+      );
       const deliveredCount = Number(org.total_delivered ?? 0);
       const approvedOrders = Array.isArray(org.orders)
         ? org.orders.filter((o) => {
@@ -759,10 +761,10 @@ export async function fetchOrderStatusApi(
         0
       );
 
-      // Compute total approved liters strictly from approved & delivered counts
+      // Directly use approved quantity from API (fallback to approved order items sum)
       const totalApprovedLiters =
-        approvedCount > 0 || deliveredCount > 0
-          ? approvedCount + deliveredCount
+        approvedCount > 0
+          ? approvedCount
           : ordersApprovedSum > 0
             ? ordersApprovedSum
             : 0;
@@ -796,20 +798,13 @@ export async function fetchOrderStatusApi(
     .filter((item) => item.status === 'APPROVED' && item.totalQuantityLiters > 0)
     .sort((a, b) => b.totalQuantityLiters - a.totalQuantityLiters);
 
-  const calculatedSum = summaries.reduce(
-    (acc, item) => acc + (item.totalQuantityLiters || 0),
+  // Directly use organization total from order_status API (exact same source as order page)
+  const organizationTotal = Number(
+    rawStats.organization_total ||
+    rawStats.total_approved ||
+    rawStats.total_order ||
     0
   );
-
-  const organizationTotal =
-    calculatedSum > 0
-      ? calculatedSum
-      : Number(
-          rawStats.organization_total ||
-          rawStats.total_approved ||
-          rawStats.total_order ||
-          0
-        );
   const grandTotal = Number(
     rawStats.grand_total ||
     rawStats.total_order ||
