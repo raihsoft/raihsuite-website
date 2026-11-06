@@ -254,6 +254,41 @@ export interface OrderStatusResponse {
   raw?: BackendOrderStatus;
 }
 
+export interface DeliveryClubSummary {
+  clubId: string;
+  clubName: string;
+  totalDeliveredLiters: number;
+  totalOrderCount: number;
+  deliveredOrderCount: number;
+  totalOrderQuantity: number;
+  lastOrderDate?: string;
+  location?: string;
+  rank: number;
+  orders?: Array<{
+    order_by_name?: string;
+    order_number?: string;
+    quantity?: number;
+    status?: string;
+    order_date?: string;
+  }>;
+  raw?: BackendOrderByOrganization;
+}
+
+export interface DeliveryStatusResponse {
+  success: boolean;
+  totalDeliveredLiters: number;
+  totalDeliveredOrganizations: number;
+  totalOrganizationsCount: number;
+  totalOrdersDeliveredCount: number;
+  summaries: DeliveryClubSummary[];
+  raw?: unknown;
+}
+
+export interface FetchDeliveryStatusOptions {
+  tenant?: number | string;
+  fundraising?: string;
+}
+
 export interface BackendOrderPayload {
   tenant: number;
   fundraising: string;
@@ -746,7 +781,9 @@ export async function fetchOrderStatusApi(
   const summaries: ClubSummary[] = orgResults
     .filter((org) => !isInitiatedOrganization(org))
     .map((org) => {
-      const approvedCount = Number(org.total_approved ?? 0);
+      const approvedCount = Number(
+        org.total_approved ?? org.total_order_quantity ?? 0
+      );
       const deliveredCount = Number(org.total_delivered ?? 0);
       const approvedOrders = Array.isArray(org.orders)
         ? org.orders.filter((o) => {
@@ -759,10 +796,11 @@ export async function fetchOrderStatusApi(
         0
       );
 
-      // Compute total approved liters strictly from approved & delivered counts
+      // total_approved already includes delivered litres, so adding the two counts
+      // delivered litres twice. Take the larger in case delivered is ever reported alone.
       const totalApprovedLiters =
         approvedCount > 0 || deliveredCount > 0
-          ? approvedCount + deliveredCount
+          ? Math.max(approvedCount, deliveredCount)
           : ordersApprovedSum > 0
             ? ordersApprovedSum
             : 0;
@@ -796,20 +834,13 @@ export async function fetchOrderStatusApi(
     .filter((item) => item.status === 'APPROVED' && item.totalQuantityLiters > 0)
     .sort((a, b) => b.totalQuantityLiters - a.totalQuantityLiters);
 
-  const calculatedSum = summaries.reduce(
-    (acc, item) => acc + (item.totalQuantityLiters || 0),
+  // Directly use organization total from order_status API (exact same source as order page)
+  const organizationTotal = Number(
+    rawStats.organization_total ||
+    rawStats.total_approved ||
+    rawStats.total_order ||
     0
   );
-
-  const organizationTotal =
-    calculatedSum > 0
-      ? calculatedSum
-      : Number(
-          rawStats.organization_total ||
-          rawStats.total_approved ||
-          rawStats.total_order ||
-          0
-        );
   const grandTotal = Number(
     rawStats.grand_total ||
     rawStats.total_order ||
@@ -957,4 +988,114 @@ export async function submitDonationApi(
   }
 
   return responseData as DonationResponse;
+}
+
+/**
+ * Fetches delivery status report and organization summaries from the backend.
+ * Organizations are sorted descending by total_delivered (more delivered organisation on top).
+ */
+export async function fetchDeliveryStatusApi(
+  options: FetchDeliveryStatusOptions = {}
+): Promise<DeliveryStatusResponse> {
+  const config = await getILUConfig();
+  const tenantParam = options.tenant ?? config.TENANT_ID ?? (isMainBranch ? 12 : 73);
+  const fundraisingParam =
+    options.fundraising ??
+    config.FUNDRAISING_CODE ??
+    (isMainBranch ? 'ILU001' : 'ILU041');
+
+  const orderByOrgUrl = `${config.ORDER_BY_ORGANIZATION_URL}?tenant=${encodeURIComponent(
+    String(tenantParam)
+  )}&fundraising=${encodeURIComponent(String(fundraisingParam))}&limit=500&offset=0`;
+
+  const statusUrl = `${config.ORDER_STATUS_URL}?tenant=${encodeURIComponent(
+    String(tenantParam)
+  )}&fundraising=${encodeURIComponent(String(fundraisingParam))}`;
+
+  const [orgsRes, statusRes] = await Promise.all([
+    fetch(orderByOrgUrl, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    }),
+    fetch(statusUrl, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    }).catch(() => null),
+  ]);
+
+  if (!orgsRes.ok) {
+    throw new Error(
+      `Failed to load delivery status (${orgsRes.status} ${orgsRes.statusText}).`
+    );
+  }
+
+  const rawOrgData = await orgsRes.json();
+  const orgResults = getResults<BackendOrderByOrganization>(rawOrgData);
+
+  let statusStats: BackendOrderStatus | null = null;
+  if (statusRes && statusRes.ok) {
+    statusStats = (await statusRes.json().catch(() => null)) as BackendOrderStatus | null;
+  }
+
+  const summaries: DeliveryClubSummary[] = orgResults
+    .map((org) => {
+      // Directly read backend total_delivered from API
+      const totalDelivered = Number(org.total_delivered ?? 0);
+      const deliveredOrders =
+        totalDelivered > 0 && Array.isArray(org.orders)
+          ? org.orders.filter(
+              (o) => String(o.status || '').trim().toUpperCase() === 'DELIVERED'
+            )
+          : [];
+
+      const latestDeliveredOrder = deliveredOrders[0] || org.orders?.[0];
+      const lastOrderDate = String(
+        org.last_ordered_at || latestDeliveredOrder?.order_date || ''
+      );
+
+      return {
+        clubId: String(org.organization_id || ''),
+        clubName: String(org.organization_name || '').trim(),
+        totalDeliveredLiters: totalDelivered,
+        totalOrderCount: Number(org.total_order ?? org.orders?.length ?? 0),
+        deliveredOrderCount: deliveredOrders.length,
+        totalOrderQuantity: Number(org.total_order_quantity ?? 0),
+        lastOrderDate,
+        location: (org as any).place || (org as any).location || '',
+        rank: 0,
+        orders: org.orders,
+        raw: org,
+      };
+    })
+    // Sort descending by total delivered count: more delivered organisation on top
+    .sort((a, b) => b.totalDeliveredLiters - a.totalDeliveredLiters || a.clubName.localeCompare(b.clubName))
+    .map((item, index) => ({
+      ...item,
+      rank: index + 1,
+    }));
+
+  // Directly read total_delivered from backend order_status API (no frontend recalculation)
+  const totalDeliveredLiters = Number(
+    statusStats?.total_delivered ??
+      summaries.reduce((acc, item) => acc + (item.totalDeliveredLiters || 0), 0)
+  );
+
+  const totalDeliveredOrganizations = summaries.filter(
+    (s) => s.totalDeliveredLiters > 0
+  ).length;
+
+  const totalOrdersDeliveredCount = summaries.reduce(
+    (acc, item) => acc + (item.deliveredOrderCount || 0),
+    0
+  );
+
+  return {
+    success: true,
+    totalDeliveredLiters,
+    totalDeliveredOrganizations,
+    totalOrganizationsCount: summaries.length,
+    totalOrdersDeliveredCount,
+    summaries,
+    raw: rawOrgData,
+  };
 }

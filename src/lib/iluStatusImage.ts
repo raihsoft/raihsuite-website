@@ -8,27 +8,6 @@ export interface StatusImageOptions {
   imageUrl?: string;
 }
 
-function drawRoundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
-
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -56,7 +35,9 @@ function wrapText(
 
 import { STATUS_BANNER_BASE64 } from './iluStatusBannerData';
 
-export const STATUS_BANNER_IMAGE_URL = 'https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status-4.webp';
+export const STATUS_BANNER_IMAGE_URL =
+  process.env.NEXT_PUBLIC_ILU_STATUS_IMAGE_URL ||
+  'https://media.raihsuite.com/RS0001/web/ilu/status-image-cmplte.webp';
 
 const STATUS_FONT_FAMILY = '"Noto Sans Malayalam", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
@@ -79,7 +60,7 @@ function loadImageFromSource(src: string, isCrossOrigin = false): Promise<HTMLIm
  * 1. If in-memory cache is available, returns it immediately.
  * 2. Fetches via server proxy (/api/ilu/status-banner) which injects CORS headers and caches at edge.
  * 3. Attempts direct fetch with CORS if available.
- * 4. Fallback: Loads the embedded STATUS_BANNER_BASE64 (identical to https://media.raihsuite.com/RS0001/web/ilu/wtsapp-status-4.webp).
+ * 4. Fallback: Loads the embedded STATUS_BANNER_BASE64 (identical to https://media.raihsuite.com/RS0001/web/ilu/status-image-cmplte.webp).
  *    This ensures 100% reliability in staging, production, offline, or environments without edge API routes.
  */
 async function loadTemplateImage(customUrl?: string): Promise<{ img: HTMLImageElement; cleanup: () => void }> {

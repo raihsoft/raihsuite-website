@@ -310,6 +310,21 @@ export default function IluOrderStatusPageClient() {
 
       <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-8 relative z-10 space-y-3.5 sm:space-y-6">
 
+        {/* TOP STATUS NAVIGATION TABS */}
+        <div className="flex items-center justify-center">
+          <div className="inline-flex p-1 bg-amber-100/80 border border-amber-200/90 rounded-full shadow-inner gap-1">
+            <div className="px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-black bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] text-white shadow-md flex items-center gap-1.5">
+              <span>📋 Order Status</span>
+            </div>
+            <Link
+              href="/ilu/delivery-status"
+              className="px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 hover:bg-white/60 transition-all flex items-center gap-1.5"
+            >
+              <span>🚚 Delivery Status</span>
+            </Link>
+          </div>
+        </div>
+
         {/* ERROR STATE */}
         {error && (
           <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between gap-4 text-sm shadow-sm">
@@ -772,8 +787,14 @@ export default function IluOrderStatusPageClient() {
           </div>
         </section>
 
-        {/* Back Button */}
-        <section className="pt-1 sm:pt-2 text-center">
+        {/* Navigation / Action Buttons */}
+        <section className="pt-1 sm:pt-2 text-center flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/ilu/delivery-status"
+            className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-full bg-white hover:bg-slate-50 border border-emerald-300 text-emerald-900 font-bold text-xs sm:text-sm shadow-sm transition transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <span>🚚 View Delivery Status Portal</span>
+          </Link>
           <Link
             href="/ilu"
             className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-full bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-[#ea183c]/25 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
