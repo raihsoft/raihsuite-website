@@ -1,6 +1,7 @@
 'use client';
 
 import { VolunteerParticipant, formatVolunteerPassId } from './iluVolunteerService';
+import { ILU_VOLUNTEER_LOGO_BASE64 } from './iluVolunteerLogoData';
 
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
@@ -24,12 +25,15 @@ function drawRoundedRect(
 }
 
 /**
- * Loads an image from a URL as a promise.
+ * Loads an image from a URL or base64 data URI as a promise.
  */
 function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // Do not set crossOrigin for data URIs to avoid triggering CORS errors
+    if (!src.startsWith('data:') && !src.startsWith('blob:')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = src;
@@ -106,10 +110,19 @@ export async function generateVolunteerSlipDataUrl(
   ctx.fillRect(cardX, cardY + headerH - 6, cardW, 6);
   ctx.restore();
 
-  // Logo
-  const logo = await loadImage(
-    'https://media.raihsuite.com/RS0001/web/ilu/tv-display-logo.png'
-  );
+  // Logo - load embedded base64 first (guaranteed CORS-free & instant), with proxy fallback
+  let logo = await loadImage(ILU_VOLUNTEER_LOGO_BASE64);
+  if (!logo) {
+    logo = await loadImage(
+      `/api/ilu/status-banner?url=${encodeURIComponent('https://media.raihsuite.com/RS0001/web/ilu/tv-display-logo.png')}`
+    );
+  }
+  if (!logo) {
+    logo = await loadImage(
+      'https://media.raihsuite.com/RS0001/web/ilu/tv-display-logo.png'
+    );
+  }
+
   if (logo) {
     const logoW = 240;
     const logoH = Math.round((logoW * logo.height) / logo.width);
@@ -261,21 +274,62 @@ export async function generateVolunteerSlipDataUrl(
 }
 
 /**
+ * Converts a base64 data URL to a binary Blob.
+ */
+function dataUrlToBlob(dataUrl: string): Blob {
+  const parts = dataUrl.split(';base64,');
+  const contentType = parts[0]?.split(':')[1] || 'image/png';
+  const binaryString = atob(parts[1] || '');
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return new Blob([bytes.buffer], { type: contentType });
+}
+
+/**
  * Initiates a browser download of the volunteer slip PNG file.
  */
 export function downloadVolunteerSlipImage(
   dataUrl: string,
-  volunteerName: string,
-  passId: string
+  volunteerName?: string,
+  passId?: string
 ) {
-  const safeName = volunteerName
+  const safeName = (volunteerName || 'volunteer')
+    .toString()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  const link = document.createElement('a');
-  link.download = `ilu-volunteer-pass-${passId.toLowerCase()}-${safeName || 'slip'}.png`;
-  link.href = dataUrl;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const safePass = (passId || 'pass')
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+  const filename = `ilu-volunteer-pass-${safePass}-${safeName || 'slip'}.png`;
+
+  try {
+    const blob = dataUrlToBlob(dataUrl);
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = blobUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        // Ignore
+      }
+    }, 1500);
+  } catch {
+    // Direct fallback using data URL
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
