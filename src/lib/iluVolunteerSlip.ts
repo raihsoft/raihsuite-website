@@ -279,20 +279,13 @@ export async function generateVolunteerSlipDataUrl(
 function dataUrlToBlob(dataUrl: string): Blob {
   const parts = dataUrl.split(';base64,');
   const contentType = parts[0]?.split(':')[1] || 'image/png';
-  const byteCharacters = atob(parts[1] || '');
-  const byteArrays: Uint8Array[] = [];
-
-  const sliceSize = 512;
-  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    const slice = byteCharacters.slice(offset, offset + sliceSize);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
-    byteArrays.push(new Uint8Array(byteNumbers));
+  const binaryString = atob(parts[1] || '');
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
   }
-
-  return new Blob(byteArrays, { type: contentType });
+  return new Blob([bytes.buffer], { type: contentType });
 }
 
 /**
