@@ -23,9 +23,9 @@
 .tvd .card2{background:var(--panel2);border-radius:22px}
 /* ---------- top bar ---------- */.tvd #topbar{height:110px;flex-shrink:0;padding:0 40px;display:flex;align-items:center;gap:28px;background:var(--bar);position:relative;z-index:5}
 .tvd #topbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--red),var(--pink),var(--orange),var(--amber))}
-.tvd .logo{display:flex;align-items:center;gap:10px;background:var(--fg);border-radius:16px;padding:0 20px;height:64px}
-.tvd .logo b{font-family:var(--display);font-weight:800;font-size:36px;color:var(--red);letter-spacing:-.5px}
-.tvd .logo span{font-size:13px;font-weight:800;color:#800720;letter-spacing:1.5px;text-transform:uppercase}
+.tvd .logo{height:66px;width:auto;max-width:260px;object-fit:contain;border-radius:14px;display:block;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.tvd .logo b{display:none}
+.tvd .logo span{display:none}
 .tvd .tb-title{display:flex;flex-direction:column;gap:2px}
 .tvd .tb-title small{font-size:15px;font-weight:800;letter-spacing:3px;color:var(--amber);text-transform:uppercase}
 .tvd #screenName{font-family:var(--display);font-size:32px;font-weight:700;line-height:1.1;transition:opacity .35s,transform .35s}
@@ -483,3 +483,531 @@
 @keyframes tv-tsbSign{0%{opacity:0;transform:rotate(-30deg)}4%{opacity:1;transform:rotate(14deg)}7%{transform:rotate(-8deg)}10%{transform:rotate(4deg)}13%,100%{opacity:1;transform:none}}
 @keyframes tv-tsbBar{0%{transform:scaleX(0)}33.3%{transform:scaleX(1)}33.4%,100%{transform:scaleX(0)}}
 @media (prefers-reduced-motion: reduce){.tvd .ad-tsb *,.tvd .ad-tsb *::after{animation:none!important}.tvd .tsb-sc[style*="--s:0"]{opacity:1}}
+
+/* ================= 3 Raihsoft Creative Blue Ads ================= */
+.tvd .ad-rs {
+  --rs-navy: #010a26;
+  --rs-royal: #0a2472;
+  --rs-electric: #1f7ae0;
+  --rs-cyan: #5ee0e6;
+  --rs-card-bg: rgba(6, 22, 68, 0.72);
+  --rs-card-border: rgba(94, 224, 230, 0.22);
+  --rs-soft: #c8dcf7;
+  --rs-muted: #83a5d8;
+  background: radial-gradient(circle at 82% 16%, #1545b5 0%, #06195c 44%, #010a26 100%);
+  color: #fff;
+  width: 440px;
+  height: 409px;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 16px 20px 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: 'Outfit', var(--display);
+  border: 1.5px solid var(--rs-card-border);
+  box-shadow: 0 18px 42px rgba(0, 14, 82, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.tvd .ad-rs, .tvd .ad-rs * {
+  box-sizing: border-box;
+}
+.tvd .ad-rs > * {
+  position: relative;
+  flex-shrink: 0;
+}
+.tvd .ad-rs .sp {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* Background accents */
+.tvd .rs-cyber-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(94, 224, 230, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(94, 224, 230, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 35%, transparent 80%);
+  mask-image: radial-gradient(ellipse at center, #000 35%, transparent 80%);
+}
+.tvd .rs-cyber-glow {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  right: -70px;
+  top: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(31, 122, 224, 0.42), transparent 70%);
+  pointer-events: none;
+  animation: tv-rsGlow 5s ease-in-out infinite alternate;
+}
+
+/* Common Header */
+.tvd .rs-ad-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 30px;
+}
+.tvd .rs-ad-logo {
+  height: 28px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+}
+.tvd .rs-ad-chip {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(94, 224, 230, 0.16);
+  border: 1px solid var(--rs-card-border);
+  color: var(--rs-cyan);
+  font-family: var(--body);
+}
+
+/* Eyebrow & Titles */
+.tvd .rs-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 11px;
+  font-weight: 700;
+  color: #d8e6f8;
+  letter-spacing: 0.3px;
+}
+.tvd .rs-dot-live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rs-cyan);
+  display: inline-block;
+  box-shadow: 0 0 8px var(--rs-cyan);
+  animation: tv-rsBlink 2s ease-in-out infinite;
+}
+.tvd .rs-grad-blue {
+  background: linear-gradient(90deg, #5ee0e6, #38bdf8 55%, #93c5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.tvd .ad-rs h3.rs-title {
+  margin: 0;
+  font-family: 'Poppins', var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.3px;
+}
+.tvd .ad-rs p.rs-subtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--rs-soft);
+  font-family: var(--body);
+}
+
+/* Common Footer */
+.tvd .rs-ad-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rs-card-border);
+  height: 36px;
+}
+.tvd .rs-cta-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #25D366;
+  color: #063d1d;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  animation: tv-tsBeat 2.4s ease-in-out 3s infinite;
+}
+.tvd .rs-ad-foot b {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--rs-cyan);
+}
+
+/* ================= Design 1: Enterprise Solutions (Console & Flow) ================= */
+.tvd .ad-rs1 .rs1-console {
+  border-radius: 12px;
+  background: rgba(4, 15, 48, 0.85);
+  border: 1px solid var(--rs-card-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.tvd .ad-rs1 .rs1-con-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(1, 10, 32, 0.9);
+  border-bottom: 1px solid rgba(94, 224, 230, 0.12);
+  font-size: 10.5px;
+  color: var(--rs-muted);
+  font-family: monospace;
+}
+.tvd .ad-rs1 .rs1-con-bar i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.tvd .ad-rs1 .rs1-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: linear-gradient(90deg, rgba(31, 122, 224, 0.12), rgba(94, 224, 230, 0.08));
+}
+.tvd .ad-rs1 .rs1-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(10, 36, 114, 0.7);
+  border: 1px solid rgba(94, 224, 230, 0.3);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fff;
+}
+.tvd .ad-rs1 .rs1-wire {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(94, 224, 230, 0.3), var(--rs-cyan), rgba(94, 224, 230, 0.3));
+  position: relative;
+  overflow: hidden;
+  margin: 0 4px;
+}
+.tvd .ad-rs1 .rs1-wire::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 14px;
+  height: 6px;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 0 8px #5ee0e6;
+  animation: tv-rsWirePacket 2.2s linear infinite;
+}
+.tvd .ad-rs1 .rs1-tags {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+}
+.tvd .ad-rs1 .rs1-tag {
+  flex: 1;
+  text-align: center;
+  padding: 5px 6px;
+  border-radius: 8px;
+  background: rgba(31, 122, 224, 0.18);
+  border: 1px solid rgba(94, 224, 230, 0.18);
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+  animation: tv-rsFloat 4s ease-in-out infinite alternate;
+}
+.tvd .ad-rs1 .rs1-tag:nth-child(2) {
+  animation-delay: 1.2s;
+}
+.tvd .ad-rs1 .rs1-tag:nth-child(3) {
+  animation-delay: 2.4s;
+}
+
+/* ================= Design 2: 5 Core Capabilities (The 2x2 Orbit Grid) ================= */
+.tvd .ad-rs2 {
+  background: radial-gradient(circle at 18% 20%, #1a4fd4 0%, #071e6e 45%, #010c2e 100%);
+}
+.tvd .ad-rs2 .rs2-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  position: relative;
+}
+.tvd .ad-rs2 .rs2-cell {
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: var(--rs-card-bg);
+  border: 1px solid var(--rs-card-border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.tvd .ad-rs2 .rs2-cell-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+.tvd .ad-rs2 .rs2-ic {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(94, 224, 230, 0.25), rgba(31, 122, 224, 0.45));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rs-cyan);
+}
+.tvd .ad-rs2 .rs2-cell b {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tvd .ad-rs2 .rs2-cell small {
+  font-size: 10.5px;
+  color: var(--rs-muted);
+  font-family: var(--body);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================= Design 3: Direct Hotline & Location (Cyber Portal) ================= */
+.tvd .ad-rs3 {
+  background: radial-gradient(circle at 80% 80%, #0d38a8 0%, #061957 48%, #010a24 100%);
+}
+.tvd .ad-rs3 .rs3-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.tvd .ad-rs3 .rs3-channel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--rs-card-bg);
+  border: 1px solid var(--rs-card-border);
+}
+.tvd .ad-rs3 .rs3-ch-ic {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #1f7ae0, #0a4fb3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+.tvd .ad-rs3 .rs3-ch-ic.wa {
+  background: #25D366;
+  color: #063d1d;
+  animation: tv-tsBeat 2.4s ease-in-out infinite;
+}
+.tvd .ad-rs3 .rs3-ch-ic.pin {
+  animation: tv-rsPinBounce 2.5s ease-in-out infinite;
+}
+.tvd .ad-rs3 .rs3-channel small {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--rs-cyan);
+  font-family: var(--body);
+  line-height: 1;
+}
+.tvd .ad-rs3 .rs3-channel b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.tvd .ad-rs3 .rs3-badge-fast {
+  margin-left: auto;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(37, 211, 102, 0.2);
+  color: #25D366;
+  border: 1px solid rgba(37, 211, 102, 0.4);
+}
+
+/* ================= Tall Cards (842px) ================= */
+.tvd .ad-rs.tall {
+  height: 842px;
+  padding: 24px 26px 20px;
+  gap: 14px;
+}
+.tvd .ad-rs.tall h3.rs-title {
+  font-size: 32px;
+  line-height: 1.12;
+}
+.tvd .ad-rs.tall p.rs-subtitle {
+  font-size: 17px;
+  line-height: 1.38;
+}
+.tvd .ad-rs.tall .rs-ad-foot {
+  height: 42px;
+  padding-top: 10px;
+}
+.tvd .ad-rs.tall .rs-cta-wa {
+  padding: 9px 16px;
+  font-size: 15px;
+}
+.tvd .ad-rs.tall .rs-ad-foot b {
+  font-size: 18px;
+}
+
+/* Tall Ad 1 */
+.tvd .ad-rs1 .rs1-banner-wrap {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid var(--rs-card-border);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+.tvd .ad-rs1 .rs1-banner-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.tvd .ad-rs1 .rs1-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.tvd .ad-rs1 .rs1-metric-card {
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: var(--rs-card-bg);
+  border: 1px solid var(--rs-card-border);
+}
+.tvd .ad-rs1 .rs1-metric-card h4 {
+  margin: 0 0 3px;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tvd .ad-rs1 .rs1-metric-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--rs-soft);
+  font-family: var(--body);
+}
+
+/* Tall Ad 2 (All 5 Services) */
+.tvd .ad-rs2 .rs2-tall-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tvd .ad-rs2 .rs2-deck-item {
+  padding: 10px 13px;
+  border-radius: 12px;
+  background: var(--rs-card-bg);
+  border: 1px solid var(--rs-card-border);
+}
+.tvd .ad-rs2 .rs2-deck-item h4 {
+  margin: 0 0 3px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tvd .ad-rs2 .rs2-deck-item p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--rs-soft);
+  font-family: var(--body);
+  line-height: 1.3;
+}
+
+/* Tall Ad 3 */
+.tvd .ad-rs3 .rs3-hq-card {
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(31, 122, 224, 0.22), rgba(6, 22, 68, 0.88));
+  border: 1px solid rgba(94, 224, 230, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+.tvd .ad-rs3 .rs3-hq-card h4 {
+  margin: 0 0 5px;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tvd .ad-rs3 .rs3-hq-card p {
+  margin: 0 0 7px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #e2e8f0;
+}
+.tvd .ad-rs3 .rs3-hq-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rs-cyan);
+}
+
+/* Keyframe Animations */
+@keyframes tv-rsWirePacket {
+  0% { left: 0; opacity: 1; }
+  100% { left: 100%; opacity: 0.2; }
+}
+@keyframes tv-rsFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
+@keyframes tv-rsPinBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes tv-rsBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+@keyframes tv-rsGlow {
+  from { opacity: 0.32; transform: scale(0.92); }
+  to { opacity: 0.75; transform: scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tvd .ad-rs *, .tvd .ad-rs *::after { animation: none !important; }
+}

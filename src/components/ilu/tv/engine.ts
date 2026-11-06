@@ -4,7 +4,13 @@
  * It drives the static markup from markup.ts inside `root`.
  */
 import type { TvAd, TvClub, TvSnapshot, TvSource } from './tvData';
-import { HOUSE_ADS, TOWNSHOP_AD } from './tvData';
+import {
+  HOUSE_ADS,
+  RAIHSOFT_CONTACT_AD,
+  RAIHSOFT_SERVICES_AD,
+  RAIHSOFT_SOLUTIONS_AD,
+  TOWNSHOP_AD,
+} from './tvData';
 
 export interface TvEngineOptions {
   source: TvSource;
@@ -88,9 +94,14 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   };
   let D: D = {};
   let zones: { name: string; o: number; d: number }[] = [];
-  const withOwnAds = (list: TvAd[]) => [TOWNSHOP_AD, ...list];
+  const withOwnAds = (list: TvAd[]) => [
+    RAIHSOFT_SOLUTIONS_AD,
+    TOWNSHOP_AD,
+    RAIHSOFT_SERVICES_AD,
+    RAIHSOFT_CONTACT_AD,
+    ...list,
+  ];
   let ads: TvAd[] = withOwnAds(HOUSE_ADS);
-  let adPtr = 0;
   const events: { text: string; color: string }[] = [];
   let offline = false;
 
@@ -173,9 +184,11 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   }
 
   /* ---------------- ads ---------------- */
-  const nextAd = () => ads[adPtr++ % ads.length];
   function adHTML(ad: TvAd, tall: boolean, d: number) {
     if (ad.kind === 'townshop') return townshopAdHTML(tall, d);
+    if (ad.kind === 'raihsoft-solutions') return raihsoftSolutionsAdHTML(tall, d);
+    if (ad.kind === 'raihsoft-services') return raihsoftServicesAdHTML(tall, d);
+    if (ad.kind === 'raihsoft-contact') return raihsoftContactAdHTML(tall, d);
     if (ad.image) {
       return `<div class="ad ad-img${tall ? ' tall' : ''}" style="--d:${d}"><img src="${esc(ad.image)}" alt="${esc(ad.title || 'Sponsor advertisement')}"><span class="ad-tag">AD</span></div>`;
     }
@@ -252,11 +265,196 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       </div>
     </div>`;
   }
+
+  /** Raihsoft Ad 1: Enterprise Solutions (The Console & Architecture Hub) */
+  function raihsoftSolutionsAdHTML(tall: boolean, d: number) {
+    const wa = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15c-1.49 0-2.94-.4-4.22-1.16l-.3-.18-3.13.82.84-3.05-.2-.31a8.16 8.16 0 0 1-1.25-4.36c0-4.52 3.68-8.2 8.2-8.2 2.19 0 4.25.85 5.8 2.4 1.55 1.55 2.4 3.61 2.4 5.8 0 4.52-3.68 8.2-8.14 8.24z"/></svg>';
+
+    const content = tall
+      ? `<div class="rs1-banner-wrap"><img src="/ilu/tv/raihsoft-ad-banner.jpg" alt="Enterprise Solutions Illustration" class="rs1-banner-img"></div>
+         <div class="rs1-metrics">
+           <div class="rs1-metric-card"><h4><i class="rs-dot-live"></i>15+ Years Architecture</h4><p>Custom software precision-engineered to solve complex enterprise business challenges.</p></div>
+           <div class="rs1-metric-card"><h4><i class="rs-dot-live"></i>Cloud-Ready &amp; High Scale</h4><p>Multi-tenant, AWS hybrid migrations and containerized high-performance backends.</p></div>
+           <div class="rs1-metric-card"><h4><i class="rs-dot-live"></i>Integrated ERP &amp; Data</h4><p>Connect your web portals and operations directly to backend ERP workflows.</p></div>
+         </div>`
+      : `<div class="rs1-console">
+           <div class="rs1-con-bar">
+             <i style="background:#ff5f56"></i>
+             <i style="background:#ffbd2e"></i>
+             <i style="background:#27c93f"></i>
+             <span>core-pipeline.ts</span>
+           </div>
+           <div class="rs1-flow">
+             <div class="rs1-node"><span>App / Web</span></div>
+             <div class="rs1-wire"></div>
+             <div class="rs1-node" style="border-color:#5ee0e6;color:#5ee0e6"><span>Cloud / ERP</span></div>
+           </div>
+           <div class="rs1-tags">
+             <div class="rs1-tag">Multi-Tenant</div>
+             <div class="rs1-tag">Modern Backend</div>
+             <div class="rs1-tag">API Systems</div>
+           </div>
+         </div>`;
+
+    return `<div class="ad ad-rs ad-rs1${tall ? ' tall' : ''}" style="--d:${d}" aria-label="Raihsoft: Enterprise-Grade Digital Solutions">
+      <div class="rs-cyber-grid" aria-hidden="true"></div><div class="rs-cyber-glow" aria-hidden="true"></div>
+      <div class="rs-ad-top">
+        <img class="rs-ad-logo" src="https://media.raihsuite.com/RS0001/web/ilu/Raihsoft%20logo.png" alt="Raihsoft">
+        <span class="rs-ad-chip">ENTERPRISE</span>
+      </div>
+      <span class="rs-eyebrow"><i class="rs-dot-live"></i>Engineering Digital Success</span>
+      <h3 class="rs-title">We Build <span class="rs-grad-blue">Enterprise-Grade</span> Digital Solutions</h3>
+      <p class="rs-subtitle">From strategic vision to flawless execution, architecting resilient technology that powers business growth.</p>
+      ${content}
+      <div class="sp"></div>
+      <div class="rs-ad-foot">
+        <span class="rs-cta-wa">${wa}Talk to Engineers</span>
+        <b>raihsoft.com</b>
+      </div>
+    </div>`;
+  }
+
+  /** Raihsoft Ad 2: 5 Core Capabilities (The Modular Service Grid) */
+  function raihsoftServicesAdHTML(tall: boolean, d: number) {
+    const wa = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15c-1.49 0-2.94-.4-4.22-1.16l-.3-.18-3.13.82.84-3.05-.2-.31a8.16 8.16 0 0 1-1.25-4.36c0-4.52 3.68-8.2 8.2-8.2 2.19 0 4.25.85 5.8 2.4 1.55 1.55 2.4 3.61 2.4 5.8 0 4.52-3.68 8.2-8.14 8.24z"/></svg>';
+    const icCode = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>';
+    const icCloud = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>';
+    const icAi = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
+    const icUi = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 10 5-10 5L2 7l10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>';
+    const icShield = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+
+    const content = tall
+      ? `<div class="rs2-tall-deck">
+           <div class="rs2-deck-item"><h4><span class="rs2-ic">${icCode}</span>Custom Enterprise Software</h4><p>Bespoke systems, multi-tenant &amp; cloud-ready apps, integrated web ecosystems, and APIs.</p></div>
+           <div class="rs2-deck-item"><h4><span class="rs2-ic">${icCloud}</span>Cloud Architecture &amp; DevOps</h4><p>AWS &amp; hybrid migrations, serverless infra, DevOps automation, Docker &amp; Kubernetes.</p></div>
+           <div class="rs2-deck-item"><h4><span class="rs2-ic">${icAi}</span>Data Analytics &amp; AI Engineering</h4><p>BI &amp; real-time analytics, predictive machine learning models, and process automation.</p></div>
+           <div class="rs2-deck-item"><h4><span class="rs2-ic">${icUi}</span>UI/UX Engineering &amp; Design Systems</h4><p>User research, journey mapping, wireframing, and scalable digital product design systems.</p></div>
+           <div class="rs2-deck-item"><h4><span class="rs2-ic">${icShield}</span>Strategic IT Consulting</h4><p>Technology stack audits, technical debt assessment, and enterprise solution planning.</p></div>
+         </div>`
+      : `<div class="rs2-grid">
+           <div class="rs2-cell">
+             <div class="rs2-cell-top"><span class="rs2-ic">${icCode}</span><span class="rs-dot-live"></span></div>
+             <b>Custom Software</b>
+             <small>Multi-Tenant &amp; ERP</small>
+           </div>
+           <div class="rs2-cell">
+             <div class="rs2-cell-top"><span class="rs2-ic">${icCloud}</span><span class="rs-dot-live"></span></div>
+             <b>Cloud &amp; DevOps</b>
+             <small>AWS, Docker &amp; CI/CD</small>
+           </div>
+           <div class="rs2-cell">
+             <div class="rs2-cell-top"><span class="rs2-ic">${icAi}</span><span class="rs-dot-live"></span></div>
+             <b>Data &amp; AI Eng</b>
+             <small>BI &amp; Machine Learning</small>
+           </div>
+           <div class="rs2-cell">
+             <div class="rs2-cell-top"><span class="rs2-ic">${icUi}</span><span class="rs-dot-live"></span></div>
+             <b>UI/UX &amp; Consulting</b>
+             <small>Design systems &amp; audits</small>
+           </div>
+         </div>`;
+
+    return `<div class="ad ad-rs ad-rs2${tall ? ' tall' : ''}" style="--d:${d}" aria-label="Raihsoft: Engineering Capabilities">
+      <div class="rs-cyber-grid" aria-hidden="true"></div><div class="rs-cyber-glow" aria-hidden="true"></div>
+      <div class="rs-ad-top">
+        <img class="rs-ad-logo" src="https://media.raihsuite.com/RS0001/web/ilu/Raihsoft%20logo.png" alt="Raihsoft">
+        <span class="rs-ad-chip">5 CORE SERVICES</span>
+      </div>
+      <span class="rs-eyebrow"><i class="rs-dot-live"></i>Full-Stack Capabilities</span>
+      <h3 class="rs-title">Enterprise <span class="rs-grad-blue">Engineering</span> Expertise</h3>
+      <p class="rs-subtitle">Specialized technology solutions designed for scalability, security, and continuous delivery.</p>
+      ${content}
+      <div class="sp"></div>
+      <div class="rs-ad-foot">
+        <span class="rs-cta-wa">${wa}Discuss Your Project</span>
+        <b>raihsoft.com</b>
+      </div>
+    </div>`;
+  }
+
+  /** Raihsoft Ad 3: Direct Hotline & Location (The Cyber Contact Portal) */
+  function raihsoftContactAdHTML(tall: boolean, d: number) {
+    const wa = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.15c-1.49 0-2.94-.4-4.22-1.16l-.3-.18-3.13.82.84-3.05-.2-.31a8.16 8.16 0 0 1-1.25-4.36c0-4.52 3.68-8.2 8.2-8.2 2.19 0 4.25.85 5.8 2.4 1.55 1.55 2.4 3.61 2.4 5.8 0 4.52-3.68 8.2-8.14 8.24z"/></svg>';
+    const phone = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
+    const mail = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM22 6l-10 7L2 6"/></svg>';
+    const pin = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+    const extra = tall
+      ? `<div class="rs3-hq-card">
+           <h4><span class="rs3-ch-ic pin" style="width:26px;height:26px">${pin}</span>Kerala Engineering Headquarters</h4>
+           <p>Al Irshad Plaza, 1st Floor, Karaya, Pandikkad, Malappuram, Kerala, India - 676521</p>
+           <span class="rs3-hq-badge"><i class="rs-dot-live"></i>Serving Kerala, Middle East &amp; Global Enterprises</span>
+         </div>`
+      : '';
+
+    return `<div class="ad ad-rs ad-rs3${tall ? ' tall' : ''}" style="--d:${d}" aria-label="Contact Raihsoft Technologies">
+      <div class="rs-cyber-grid" aria-hidden="true"></div><div class="rs-cyber-glow" aria-hidden="true"></div>
+      <div class="rs-ad-top">
+        <img class="rs-ad-logo" src="https://media.raihsuite.com/RS0001/web/ilu/Raihsoft%20logo.png" alt="Raihsoft">
+        <span class="rs-ad-chip">DIRECT CONTACT</span>
+      </div>
+      <span class="rs-eyebrow"><i class="rs-dot-live"></i>Direct Architect Line</span>
+      <h3 class="rs-title">Ready to Build <span class="rs-grad-blue">What's Next?</span></h3>
+      <p class="rs-subtitle">Direct access to technical leadership for enterprise software and digital transformation.</p>
+      <div class="rs3-channels">
+        <div class="rs3-channel"><span class="rs3-ch-ic wa">${wa}</span><div><small>WhatsApp Direct</small><b>+91 9847991099</b></div><span class="rs3-badge-fast">Fast Reply</span></div>
+        <div class="rs3-channel"><span class="rs3-ch-ic">${phone}</span><div><small>Direct Phone Call</small><b>+91 9847991099</b></div></div>
+        <div class="rs3-channel"><span class="rs3-ch-ic">${mail}</span><div><small>Email Inquiries</small><b>contact@raihsoft.com</b></div></div>
+        <div class="rs3-channel"><span class="rs3-ch-ic pin">${pin}</span><div><small>Engineering HQ</small><b>Karaya, Pandikkad, Malappuram</b></div></div>
+      </div>
+      ${extra}
+      <div class="sp"></div>
+      <div class="rs-ad-foot">
+        <span class="rs-cta-wa">${wa}Message on WhatsApp</span>
+        <b>raihsoft.com</b>
+      </div>
+    </div>`;
+  }
+
   let tallTurn = 0;
-  // Every other tall slot shows the shop-owner townshop card; the rest follow the normal ad rotation.
-  const tallAd = () => (tallTurn++ % 2 === 0 ? townshopShopsHTML(0) : adHTML(nextAd(), true, 0));
-  const asideHTML = (slots: 1 | 2) =>
-    slots === 1 ? `<aside class="aside">${tallAd()}</aside>` : `<aside class="aside">${adHTML(nextAd(), false, 0)}${adHTML(nextAd(), false, 1)}</aside>`;
+  // Alternate between the 3 creative Raihsoft tall designs and Townshop
+  const tallAd = () => {
+    const turn = tallTurn++ % 4;
+    if (turn === 0) return raihsoftSolutionsAdHTML(true, 0);
+    if (turn === 1) return townshopShopsHTML(0);
+    if (turn === 2) return raihsoftServicesAdHTML(true, 0);
+    return raihsoftContactAdHTML(true, 0);
+  };
+
+  const raihsoftAds: TvAd[] = [
+    RAIHSOFT_SOLUTIONS_AD,
+    RAIHSOFT_SERVICES_AD,
+    RAIHSOFT_CONTACT_AD,
+  ];
+
+  function getNonRaihsoftAds(): TvAd[] {
+    const list = ads.filter(
+      (a) => !a.kind?.startsWith('raihsoft') && !a.id.startsWith('raihsoft')
+    );
+    if (list.length > 0) return list;
+    return [TOWNSHOP_AD, ...HOUSE_ADS];
+  }
+
+  let rsTurn = 0;
+  let nonRsTurn = 0;
+  let flipTwoSlot = 0;
+
+  function getTwoSlotAds(): [TvAd, TvAd] {
+    const rs = raihsoftAds[rsTurn++ % raihsoftAds.length];
+    const others = getNonRaihsoftAds();
+    const other = others[nonRsTurn++ % others.length];
+    // Alternate Raihsoft between top slot and bottom slot for fresh dynamic visual layout
+    const isRsTop = (flipTwoSlot++ % 2 === 0);
+    return isRsTop ? [rs, other] : [other, rs];
+  }
+
+  const asideHTML = (slots: 1 | 2) => {
+    if (slots === 1) {
+      return `<aside class="aside">${tallAd()}</aside>`;
+    }
+    const [top, btm] = getTwoSlotAds();
+    return `<aside class="aside">${adHTML(top, false, 0)}${adHTML(btm, false, 1)}</aside>`;
+  };
 
   /* ---------------- screens ---------------- */
   const sortedClubs = () => S.clubs.slice().sort((a, b) => b.ordered - a.ordered);

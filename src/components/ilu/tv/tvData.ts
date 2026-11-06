@@ -40,7 +40,7 @@ export interface TvAd {
   image?: string;
   house?: boolean;
   /** Built-in animated card instead of a text or image ad. */
-  kind?: 'townshop';
+  kind?: 'townshop' | 'raihsoft-solutions' | 'raihsoft-services' | 'raihsoft-contact';
 }
 
 export interface TvTotals {
@@ -74,6 +74,34 @@ export const HOURS_SHOWN = 11;
 
 /** Our own townshop.in card, always part of the side-ad rotation. */
 export const TOWNSHOP_AD: TvAd = { id: 'townshop', kind: 'townshop', title: 'townshop.in', house: true };
+
+/** Built-in Raihsoft brand, services and contact ads based on official marketing materials. */
+export const RAIHSOFT_SOLUTIONS_AD: TvAd = {
+  id: 'raihsoft-solutions',
+  kind: 'raihsoft-solutions',
+  title: 'Enterprise Digital Solutions',
+  house: true,
+};
+
+export const RAIHSOFT_SERVICES_AD: TvAd = {
+  id: 'raihsoft-services',
+  kind: 'raihsoft-services',
+  title: 'Raihsoft Engineering Services',
+  house: true,
+};
+
+export const RAIHSOFT_CONTACT_AD: TvAd = {
+  id: 'raihsoft-contact',
+  kind: 'raihsoft-contact',
+  title: 'Contact Raihsoft',
+  house: true,
+};
+
+export const RAIHSOFT_ADS: TvAd[] = [
+  RAIHSOFT_SOLUTIONS_AD,
+  RAIHSOFT_SERVICES_AD,
+  RAIHSOFT_CONTACT_AD,
+];
 
 /** Shown when the ads table is empty or cannot be reached. */
 export const HOUSE_ADS: TvAd[] = [
