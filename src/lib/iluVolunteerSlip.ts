@@ -133,11 +133,13 @@ export async function generateVolunteerSlipDataUrl(
   ctx.letterSpacing = '1px';
   ctx.fillText('OFFICIAL VOLUNTEER PASS', width / 2, cardY + 196);
 
-  // 3. Pass Badge (ILUV-0007)
-  const passId = formatVolunteerPassId(volunteer.number || 1);
+  // 3. Pass Badge (ILUV-0007 / from backend code)
+  const passId = volunteer.code || formatVolunteerPassId(volunteer);
   const badgeY = cardY + headerH + 28;
-  const badgeW = 320;
   const badgeH = 56;
+  ctx.font = '800 24px sans-serif';
+  const textWidth = ctx.measureText(`PASS NO: ${passId}`).width;
+  const badgeW = Math.max(320, textWidth + 60);
   const badgeX = cardX + (cardW - badgeW) / 2;
 
   drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 28);
@@ -236,13 +238,6 @@ export async function generateVolunteerSlipDataUrl(
     }
     ctx.fillText(printVal, cx + 20, cy + 72);
   });
-
-  // Ref ID
-  const refY = gridY + cellH * 2 + 40;
-  ctx.textAlign = 'center';
-  ctx.font = '600 12px monospace';
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText(`REF ID: ${volunteer.id}`, width / 2, refY);
 
   // 6. Clean Footer
   const footY = cardY + cardH - 44;

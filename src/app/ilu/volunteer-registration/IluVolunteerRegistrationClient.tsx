@@ -139,7 +139,9 @@ export default function IluVolunteerRegistrationClient() {
     setIsDownloading(true);
     try {
       const dataUrl = await generateVolunteerSlipDataUrl(registeredVolunteer);
-      const passId = formatVolunteerPassId(registeredVolunteer.number || 1);
+      const passId =
+        registeredVolunteer.code ||
+        formatVolunteerPassId(registeredVolunteer);
       downloadVolunteerSlipImage(
         dataUrl,
         registeredVolunteer.first_name || registeredVolunteer.participant_name,
@@ -199,7 +201,7 @@ export default function IluVolunteerRegistrationClient() {
                       Volunteer Registered!
                     </h3>
                     <p className="text-xs text-emerald-700">
-                      Pass #{formatVolunteerPassId(registeredVolunteer.number || 1)} is ready.
+                      Pass #{registeredVolunteer.code || formatVolunteerPassId(registeredVolunteer)} is ready.
                     </p>
                   </div>
                 </div>
@@ -279,7 +281,7 @@ export default function IluVolunteerRegistrationClient() {
                   <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-sm tracking-wide">
                     <IdCard className="w-4 h-4" />
                     <span>
-                      PASS NO: {formatVolunteerPassId(registeredVolunteer.number || 1)}
+                      PASS NO: {registeredVolunteer.code || formatVolunteerPassId(registeredVolunteer)}
                     </span>
                   </span>
                 </div>
@@ -343,10 +345,6 @@ export default function IluVolunteerRegistrationClient() {
                         {registeredVolunteer.place || '-'}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="text-[11px] text-center text-slate-400 font-mono">
-                    Ref ID: {registeredVolunteer.id}
                   </div>
                 </div>
 

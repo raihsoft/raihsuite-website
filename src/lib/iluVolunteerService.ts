@@ -31,10 +31,11 @@ export interface VolunteerParticipant {
   tenant: number;
   program: string;
   program_name: string;
+  code?: string;
   first_name: string;
   last_name: string;
   participant_name: string;
-  number: number;
+  number?: number;
   email: string | null;
   phone: string;
   place: string;
@@ -85,11 +86,30 @@ export function validateMobileNumber(mobile: string): {
 }
 
 /**
- * Formats a volunteer number into a badge code, e.g. ILUV-0007.
+ * Retrieves or formats the official volunteer pass code.
+ * Directly uses the backend `code` field if present, otherwise
+ * formats the numeric sequence into ILUV-0001.
  */
-export function formatVolunteerPassId(number: number): string {
-  const padded = String(number).padStart(4, '0');
-  return `ILUV-${padded}`;
+export function formatVolunteerPassId(
+  input: { code?: string; number?: number } | number | null | undefined
+): string {
+  if (!input) return 'ILUV-0001';
+
+  if (typeof input === 'number') {
+    const padded = String(input).padStart(4, '0');
+    return `ILUV-${padded}`;
+  }
+
+  if (input.code && typeof input.code === 'string' && input.code.trim()) {
+    return input.code.trim();
+  }
+
+  if (typeof input.number === 'number' && !Number.isNaN(input.number)) {
+    const padded = String(input.number).padStart(4, '0');
+    return `ILUV-${padded}`;
+  }
+
+  return 'ILUV-0001';
 }
 
 /**
