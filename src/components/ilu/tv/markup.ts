@@ -4,7 +4,7 @@ export const TV_SHELL_HTML = String.raw`
 <div id="viewport">
   <div id="stage">
     <header id="topbar">
-      <div class="logo" aria-label="ILU Foundation"><b>ILU</b><span>Foundation</span></div>
+      <img class="logo tv-logo" src="https://media.raihsuite.com/RS0001/web/ilu/tv-display-logo.png" alt="ILU Palada Challenge TV Display">
       <div class="tb-title"><small>Palada Challenge 2026</small><span id="screenName">Live Delivery Progress</span></div>
       <div style="flex:1"></div>
       <div class="live" id="liveBadge"><i></i><span id="liveText">LIVE</span></div>
@@ -34,7 +34,7 @@ export const TV_SHELL_HTML = String.raw`
     <div id="rsAd" aria-label="Advertisement: Raihsoft Technologies" aria-hidden="true">
       <div class="rs-blob b1"></div><div class="rs-blob b2"></div><div class="rs-grid"></div>
       <svg class="rs-wave" viewBox="0 0 1920 150" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="rsWaveG" x1="0" x2="1"><stop offset="0" stop-color="#5ee0e6" stop-opacity=".5"/><stop offset="1" stop-color="#1f6fd1" stop-opacity=".7"/></linearGradient></defs><path d="M0 90 C 400 20 900 140 1920 40 V150 H0Z" fill="url(#rsWaveG)"/></svg>
-      <img class="rs-mark" src="/ilu/tv/raihsoft-logo.png" alt="Raihsoft">
+      <img class="rs-mark" src="https://media.raihsuite.com/RS0001/web/ilu/Raihsoft%20logo.png" alt="Raihsoft">
       <div class="rs-hud"><span class="rs-pill">Advertisement</span><span class="rs-pill">Live stats in <b id="rsCount">0s</b></span></div>
       <div id="rsSweep"></div>
 
@@ -44,7 +44,7 @@ export const TV_SHELL_HTML = String.raw`
           <span class="rs-halo"></span><span class="rs-halo" style="animation-delay:1.2s"></span>
           <svg width="230" height="230" viewBox="0 0 230 230" aria-hidden="true"><defs><linearGradient id="rsTile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ee0e6"/><stop offset="1" stop-color="#0a4fb3"/></linearGradient></defs><rect width="230" height="230" rx="52" fill="url(#rsTile)"/><path d="M64 30h50v44h40v44h-40v52q0 10 10 10h30v40h-44q-46 0-46-46v-56h-22v-44h22z" fill="#000e52" stroke="#fff" stroke-width="3"/><circle cx="186" cy="192" r="22" fill="#000e52" stroke="#fff" stroke-width="3"/></svg>
         </div>
-        <img class="a-wipe" style="--d:6;width:820px;height:auto;max-width:none" src="/ilu/tv/raihsoft-logo.png" alt="Raihsoft">
+        <img class="a-wipe" style="--d:6;width:820px;height:auto;max-width:none" src="https://media.raihsuite.com/RS0001/web/ilu/Raihsoft%20logo.png" alt="Raihsoft">
         <span class="rs-tag a-up" style="--d:11">Engineering Digital Success for Modern Businesses</span>
       </section>
 
@@ -175,7 +175,7 @@ export const TV_SHELL_HTML = String.raw`
       <!-- 7 · call to action -->
       <section class="rs-scene">
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:30px">
-          <img class="a-wipe" src="/ilu/tv/raihsoft-logo.png" alt="Raihsoft" style="width:380px;height:auto;max-width:none">
+          <img class="a-wipe" src="https://media.raihsuite.com/RS0001/web/ilu/Raihsoft%20logo.png" alt="Raihsoft" style="width:380px;height:auto;max-width:none">
           <h1 class="rs-h1" style="font-size:100px"><span class="rs-mask"><span style="--d:2">Ready to build</span></span><span class="rs-mask"><span class="rs-grad" style="--d:3">what's next?</span></span></h1>
           <p class="rs-sub a-up" style="--d:5">ERP, websites, mobile apps, cloud and AI, engineered for your business.</p>
           <div class="rs-contacts">
