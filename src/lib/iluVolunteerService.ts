@@ -3,9 +3,21 @@
  * Submits participants to the official Raihsuite programs API.
  */
 
-export const ILU_VOLUNTEER_PROGRAM_ID = '01a1b00a-394f-7991-bd86-342648b14fcc';
+const RAW_BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_API_URL ||
+  'https://staging-api.raihsuite.com/v1/';
+
+export const ILU_VOLUNTEER_PROGRAM_ID =
+  process.env.NEXT_PUBLIC_ILU_VOLUNTEER_PROGRAM_ID ||
+  '01a1b00a-394f-7991-bd86-342648b14fcc';
+
+export const ILU_VOLUNTEER_PROGRAM_CODE =
+  process.env.NEXT_PUBLIC_ILU_VOLUNTEER_PROGRAM_CODE ||
+  'ILUV001';
+
 export const VOLUNTEER_API_URL =
-  'https://staging-api.raihsuite.com/v1/programs/participants/';
+  process.env.NEXT_PUBLIC_ILU_VOLUNTEER_API_URL ||
+  `${RAW_BASE_URL.replace(/\/+$/, '')}/programs/participants/`;
 
 export interface VolunteerFormData {
   name: string;
