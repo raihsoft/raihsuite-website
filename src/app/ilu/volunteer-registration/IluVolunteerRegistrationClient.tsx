@@ -21,6 +21,8 @@ import {
   registerVolunteer,
   formatVolunteerPassId,
   validateMobileNumber,
+  resolveProgramIdByCode,
+  ILU_VOLUNTEER_PROGRAM_CODE,
   VolunteerParticipant,
 } from '@/lib/iluVolunteerService';
 import {
@@ -52,8 +54,10 @@ export default function IluVolunteerRegistrationClient() {
     useState<VolunteerParticipant | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Check localStorage for recent slip
+  // Pre-resolve program ID from code on mount & check localStorage for recent slip
   useEffect(() => {
+    resolveProgramIdByCode(ILU_VOLUNTEER_PROGRAM_CODE).catch(() => {});
+
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
@@ -114,6 +118,7 @@ export default function IluVolunteerRegistrationClient() {
         mobile: mobVal.cleanNumber,
         clubName: clubName.trim(),
         place: place.trim(),
+        programCode: ILU_VOLUNTEER_PROGRAM_CODE,
       });
 
       setRegisteredVolunteer(volunteer);
