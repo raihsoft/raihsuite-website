@@ -15,15 +15,33 @@ export const ILU_VOLUNTEER_PROGRAM_CODE =
   process.env.NEXT_PUBLIC_ILU_VOLUNTEER_PROGRAM_CODE ||
   'ILUV001';
 
+export const PROGRAMS_API_URL =
+  process.env.NEXT_PUBLIC_ILU_PROGRAMS_API_URL ||
+  `${RAW_BASE_URL.replace(/\/+$/, '')}/programs/programs/`;
+
 export const VOLUNTEER_API_URL =
   process.env.NEXT_PUBLIC_ILU_VOLUNTEER_API_URL ||
   `${RAW_BASE_URL.replace(/\/+$/, '')}/programs/participants/`;
+
+export interface BackendProgram {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  tenant?: number;
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
+  is_public?: boolean;
+  participants_count?: number;
+}
 
 export interface VolunteerFormData {
   name: string;
   mobile: string;
   clubName?: string;
   place: string;
+  programCode?: string;
 }
 
 export interface VolunteerParticipant {
@@ -112,6 +130,83 @@ export function formatVolunteerPassId(
   return 'ILUV-0001';
 }
 
+const programCache: Record<string, BackendProgram> = {};
+const programIdCache: Record<string, string> = {};
+
+/**
+ * Fetches program details from the backend using the program code (e.g. 'ILUV001').
+ */
+export async function fetchProgramByCode(
+  code: string = ILU_VOLUNTEER_PROGRAM_CODE
+): Promise<BackendProgram | null> {
+  const trimmedCode = (code || '').trim() || ILU_VOLUNTEER_PROGRAM_CODE;
+
+  if (programCache[trimmedCode]) {
+    return programCache[trimmedCode];
+  }
+
+  try {
+    const url = `${PROGRAMS_API_URL}?code=${encodeURIComponent(trimmedCode)}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const results: BackendProgram[] = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.results)
+          ? data.results
+          : data?.id
+            ? [data]
+            : [];
+
+      const match =
+        results.find(
+          (p) => p.code?.toUpperCase() === trimmedCode.toUpperCase()
+        ) || results[0];
+
+      if (match?.id) {
+        programCache[trimmedCode] = match;
+        programIdCache[trimmedCode] = match.id;
+        return match;
+      }
+    }
+  } catch (err) {
+    console.warn(
+      `[iluVolunteerService] Failed to fetch program by code ${trimmedCode}:`,
+      err
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Resolves the program ID using its code.
+ * Queries /v1/programs/programs/?code=<code> and returns the program UUID.
+ * Falls back to ILU_VOLUNTEER_PROGRAM_ID if not found.
+ */
+export async function resolveProgramIdByCode(
+  code: string = ILU_VOLUNTEER_PROGRAM_CODE
+): Promise<string> {
+  const trimmedCode = (code || '').trim() || ILU_VOLUNTEER_PROGRAM_CODE;
+
+  if (programIdCache[trimmedCode]) {
+    return programIdCache[trimmedCode];
+  }
+
+  const program = await fetchProgramByCode(trimmedCode);
+  if (program?.id) {
+    return program.id;
+  }
+
+  return ILU_VOLUNTEER_PROGRAM_ID;
+}
+
 /**
  * Submits the volunteer registration form to the backend.
  */
@@ -121,6 +216,7 @@ export async function registerVolunteer(
   const trimmedName = data.name.trim();
   const trimmedClub = (data.clubName || '').trim();
   const trimmedPlace = data.place.trim();
+  const targetCode = data.programCode?.trim() || ILU_VOLUNTEER_PROGRAM_CODE;
   const mobileValidation = validateMobileNumber(data.mobile);
 
   if (!trimmedName) {
@@ -135,8 +231,11 @@ export async function registerVolunteer(
     throw new Error('Please enter place.');
   }
 
+  // Resolve program ID dynamically using the program code
+  const programId = await resolveProgramIdByCode(targetCode);
+
   const payload = {
-    program: ILU_VOLUNTEER_PROGRAM_ID,
+    program: programId,
     first_name: trimmedName,
     phone: mobileValidation.cleanNumber,
     place: trimmedPlace,
