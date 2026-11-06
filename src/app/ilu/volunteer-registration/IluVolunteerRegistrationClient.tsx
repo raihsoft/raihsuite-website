@@ -549,7 +549,7 @@ export default function IluVolunteerRegistrationClient() {
                         <span>Submitting...</span>
                       </>
                     ) : (
-                      <span>Register Volunteer</span>
+                      <span>Submit</span>
                     )}
                   </button>
                 </div>
