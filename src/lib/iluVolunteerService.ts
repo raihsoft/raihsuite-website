@@ -3,13 +3,32 @@
  * Submits participants to the official Raihsuite programs API.
  */
 
+// Detect Main (Production) branch or production API
+const isMainBranch =
+  process.env.CF_PAGES_BRANCH === 'main' ||
+  process.env.NEXT_PUBLIC_CF_PAGES_BRANCH === 'main' ||
+  process.env.CF_PAGES_ENVIRONMENT === 'production' ||
+  process.env.NEXT_PUBLIC_CF_PAGES_ENVIRONMENT === 'production' ||
+  Boolean(
+    process.env.NEXT_PUBLIC_BASE_API_URL &&
+      !process.env.NEXT_PUBLIC_BASE_API_URL.includes('staging') &&
+      !process.env.NEXT_PUBLIC_BASE_API_URL.includes('localhost')
+  );
+
+export const DEFAULT_PROD_PROGRAM_ID = '01a1b175-994c-7a30-98ec-fbe198b971de';
+export const DEFAULT_STAGING_PROGRAM_ID = '01a1b00a-394f-7991-bd86-342648b14fcc';
+
 const RAW_BASE_URL =
   process.env.NEXT_PUBLIC_BASE_API_URL ||
-  'https://staging-api.raihsuite.com/v1/';
+  (isMainBranch
+    ? 'https://api.raihsuite.com/v1/'
+    : 'https://staging-api.raihsuite.com/v1/');
 
-export const ILU_VOLUNTEER_PROGRAM_ID =
+const rawProgramId =
   process.env.NEXT_PUBLIC_ILU_VOLUNTEER_PROGRAM_ID ||
-  '01a1b00a-394f-7991-bd86-342648b14fcc';
+  (isMainBranch ? DEFAULT_PROD_PROGRAM_ID : DEFAULT_STAGING_PROGRAM_ID);
+
+export const ILU_VOLUNTEER_PROGRAM_ID = rawProgramId.trim().replace(/\/+$/, '');
 
 export const ILU_VOLUNTEER_PROGRAM_CODE =
   process.env.NEXT_PUBLIC_ILU_VOLUNTEER_PROGRAM_CODE ||
