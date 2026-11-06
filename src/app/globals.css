@@ -236,3 +236,17 @@ input[type='number'] {
     transform: rotate(360deg);
   }
 }
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  #printable-volunteer-slip {
+    box-shadow: none !important;
+    border: 1.5px solid #065f46 !important;
+    max-width: 650px !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid;
+  }
+}
