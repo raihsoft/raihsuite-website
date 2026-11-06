@@ -149,7 +149,9 @@ export default function IluVolunteerRegistrationClient() {
         formatVolunteerPassId(registeredVolunteer);
       downloadVolunteerSlipImage(
         dataUrl,
-        registeredVolunteer.first_name || registeredVolunteer.participant_name,
+        registeredVolunteer.first_name ||
+          registeredVolunteer.participant_name ||
+          'Volunteer',
         passId
       );
     } catch (err) {
@@ -238,21 +240,12 @@ export default function IluVolunteerRegistrationClient() {
 
                 <button
                   type="button"
-                  onClick={handleRegisterAnother}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-400 ring-offset-2 transition active:scale-95"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Add New</span>
-                </button>
-
-                <button
-                  type="button"
                   onClick={handlePrint}
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm border border-slate-300 shadow-xs transition"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm border border-slate-300 shadow-xs transition"
                   title="Print Slip"
                 >
                   <Printer className="w-4 h-4" />
-                  <span className="hidden sm:inline">Print</span>
+                  <span>Print</span>
                 </button>
               </div>
 
