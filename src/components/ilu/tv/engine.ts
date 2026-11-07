@@ -122,8 +122,9 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       stockCover: clamp((t.stock / Math.max(1, remaining)) * 100, 0, 100),
       prepared: t.delivered + t.stock,
       clubs: S.clubs.length,
-      deliveryInitiated: t.deliveryInitiatedCount,
+      deliveryInitiated: t.deliveryInitiatedLiters || t.deliveryInitiatedCount,
       deliveryInitiatedL: t.deliveryInitiatedLiters,
+      deliveryInitiatedCount: t.deliveryInitiatedCount,
       orgL: t.orgL, indL: t.indL,
       orgPct: (t.orgL / ordered) * 100, indPct: (t.indL / ordered) * 100,
       deliveriesToday: S.deliveriesToday,
@@ -195,9 +196,9 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
 
     const content = tall
       ? `<div class="ilu-ad-brand tall">
-           <div class="ilu-logo-badge tall">
-             <img src="/ilu/tv/ilu-foundation-logo.png" alt="ILU Foundation - Integrate, Love & Uplift the Differently-abled" class="ilu-logo-img tall" />
-           </div>
+           <a href="https://www.raihsuite.com/ilu" target="_blank" rel="noopener noreferrer" class="ilu-logo-badge tall" aria-label="ILU Foundation">
+             <img src="https://media.raihsuite.com/RS0001/web/ilu/tv-display-logo.png" alt="ILU Foundation - Integrate, Love & Uplift the Differently-abled" class="ilu-logo-img tall" />
+           </a>
            <span class="ilu-ad-chip">OFFICIAL ORGANIZER</span>
          </div>
          <div class="ilu-banner-wrap tall">
@@ -245,9 +246,9 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
            </div>
          </div>`
       : `<div class="ilu-ad-brand">
-           <div class="ilu-logo-badge">
-             <img src="/ilu/tv/ilu-foundation-logo.png" alt="ILU Foundation - Integrate, Love & Uplift the Differently-abled" class="ilu-logo-img" />
-           </div>
+           <a href="https://www.raihsuite.com/ilu" target="_blank" rel="noopener noreferrer" class="ilu-logo-badge" aria-label="ILU Foundation">
+             <img src="https://media.raihsuite.com/RS0001/web/ilu/tv-display-logo.png" alt="ILU Foundation - Integrate, Love & Uplift the Differently-abled" class="ilu-logo-img" />
+           </a>
            <span class="ilu-ad-chip">OFFICIAL CAUSE</span>
          </div>
          <div class="ilu-banner-wrap">
@@ -555,7 +556,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   function statusOf(c: TvClub): [string, string, string, string] {
     if (c.delivered >= c.ordered && c.ordered > 0) return ['Delivered', 'rgba(52,211,153,.16)', '#6ee7b7', '#34d399'];
     if (c.delivered > 0) return ['Delivering', 'rgba(52,211,153,.2)', '#a7f3d0', '#10b981'];
-    if ((c.initiated ?? 0) > 0) return ['Initiated', 'rgba(250,167,12,.16)', '#fcd34d', '#faa70c'];
+    if ((c.initiated ?? 0) > 0 || c.deliveryStatus === 'INITIATED') return ['Initiated', 'rgba(250,167,12,.16)', '#fcd34d', '#faa70c'];
     if (c.approved > 0) return ['Ready', 'rgba(243,99,31,.18)', '#ffa477', '#f3631f'];
     return ['Pending', 'rgba(230,3,136,.18)', '#ff8cc8', '#e60388'];
   }
@@ -585,7 +586,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
         <div class="card2 fu" style="--d:2;padding:22px 20px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Total ordered</span><span class="num" style="font-size:42px;font-weight:700;line-height:1">${N('ordered')} <span class="muted" style="font-size:20px">L</span></span></div>
-        <div class="card2 fu" style="--d:3;padding:22px 20px;display:flex;flex-direction:column;gap:8px;border:1px solid rgba(250,167,12,.45)"><span style="font-size:16px;font-weight:700;color:var(--amber)">Delivery initiated</span><span class="num" style="font-size:42px;font-weight:700;line-height:1;color:var(--gold)">${N('deliveryInitiated')}</span></div>
+        <div class="card2 fu" style="--d:3;padding:22px 20px;display:flex;flex-direction:column;gap:8px;border:1px solid rgba(250,167,12,.45)"><span style="font-size:16px;font-weight:700;color:var(--amber)">Delivery initiated</span><span class="num" style="font-size:42px;font-weight:700;line-height:1;color:var(--gold)">${N('deliveryInitiated')} <span class="muted" style="font-size:20px">L</span></span></div>
         <div class="card2 fu" style="--d:4;padding:22px 20px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Still to deliver</span><span class="num" style="font-size:42px;font-weight:700;line-height:1">${N('remaining')} <span class="muted" style="font-size:20px">L</span></span></div>
         <div class="card2 fu" style="--d:5;padding:22px 20px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Current stock</span><span class="num" style="font-size:42px;font-weight:700;line-height:1">${N('stock')} <span class="muted" style="font-size:20px">L</span></span></div>
       </div>
@@ -597,7 +598,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         </div>
         <div class="legend"><span><i style="background:var(--ok)"></i>Delivered ${N('delivered')} L</span><span><i style="background:var(--amber)"></i>Ready ${N('ready')} L</span><span><i style="background:var(--pink)"></i>Pending ${N('pending')} L</span></div>
       </div>
-      <div class="fu muted" style="--d:6;font-size:20px;font-weight:600">Participating: <b style="color:var(--fg)">${N('clubs')} clubs</b> · <b style="color:var(--amber)">${N('deliveryInitiated')}</b> deliveries initiated · <b style="color:var(--fg)">${N('indL')} L</b> from individuals</div>
+      <div class="fu muted" style="--d:6;font-size:20px;font-weight:600">Participating: <b style="color:var(--fg)">${N('clubs')} clubs</b> · <b style="color:var(--amber)">${N('deliveryInitiated')} L</b> deliveries initiated · <b style="color:var(--fg)">${N('indL')} L</b> from individuals</div>
     </div>
   </div>`,
     },
@@ -607,7 +608,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         const T: [string, string, string, string, string, string, string, string][] = [
           ['Total ordered', 'ordered', 'L', 'All orders combined', 'full', '#f3631f', 'rgba(243,99,31,.16)', ICON.box],
           ['Delivered', 'delivered', 'L', `${D.pct.toFixed(1)}% of all orders`, 'pct', '#34d399', 'rgba(52,211,153,.14)', ICON.check],
-          ['Delivery initiated', 'deliveryInitiated', '', 'Dispatched & on the way', 'pctPending', '#faa70c', 'rgba(250,167,12,.18)', ICON.truck],
+          ['Delivery initiated', 'deliveryInitiated', 'L', 'Dispatched & on the way', 'pctPending', '#faa70c', 'rgba(250,167,12,.18)', ICON.truck],
           ['Ready to deliver', 'ready', 'L', 'Approved, waiting dispatch', 'pctReady', '#ffcf5a', 'rgba(255,207,90,.15)', ICON.clock],
           ['Current stock', 'stock', 'L', 'Ready in the kitchen', 'stockCover', '#ff7ab8', 'rgba(230,3,136,.18)', ICON.pot],
           ['Clubs taking part', 'clubs', '', `plus ${fmt(D.indL)} L from individuals`, 'orgPct', '#ff5a72', 'rgba(234,24,60,.18)', ICON.users],
@@ -678,7 +679,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
         <div class="card2 fu" style="--d:3;padding:22px 20px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:16px;font-weight:700">Prepared so far</span><span class="num" style="font-size:40px;font-weight:700;line-height:1">${N('prepared')} <span class="muted" style="font-size:20px">L</span></span></div>
-        <div class="card2 fu" style="--d:4;padding:22px 20px;display:flex;flex-direction:column;gap:6px;border:1px solid rgba(250,167,12,.45)"><span style="font-size:16px;font-weight:700;color:var(--amber)">Delivery initiated</span><span class="num" style="font-size:40px;font-weight:700;line-height:1;color:var(--gold)">${N('deliveryInitiated')}</span></div>
+        <div class="card2 fu" style="--d:4;padding:22px 20px;display:flex;flex-direction:column;gap:6px;border:1px solid rgba(250,167,12,.45)"><span style="font-size:16px;font-weight:700;color:var(--amber)">Delivery initiated</span><span class="num" style="font-size:40px;font-weight:700;line-height:1;color:var(--gold)">${N('deliveryInitiated')} <span class="muted" style="font-size:20px">L</span></span></div>
         <div class="card2 fu" style="--d:5;padding:22px 20px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:16px;font-weight:700">Deliveries today</span><span class="num" style="font-size:40px;font-weight:700;line-height:1">${N('deliveriesToday')}</span></div>
       </div>
     </div>
@@ -818,7 +819,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       const delay = mode === 'flip' ? i * 0.06 : i * 0.08 + 0.35;
       return `<div class="row ${cls}" style="animation-delay:${delay}s;height:66px;border-radius:18px;background:${i % 2 ? 'transparent' : 'rgba(255,253,247,.035)'}">
       <span class="num" style="font-size:30px;font-weight:800;color:var(--amber)">${p * 9 + i + 1}</span>
-      <div style="display:flex;flex-direction:column;min-width:0"><span class="ellip" style="font-size:23px;font-weight:800">${esc(c.name)}</span><span class="muted ellip" style="font-size:16px;font-weight:600">${esc(c.place)}</span></div>
+      <div style="display:flex;flex-direction:column;min-width:0"><span class="ellip" style="font-size:23px;font-weight:800">${esc(c.name)}</span><span class="muted ellip" style="font-size:16px;font-weight:600">${esc(c.place)}${c.initiated > 0 ? ` · <b style="color:var(--amber)">${fmt(c.initiated)} L initiated</b>` : ''}</span></div>
       <span class="num" style="font-size:28px;font-weight:700;text-align:right;color:var(--ok-fg)">${fmt(c.delivered)} <span class="muted" style="font-size:16px">L</span></span>
       <span class="num" style="font-size:28px;font-weight:700;text-align:right">${fmt(c.ordered)} <span class="muted" style="font-size:16px">L</span></span>
       <div style="display:flex;align-items:center;gap:12px"><div style="flex:1;height:12px;border-radius:999px;background:rgba(255,253,247,.08);overflow:hidden"><div class="tw cb" data-p="${pc}" style="height:12px;border-radius:999px;width:${quiet ? pc : 0}%;background:${s[3]}"></div></div><span style="font-size:17px;font-weight:800;width:48px;text-align:right">${pc}%</span></div>
