@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardList, ArrowRight, UserPlus } from 'lucide-react';
+import { Truck, ArrowRight, UserPlus } from 'lucide-react';
 
 export default function IluHeader() {
   const pathname = usePathname();
@@ -48,7 +48,7 @@ export default function IluHeader() {
               </Link>
             )}
 
-            {/* Order Status / Back to Orders Button */}
+            {/* Delivery Status / Back to Orders Button */}
             {isSubPage ? (
               <Link
                 href="/ilu"
@@ -58,12 +58,12 @@ export default function IluHeader() {
               </Link>
             ) : (
               <Link
-                href="/ilu/order-status"
+                href="/ilu/delivery-status"
                 className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#ea183c] via-[#e60388] via-[#f3631f] to-[#faa70c] hover:opacity-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-md shadow-[#ea183c]/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
               >
-                <ClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
-                <span className="hidden md:inline">Order Status</span>
-                <span className="md:hidden">Status</span>
+                <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
+                <span className="hidden md:inline">Delivery Status</span>
+                <span className="md:hidden">Delivery Status</span>
                 <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline" />
               </Link>
             )}
