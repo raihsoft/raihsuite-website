@@ -20,7 +20,8 @@ export interface TvClub {
   delivered: number;
   approved: number; // approved, waiting for delivery
   pending: number; // placed, waiting for approval
-  initiated: number; // delivery initiated quantity
+  initiated: number; // delivery initiated quantity (total_delivery_initiated)
+  deliveryStatus?: string;
   lastDeliveryTime: number; // timestamp in ms of latest delivery
   lastOrderDate?: string;
 }
@@ -304,7 +305,16 @@ export function createLiveSource(): TvSource {
           const confirmed = num(o.total_approved);
           const delivered = num(o.total_delivered);
           const approved = extra(o, 'total_pending_delivery') != null ? num(extra(o, 'total_pending_delivery')) : Math.max(0, confirmed - delivered);
-          const initiated = num(o.total_initiated);
+          const initiated = num(
+            o.total_delivery_initiated ??
+            extra(o, 'total_delivery_initiated') ??
+            o.total_initiated
+          );
+          const deliveryStatus = str(
+            o.delivery_status ??
+            extra(o, 'delivery_status') ??
+            o.status
+          );
           const orders = (o.orders ?? []) as ApiOrder[];
           const name = str(o.organization_name) || str(info?.organization_name);
           const place = str(info?.place);
@@ -326,10 +336,10 @@ export function createLiveSource(): TvSource {
             }
           }
 
-          if (orgInitiatedCount > 0) {
+          if (initiated > 0 || deliveryStatus.toUpperCase() === 'INITIATED') {
+            deliveryInitiatedCount += (orgInitiatedCount > 0 ? orgInitiatedCount : 1);
+          } else if (orgInitiatedCount > 0) {
             deliveryInitiatedCount += orgInitiatedCount;
-          } else if (initiated > 0 || str(o.status).toUpperCase() === 'INITIATED') {
-            deliveryInitiatedCount += 1;
           }
           deliveryInitiatedLiters += initiated;
 
@@ -337,20 +347,31 @@ export function createLiveSource(): TvSource {
             orgLastDeliveryTime = Date.parse(str(o.last_ordered_at)) || 0;
           }
 
+          const orderQty = num(o.total_order_quantity);
+          const ordered = orderQty > 0 ? orderQty : Math.max(confirmed, delivered, initiated);
+
           return {
             id,
             name,
             place,
-            ordered: Math.max(confirmed, delivered) + initiated,
+            ordered,
             delivered,
-            approved,
-            pending: initiated,
+            approved: Math.max(0, approved - initiated),
+            pending: Math.max(0, ordered - delivered - initiated),
             initiated,
+            deliveryStatus,
             lastDeliveryTime: orgLastDeliveryTime,
             lastOrderDate: str(o.last_ordered_at),
           };
         })
         .filter((c) => c.id && c.name && c.ordered > 0);
+
+      if (deliveryInitiatedLiters === 0 && num(extra(stats, 'total_delivery_initiated')) > 0) {
+        deliveryInitiatedLiters = num(extra(stats, 'total_delivery_initiated'));
+      }
+      if (deliveryInitiatedCount === 0 && deliveryInitiatedLiters > 0) {
+        deliveryInitiatedCount = clubs.filter((c) => c.initiated > 0 || c.deliveryStatus?.toUpperCase() === 'INITIATED').length || 1;
+      }
 
       tracker.observe(clubs);
 
