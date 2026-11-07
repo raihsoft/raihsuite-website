@@ -6,6 +6,7 @@
 import type { TvAd, TvClub, TvSnapshot, TvSource } from './tvData';
 import {
   HOUSE_ADS,
+  ILU_FOUNDATION_AD,
   RAIHSOFT_CONTACT_AD,
   RAIHSOFT_SERVICES_AD,
   RAIHSOFT_SOLUTIONS_AD,
@@ -36,7 +37,6 @@ interface Screen {
 const TONES = ['red', 'pink', 'orange', 'amber', 'cream'];
 const TRANS = ['slide', 'cube', 'wipe', 'zoom'];
 const RS_DURS = [5200, 6200, 6400, 7200, 8600, 6200, 9000];
-const ZONE_COUNT_MAX = 6;
 
 const ICON = {
   box: 'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',
@@ -89,12 +89,12 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   /* ---------------- state ---------------- */
   let S: TvSnapshot = {
     fetchedAt: 0,
-    totals: { ordered: 0, delivered: 0, approved: 0, pending: 0, stock: 0, orgL: 0, indL: 0, orderCount: 0 },
+    totals: { ordered: 0, delivered: 0, approved: 0, pending: 0, stock: 0, orgL: 0, indL: 0, deliveryInitiatedCount: 0, deliveryInitiatedLiters: 0 },
     clubs: [], latest: [], hourly: [], deliveriesToday: 0,
   };
   let D: D = {};
-  let zones: { name: string; o: number; d: number }[] = [];
   const withOwnAds = (list: TvAd[]) => [
+    ILU_FOUNDATION_AD,
     RAIHSOFT_SOLUTIONS_AD,
     TOWNSHOP_AD,
     RAIHSOFT_SERVICES_AD,
@@ -109,15 +109,6 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
     const t = S.totals;
     const ordered = Math.max(1, t.ordered);
     const remaining = Math.max(0, t.ordered - t.delivered);
-    zones = [];
-    const zm = new Map<string, { name: string; o: number; d: number }>();
-    for (const c of S.clubs) {
-      if (!c.zone) continue;
-      const z = zm.get(c.zone) ?? { name: c.zone, o: 0, d: 0 };
-      z.o += c.ordered; z.d += c.delivered; zm.set(c.zone, z);
-    }
-    zones = [...zm.values()].sort((a, b) => b.o - a.o).slice(0, ZONE_COUNT_MAX);
-    const maxO = Math.max(1, ...zones.map((z) => z.o));
     const hourly = S.hourly.length ? S.hourly : [{ h: new Date().getHours(), v: 0 }];
     const maxV = Math.max(...hourly.map((h) => h.v), 1);
     const step = Math.max(100, Math.ceil((maxV * 1.12) / 4 / 100) * 100);
@@ -131,16 +122,14 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       stockCover: clamp((t.stock / Math.max(1, remaining)) * 100, 0, 100),
       prepared: t.delivered + t.stock,
       clubs: S.clubs.length,
-      orders: t.orderCount,
+      deliveryInitiated: t.deliveryInitiatedCount,
+      deliveryInitiatedL: t.deliveryInitiatedLiters,
       orgL: t.orgL, indL: t.indL,
       orgPct: (t.orgL / ordered) * 100, indPct: (t.indL / ordered) * 100,
       deliveriesToday: S.deliveriesToday,
       full: 100,
       hStep: step, hMax: step * 4, hTotal, hAvg: hTotal / hourly.length, hNow: hourly[hourly.length - 1].v,
     };
-    zones.forEach((z, i) => {
-      D[`z${i}o`] = z.o; D[`z${i}d`] = z.d; D[`z${i}p`] = (z.d / Math.max(1, z.o)) * 100; D[`z${i}t`] = (z.o / maxO) * 100;
-    });
     hourly.forEach((h, i) => { D[`h${i}`] = (h.v / D.hMax) * 100; D[`hv${i}`] = h.v; });
   }
 
@@ -185,16 +174,114 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
 
   /* ---------------- ads ---------------- */
   function adHTML(ad: TvAd, tall: boolean, d: number) {
+    if (ad.kind === 'ilu-foundation') return iluFoundationAdHTML(tall, d);
     if (ad.kind === 'townshop') return townshopAdHTML(tall, d);
     if (ad.kind === 'raihsoft-solutions') return raihsoftSolutionsAdHTML(tall, d);
     if (ad.kind === 'raihsoft-services') return raihsoftServicesAdHTML(tall, d);
     if (ad.kind === 'raihsoft-contact') return raihsoftContactAdHTML(tall, d);
     if (ad.image) {
-      return `<div class="ad ad-img${tall ? ' tall' : ''}" style="--d:${d}"><img src="${esc(ad.image)}" alt="${esc(ad.title || 'Sponsor advertisement')}"><span class="ad-tag">AD</span></div>`;
+      return `<div class="ad ad-img${tall ? ' tall' : ''}" style="--d:${d}"><img src="${esc(ad.image)}" alt="${esc(ad.title || 'Sponsor advertisement')}" onerror="this.onerror=null;this.parentElement.classList.remove('ad-img');this.parentElement.classList.add('ad-text','tone-amber');this.parentElement.innerHTML='<div class=\\'shine\\'></div><span class=\\'chip\\'>SPONSOR</span><h3>${esc(ad.title || 'ILU Palada Challenge')}</h3><p>${esc(ad.body || 'Proud Sponsor &amp; Campaign Partner')}</p><div class=\\'sp\\'></div><div class=\\'contact\\'>${esc(ad.contact || '+91 98479 91099')}</div>';"><span class="ad-tag">AD</span></div>`;
     }
     return `<div class="ad ad-text tone-${hashTone(ad.id)}${tall ? ' tall' : ''}" style="--d:${d}"><div class="shine"></div><div class="rd"></div><div class="dd"></div>
       <span class="chip">${ad.house ? 'FROM ILU' : 'SPONSORED'}</span><h3>${esc(ad.title)}</h3>${ad.body ? `<p>${esc(ad.body)}</p>` : ''}<div class="sp"></div>
       ${ad.contact ? `<div class="contact">${svgIcon(ICON.phone, 24, 'currentColor')}${esc(ad.contact)}</div>` : ''}</div>`;
+  }
+
+  /** Official ILU Foundation Ad card featuring the official puzzle heart logo & campaign artwork */
+  function iluFoundationAdHTML(tall: boolean, d: number) {
+    const heart = '<svg class="ilu-heart-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+    const spark = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>';
+    const globe = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>';
+
+    const content = tall
+      ? `<div class="ilu-ad-brand tall">
+           <div class="ilu-logo-badge tall">
+             <img src="/ilu/tv/ilu-foundation-logo.png" alt="ILU Foundation - Integrate, Love & Uplift the Differently-abled" class="ilu-logo-img tall" />
+           </div>
+           <span class="ilu-ad-chip">OFFICIAL ORGANIZER</span>
+         </div>
+         <div class="ilu-banner-wrap tall">
+           <img src="/ilu/tv/ilu-foundation-ad.png" alt="ILU Foundation - Integrate, Love & Uplift" class="ilu-banner-img" />
+           <div class="ilu-corner-chip"><i class="icc-dot"></i>WHO DATA</div>
+         </div>
+         <div class="ilu-tall-centerpiece">
+           <div class="itc-globe-aura">
+             <div class="itc-icon-box">
+               ${heart}
+               <i class="itc-ring itc-ring1"></i>
+               <i class="itc-ring itc-ring2"></i>
+             </div>
+           </div>
+           <div class="itc-stat">
+             <div class="itc-num">1 BILLION</div>
+             <div class="itc-label">Disabled People in the World</div>
+             <div class="itc-src">${globe}<span>According to World Health Organization (WHO)</span></div>
+           </div>
+         </div>
+         <div class="ilu-who-box tall">
+           <p class="ilu-who-text tall">World &mdash; According to the World Health Organization (WHO) there are <b>1 billion disabled people</b> in the world.</p>
+         </div>
+         <div class="ilu-trio-capsules">
+           <div class="itc-cap cap-integration">
+             <div class="itc-cap-ic">🤝</div>
+             <div class="itc-cap-body">
+               <b>INTEGRATE</b>
+               <span>Equal dignity, accessibility &amp; universal inclusion</span>
+             </div>
+           </div>
+           <div class="itc-cap cap-love">
+             <div class="itc-cap-ic">❤️</div>
+             <div class="itc-cap-body">
+               <b>LOVE</b>
+               <span>Rehabilitation, care &amp; community support</span>
+             </div>
+           </div>
+           <div class="itc-cap cap-uplift">
+             <div class="itc-cap-ic">✨</div>
+             <div class="itc-cap-body">
+               <b>UPLIFT</b>
+               <span>Education, empowerment &amp; self-reliance</span>
+             </div>
+           </div>
+         </div>`
+      : `<div class="ilu-ad-brand">
+           <div class="ilu-logo-badge">
+             <img src="/ilu/tv/ilu-foundation-logo.png" alt="ILU Foundation - Integrate, Love & Uplift the Differently-abled" class="ilu-logo-img" />
+           </div>
+           <span class="ilu-ad-chip">OFFICIAL CAUSE</span>
+         </div>
+         <div class="ilu-banner-wrap">
+           <img src="/ilu/tv/ilu-foundation-ad.png" alt="ILU Foundation - Integrate, Love & Uplift" class="ilu-banner-img" />
+           <div class="ilu-corner-chip"><i class="icc-dot"></i>WHO DATA</div>
+         </div>
+         <div class="ilu-card-body">
+           <div class="ilu-who-box">
+             <div class="iwb-head"><span class="iwb-dot"></span>WHO Global Health Finding</div>
+             <p class="ilu-who-text">World &mdash; According to the World Health Organization (WHO), there are <b>1 billion disabled people</b> in the world.</p>
+           </div>
+           <div class="ilu-mini-pills">
+             <span class="imp-pill imp-teal">🤝 Integrate</span>
+             <span class="imp-pill imp-rose">❤️ Love</span>
+             <span class="imp-pill imp-gold">✨ Uplift</span>
+           </div>
+         </div>`;
+
+    return `<div class="ad ad-ilu${tall ? ' tall' : ''}" style="--d:${d}" aria-label="ILU Foundation: Integration Love & Uplift The Differently-Abled">
+      <div class="ilu-glow ilu-glow1" aria-hidden="true"></div>
+      <div class="ilu-glow ilu-glow2" aria-hidden="true"></div>
+      <div class="ilu-glow ilu-glow3" aria-hidden="true"></div>
+      <div class="shine" aria-hidden="true"></div>
+      <div class="ilu-top">
+        <span class="ilu-chip"><span class="ilu-chip-dot"></span>ILU FOUNDATION</span>
+        <span class="ilu-pill-festive">${spark} PALADA CHALLENGE</span>
+      </div>
+      ${content}
+      <div class="sp"></div>
+      <div class="ilu-foot">
+        <span class="ilu-cta-btn">${heart} Support The Cause</span>
+        <b class="ilu-org-url">ilufoundation.org</b>
+      </div>
+    </div>`;
   }
   /** Animated card for our own product, townshop.in (pin + shopfront logo, Outfit wordmark). */
   function townshopAdHTML(tall: boolean, d: number) {
@@ -412,12 +499,13 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   }
 
   let tallTurn = 0;
-  // Alternate between the 3 creative Raihsoft tall designs and Townshop
+  // Alternate between ILU Foundation hero ad, the 3 creative Raihsoft tall designs, and Townshop
   const tallAd = () => {
-    const turn = tallTurn++ % 4;
-    if (turn === 0) return raihsoftSolutionsAdHTML(true, 0);
-    if (turn === 1) return townshopShopsHTML(0);
-    if (turn === 2) return raihsoftServicesAdHTML(true, 0);
+    const turn = tallTurn++ % 5;
+    if (turn === 0) return iluFoundationAdHTML(true, 0);
+    if (turn === 1) return raihsoftSolutionsAdHTML(true, 0);
+    if (turn === 2) return townshopShopsHTML(0);
+    if (turn === 3) return raihsoftServicesAdHTML(true, 0);
     return raihsoftContactAdHTML(true, 0);
   };
 
@@ -432,7 +520,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       (a) => !a.kind?.startsWith('raihsoft') && !a.id.startsWith('raihsoft')
     );
     if (list.length > 0) return list;
-    return [TOWNSHOP_AD, ...HOUSE_ADS];
+    return [ILU_FOUNDATION_AD, TOWNSHOP_AD, ...HOUSE_ADS];
   }
 
   let rsTurn = 0;
@@ -457,11 +545,18 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   };
 
   /* ---------------- screens ---------------- */
-  const sortedClubs = () => S.clubs.slice().sort((a, b) => b.ordered - a.ordered);
+  const sortedClubs = () => S.clubs.slice().sort((a, b) => {
+    const tA = a.lastDeliveryTime || 0;
+    const tB = b.lastDeliveryTime || 0;
+    if (tB !== tA) return tB - tA; // LIFO: latest delivery first
+    if (b.delivered !== a.delivered) return b.delivered - a.delivered;
+    return (b.ordered || 0) - (a.ordered || 0);
+  });
   function statusOf(c: TvClub): [string, string, string, string] {
-    if (c.delivered >= c.ordered) return ['Delivered', 'rgba(52,211,153,.16)', '#6ee7b7', '#34d399'];
-    if (c.delivered > 0) return ['Part delivered', 'rgba(250,167,12,.16)', '#fcd34d', '#faa70c'];
-    if (c.approved > 0) return ['Approved', 'rgba(243,99,31,.18)', '#ffa477', '#f3631f'];
+    if (c.delivered >= c.ordered && c.ordered > 0) return ['Delivered', 'rgba(52,211,153,.16)', '#6ee7b7', '#34d399'];
+    if (c.delivered > 0) return ['Delivering', 'rgba(52,211,153,.2)', '#a7f3d0', '#10b981'];
+    if ((c.initiated ?? 0) > 0) return ['Initiated', 'rgba(250,167,12,.16)', '#fcd34d', '#faa70c'];
+    if (c.approved > 0) return ['Ready', 'rgba(243,99,31,.18)', '#ffa477', '#f3631f'];
     return ['Pending', 'rgba(230,3,136,.18)', '#ff8cc8', '#e60388'];
   }
 
@@ -488,10 +583,11 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         <span class="eyebrow">Palada delivered so far</span>
         <span class="num" style="font-size:112px;font-weight:800;line-height:1;letter-spacing:-3px">${N('delivered')}<span class="muted" style="font-size:48px;margin-left:12px;letter-spacing:0">litres</span></span>
       </div>
-      <div class="stat-grid3">
-        <div class="card2 fu" style="--d:2;padding:22px 24px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Total ordered</span><span class="num" style="font-size:44px;font-weight:700;line-height:1">${N('ordered')} <span class="muted" style="font-size:22px">L</span></span></div>
-        <div class="card2 fu" style="--d:3;padding:22px 24px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Still to deliver</span><span class="num" style="font-size:44px;font-weight:700;line-height:1">${N('remaining')} <span class="muted" style="font-size:22px">L</span></span></div>
-        <div class="card2 fu" style="--d:4;padding:22px 24px;display:flex;flex-direction:column;gap:8px;border:1px solid rgba(250,167,12,.4)"><span style="font-size:16px;font-weight:700;color:var(--amber)">Current stock</span><span class="num" style="font-size:44px;font-weight:700;line-height:1">${N('stock')} <span class="muted" style="font-size:22px">L</span></span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+        <div class="card2 fu" style="--d:2;padding:22px 20px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Total ordered</span><span class="num" style="font-size:42px;font-weight:700;line-height:1">${N('ordered')} <span class="muted" style="font-size:20px">L</span></span></div>
+        <div class="card2 fu" style="--d:3;padding:22px 20px;display:flex;flex-direction:column;gap:8px;border:1px solid rgba(250,167,12,.45)"><span style="font-size:16px;font-weight:700;color:var(--amber)">Delivery initiated</span><span class="num" style="font-size:42px;font-weight:700;line-height:1;color:var(--gold)">${N('deliveryInitiated')}</span></div>
+        <div class="card2 fu" style="--d:4;padding:22px 20px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Still to deliver</span><span class="num" style="font-size:42px;font-weight:700;line-height:1">${N('remaining')} <span class="muted" style="font-size:20px">L</span></span></div>
+        <div class="card2 fu" style="--d:5;padding:22px 20px;display:flex;flex-direction:column;gap:8px"><span class="muted" style="font-size:16px;font-weight:700">Current stock</span><span class="num" style="font-size:42px;font-weight:700;line-height:1">${N('stock')} <span class="muted" style="font-size:20px">L</span></span></div>
       </div>
       <div class="fu" style="--d:5;display:flex;flex-direction:column;gap:14px">
         <div style="display:flex;height:28px;border-radius:999px;overflow:hidden;background:rgba(255,253,247,.07)">
@@ -501,7 +597,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         </div>
         <div class="legend"><span><i style="background:var(--ok)"></i>Delivered ${N('delivered')} L</span><span><i style="background:var(--amber)"></i>Ready ${N('ready')} L</span><span><i style="background:var(--pink)"></i>Pending ${N('pending')} L</span></div>
       </div>
-      <div class="fu muted" style="--d:6;font-size:20px;font-weight:600">Orders from <b style="color:var(--fg)">${N('clubs')} clubs</b> and <b style="color:var(--fg)">${N('indL')} L</b> from individuals</div>
+      <div class="fu muted" style="--d:6;font-size:20px;font-weight:600">Participating: <b style="color:var(--fg)">${N('clubs')} clubs</b> · <b style="color:var(--amber)">${N('deliveryInitiated')}</b> deliveries initiated · <b style="color:var(--fg)">${N('indL')} L</b> from individuals</div>
     </div>
   </div>`,
     },
@@ -509,11 +605,11 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       key: 'glance', name: 'At a Glance', short: 'At a glance', ads: 2,
       html: () => {
         const T: [string, string, string, string, string, string, string, string][] = [
-          ['Total ordered', 'ordered', 'L', D.orders ? `${fmt(D.orders)} club orders` : 'All orders together', 'full', '#f3631f', 'rgba(243,99,31,.16)', ICON.box],
+          ['Total ordered', 'ordered', 'L', 'All orders combined', 'full', '#f3631f', 'rgba(243,99,31,.16)', ICON.box],
           ['Delivered', 'delivered', 'L', `${D.pct.toFixed(1)}% of all orders`, 'pct', '#34d399', 'rgba(52,211,153,.14)', ICON.check],
-          ['Ready to deliver', 'ready', 'L', 'Approved, on the way', 'pctReady', '#faa70c', 'rgba(250,167,12,.15)', ICON.truck],
-          ['Pending approval', 'pending', 'L', 'Waiting for confirmation', 'pctPending', '#ff7ab8', 'rgba(230,3,136,.18)', ICON.clock],
-          ['Current stock', 'stock', 'L', 'Ready in the kitchen', 'stockCover', '#ffcf5a', 'rgba(255,207,90,.14)', ICON.pot],
+          ['Delivery initiated', 'deliveryInitiated', '', 'Dispatched & on the way', 'pctPending', '#faa70c', 'rgba(250,167,12,.18)', ICON.truck],
+          ['Ready to deliver', 'ready', 'L', 'Approved, waiting dispatch', 'pctReady', '#ffcf5a', 'rgba(255,207,90,.15)', ICON.clock],
+          ['Current stock', 'stock', 'L', 'Ready in the kitchen', 'stockCover', '#ff7ab8', 'rgba(230,3,136,.18)', ICON.pot],
           ['Clubs taking part', 'clubs', '', `plus ${fmt(D.indL)} L from individuals`, 'orgPct', '#ff5a72', 'rgba(234,24,60,.18)', ICON.users],
         ];
         return `<div class="main" style="flex-direction:column;gap:24px">
@@ -556,12 +652,14 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         <path d="M40 170 C 50 432, 182 522, 320 522 C 458 522, 590 432, 600 170 Z" fill="url(#bronze)"/>
         <g clip-path="url(#bowlClip)">
           <rect x="0" y="150" width="640" height="400" fill="#2a120c"/>
-          <g data-liquid style="transform:translateY(340px);transition:transform 2.4s cubic-bezier(.2,.8,.2,1)">
+          <g data-liquid style="transform:translateY(-12px);transition:transform 2.4s cubic-bezier(.2,.8,.2,1)">
             <path class="waveB" d="M0 196 q 40 -14 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 V 700 H 0 Z" fill="#d9a55a" opacity=".7"/>
             <path class="waveA" d="M0 190 q 40 -18 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 V 700 H 0 Z" fill="url(#paladaFill)"/>
             <circle class="bubble" cx="230" cy="300" r="7" fill="#fff8ea"/>
             <circle class="bubble" style="animation-delay:.9s" cx="400" cy="320" r="5" fill="#fff8ea"/>
             <circle class="bubble" style="animation-delay:1.8s" cx="330" cy="340" r="6" fill="#fff8ea"/>
+            <circle class="bubble" style="animation-delay:2.7s" cx="280" cy="280" r="5" fill="#fff8ea"/>
+            <circle class="bubble" style="animation-delay:3.6s" cx="370" cy="270" r="6" fill="#fff8ea"/>
           </g>
         </g>
         <ellipse cx="320" cy="170" rx="282" ry="30" fill="none" stroke="#e3a35a" stroke-width="14"/>
@@ -578,9 +676,10 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         <div style="height:22px;border-radius:999px;background:rgba(255,253,247,.08);overflow:hidden"><div class="tw" data-w="stockCover" style="--d:3;height:22px;width:0;border-radius:999px;background:linear-gradient(90deg,var(--orange),var(--amber))"></div></div>
         <div class="muted" style="display:flex;justify-content:space-between;font-size:17px;font-weight:600"><span>${N('stock')} L in stock</span><span>${N('remaining')} L still to deliver</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
-        <div class="card2 fu" style="--d:3;padding:22px 26px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:16px;font-weight:700">Prepared so far</span><span class="num" style="font-size:44px;font-weight:700;line-height:1">${N('prepared')} <span class="muted" style="font-size:22px">L</span></span></div>
-        <div class="card2 fu" style="--d:4;padding:22px 26px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:16px;font-weight:700">Deliveries today</span><span class="num" style="font-size:44px;font-weight:700;line-height:1">${N('deliveriesToday')}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+        <div class="card2 fu" style="--d:3;padding:22px 20px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:16px;font-weight:700">Prepared so far</span><span class="num" style="font-size:40px;font-weight:700;line-height:1">${N('prepared')} <span class="muted" style="font-size:20px">L</span></span></div>
+        <div class="card2 fu" style="--d:4;padding:22px 20px;display:flex;flex-direction:column;gap:6px;border:1px solid rgba(250,167,12,.45)"><span style="font-size:16px;font-weight:700;color:var(--amber)">Delivery initiated</span><span class="num" style="font-size:40px;font-weight:700;line-height:1;color:var(--gold)">${N('deliveryInitiated')}</span></div>
+        <div class="card2 fu" style="--d:5;padding:22px 20px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:16px;font-weight:700">Deliveries today</span><span class="num" style="font-size:40px;font-weight:700;line-height:1">${N('deliveriesToday')}</span></div>
       </div>
     </div>
   </div>`,
@@ -588,15 +687,15 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       update: (el) => updateLiquid(el),
     },
     {
-      key: 'clubs', name: 'Club Orders & Delivery', short: 'Clubs', ads: 2,
+      key: 'clubs', name: 'Organization Deliveries', short: 'Deliveries', ads: 2,
       available: () => S.clubs.length > 0,
       html: () => `
   <div class="main panel" style="flex-direction:column;gap:10px;padding:28px 32px">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:0 8px 8px">
-      <div style="display:flex;align-items:baseline;gap:16px"><span class="h2">All clubs</span><span class="muted" style="font-size:19px;font-weight:600">${fmt(S.clubs.length)} clubs · sorted by litres ordered</span></div>
+      <div style="display:flex;align-items:baseline;gap:16px"><span class="h2">Organization Deliveries</span><span class="muted" style="font-size:19px;font-weight:600">${fmt(S.clubs.length)} organizations · latest delivery first</span></div>
       <div class="muted" style="display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700">Page <span data-pg style="color:var(--fg)">1</span> of ${Math.max(1, Math.ceil(S.clubs.length / 9))}<div data-pgdots style="display:flex;gap:6px;margin-left:6px"></div></div>
     </div>
-    <div class="row" style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--muted2);text-transform:uppercase"><span>#</span><span>Club</span><span style="text-align:right">Ordered</span><span style="text-align:right">Delivered</span><span>Progress</span><span>Status</span></div>
+    <div class="row" style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--muted2);text-transform:uppercase"><span>#</span><span>Organization</span><span style="text-align:right">Delivered</span><span style="text-align:right">Total Ordered</span><span>Progress</span><span>Status</span></div>
     <div data-rows style="display:flex;flex-direction:column;gap:10px;perspective:1600px"></div>
   </div>`,
       enter: (el) => {
@@ -645,51 +744,6 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       update: (el) => renderChart(el, false),
     },
     {
-      key: 'zones', name: 'Zone-wise Progress', short: 'Zones', ads: 2,
-      available: () => zones.length >= 2,
-      html: () => {
-        const lead = zones.slice().sort((a, b) => b.d / Math.max(1, b.o) - a.d / Math.max(1, a.o))[0];
-        return `<div class="main" style="gap:24px">
-    <div class="panel" style="flex:1;min-width:0;padding:28px 34px;display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between"><span class="h2">Delivery by zone</span><span class="muted" style="font-size:18px;font-weight:600">bar length = litres ordered (clubs)</span></div>
-      ${zones.map((z, i) => {
-        const p = D[`z${i}p`];
-        const fill = p >= 75 ? 'linear-gradient(90deg,#0f9f6e,#34d399)' : p >= 55 ? 'linear-gradient(90deg,#f3631f,#faa70c)' : 'linear-gradient(90deg,#ea183c,#e60388)';
-        const pc = p >= 75 ? '#6ee7b7' : p >= 55 ? '#ffcf5a' : '#ff8da1';
-        return `<div class="fu" style="--d:${i + 1};flex:1;display:flex;align-items:center;gap:24px">
-          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><span class="ellip" style="font-size:26px;font-weight:800">${esc(z.name)}</span><span class="muted" style="font-size:19px;font-weight:600;white-space:nowrap"><b style="color:var(--fg)">${N(`z${i}d`)}</b> of ${N(`z${i}o`)} L</span></div>
-            <div style="height:26px;border-radius:999px;background:rgba(255,253,247,.06)"><div class="tw" data-w="z${i}t" style="--d:${i + 1};height:26px;width:0;border-radius:999px;background:rgba(243,99,31,.22);overflow:hidden"><div class="tw" data-w="z${i}p" style="--d:${i + 4};height:26px;width:0;border-radius:999px;background:${fill}"></div></div></div>
-          </div>
-          <span class="num" style="width:120px;text-align:right;font-size:48px;font-weight:800;color:${pc}">${N(`z${i}p`)}%</span>
-        </div>`;
-      }).join('')}
-    </div>
-    <div style="width:400px;flex-shrink:0;display:flex;flex-direction:column;gap:24px">
-      <div class="panel fu" style="--d:2;padding:28px;display:flex;flex-direction:column;align-items:center;gap:18px;flex:1">
-        <span class="eyebrow" style="align-self:flex-start;font-size:16px;letter-spacing:2px">Who ordered</span>
-        <div style="position:relative;width:320px;height:320px">
-          <svg width="320" height="320" viewBox="0 0 320 320" role="img" aria-label="Share of litres ordered by clubs and individuals">
-            <circle cx="160" cy="160" r="130" fill="none" stroke="rgba(255,253,247,.07)" stroke-width="44"/>
-            <circle class="tr" data-ring="orgPct" data-circ="816.8" data-gap="1" style="--d:3" cx="160" cy="160" r="130" fill="none" stroke="#f3631f" stroke-width="44" stroke-dasharray="0 816.8" transform="rotate(-90 160 160)"/>
-            <circle class="tr" data-ring="indPct" data-circ="816.8" data-gap="1" data-offkey="orgPct" style="--d:12" cx="160" cy="160" r="130" fill="none" stroke="#e60388" stroke-width="44" stroke-dasharray="0 816.8" transform="rotate(-90 160 160)"/>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span class="num" style="font-size:52px;font-weight:800;line-height:1">${N('ordered')}</span><span class="muted" style="font-size:18px;font-weight:700">litres ordered</span></div>
-        </div>
-        <div style="align-self:stretch;display:flex;flex-direction:column;gap:10px;font-size:19px;font-weight:700">
-          <div style="display:flex;justify-content:space-between"><span class="legend" style="font-size:19px"><span><i style="background:var(--orange)"></i>Clubs</span></span><span>${N('orgL')} L · ${N('orgPct')}%</span></div>
-          <div style="display:flex;justify-content:space-between"><span class="legend" style="font-size:19px"><span><i style="background:var(--pink)"></i>Individuals</span></span><span>${N('indL')} L · ${N('indPct')}%</span></div>
-        </div>
-      </div>
-      <div class="fu" style="--d:4;border-radius:28px;padding:24px 28px;background:linear-gradient(135deg,#34d399,#0f9f6e);color:#062b1e;display:flex;align-items:center;gap:18px">
-        ${svgIcon(ICON.trophy, 44, '#062b1e')}
-        <div style="display:flex;flex-direction:column;min-width:0"><span style="font-size:15px;font-weight:800;letter-spacing:2px;text-transform:uppercase">Leading zone</span><span class="num ellip" style="font-size:32px;font-weight:800;line-height:1.1">${esc(lead.name)} · ${Math.round((lead.d / Math.max(1, lead.o)) * 100)}%</span></div>
-      </div>
-    </div>
-  </div>`;
-      },
-    },
-    {
       key: 'podium', name: 'Top Clubs', short: 'Top clubs', ads: 2,
       available: () => S.clubs.length >= 3,
       html: () => {
@@ -706,6 +760,15 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         const colors = ['#ea183c', '#e60388', '#f3631f', '#faa70c', '#fffdf7', '#34d399'];
         let cf = '';
         for (let i = 0; i < 18; i++) cf += `<span class="cf" style="left:${(i * 37) % 100}%;width:${8 + (i % 3) * 4}px;background:${colors[i % 6]};animation-delay:${(-(i * 0.37) % 6).toFixed(2)}s;animation-duration:6s;opacity:.85"></span>`;
+        const partnerAds = [
+          { name: 'Raihsoft Technologies', role: 'Digital Engineering Partner' },
+          { name: 'townshop.in', role: 'WhatsApp Commerce Partner' },
+          { name: 'ILU Foundation', role: 'Palada Challenge 2026' },
+          { name: 'RaihSuite ERP', role: 'Enterprise Cloud Management' },
+          { name: 'Malabar Gold & Diamonds', role: 'Community Partner' },
+        ];
+        const secondaryClubs = top.slice(3, 8);
+        const blankFillers = Array.from({ length: Math.max(0, 5 - secondaryClubs.length) }, (_, k) => partnerAds[k % partnerAds.length]);
         return `<div class="main panel" style="position:relative;overflow:hidden;flex-direction:column;gap:24px;padding:28px 36px">
       ${cf}
       <div style="display:flex;align-items:baseline;justify-content:space-between;position:relative"><span class="h2">Most litres ordered</span><span class="muted" style="font-size:19px;font-weight:600">Thank you for leading the way</span></div>
@@ -714,9 +777,10 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         ${col(top[0], 1, { w: 340, av: 112, c: '#faa70c', a: 14, r: 8, h: 300, bg: 'linear-gradient(180deg,#faa70c,#f3631f 60%,#ea183c)', fs: 120, fc: '#fffdf7' })}
         ${col(top[2], 3, { w: 320, av: 96, c: '#f0a070', a: 7, r: 0, h: 170, bg: 'linear-gradient(180deg,#d9773a,#8a3a12)', fs: 84, fc: '#fffdf7' })}
       </div>
-      ${top.length > 3 ? `<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;position:relative">
-        ${top.slice(3, 8).map((c, i) => `<div class="card2 fu" style="--d:${17 + i};border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px"><span class="num" style="font-size:30px;font-weight:800;color:var(--amber)">${i + 4}</span><div style="display:flex;flex-direction:column;min-width:0"><span class="ellip" style="font-size:18px;font-weight:800">${esc(c.name)}</span><span class="muted" style="font-size:16px;font-weight:700">${fmt(c.ordered)} L</span></div></div>`).join('')}
-      </div>` : ''}
+      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;position:relative">
+        ${secondaryClubs.map((c, i) => `<div class="card2 fu" style="--d:${17 + i};border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px"><span class="num" style="font-size:30px;font-weight:800;color:var(--amber)">${i + 4}</span><div style="display:flex;flex-direction:column;min-width:0"><span class="ellip" style="font-size:18px;font-weight:800">${esc(c.name)}</span><span class="muted" style="font-size:16px;font-weight:700">${fmt(c.ordered)} L</span></div></div>`).join('')}
+        ${blankFillers.map((bf, k) => `<div class="card2 fu" style="--d:${22 + k};border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:12px;border:1px dashed rgba(255,253,247,.12);background:rgba(255,253,247,.025)"><span style="font-size:11px;font-weight:800;letter-spacing:1px;padding:4px 8px;border-radius:6px;background:rgba(250,167,12,.18);color:var(--amber)">PARTNER</span><div style="display:flex;flex-direction:column;min-width:0"><span class="ellip" style="font-size:17px;font-weight:800">${bf.name}</span><span class="muted" style="font-size:14px;font-weight:600">${bf.role}</span></div></div>`).join('')}
+      </div>
     </div>`;
       },
     },
@@ -728,8 +792,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   function updateLiquid(el: HTMLElement) {
     const g = el.querySelector<SVGGElement>('[data-liquid]');
     if (!g) return;
-    const f = clamp(D.stockCover / 100, 0.06, 1);
-    g.style.transform = `translateY(${((1 - f) * 320 + 10).toFixed(0)}px)`;
+    g.style.transform = 'translateY(-12px)';
   }
 
   function renderClubPage(el: HTMLElement, mode: 'enter' | 'flip' | 'quiet') {
@@ -741,27 +804,56 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
     (el.querySelector('[data-pg]') as HTMLElement).textContent = String(p + 1);
     (el.querySelector('[data-pgdots]') as HTMLElement).innerHTML = Array.from({ length: Math.min(pages, 12) }, (_, i) => `<span style="width:${i === p ? 28 : 8}px;height:8px;border-radius:999px;background:${i === p ? '#faa70c' : 'rgba(255,253,247,.25)'};transition:width .4s"></span>`).join('');
     const quiet = mode === 'quiet';
-    box.innerHTML = sorted.slice(p * 9, p * 9 + 9).map((c, i) => {
+    const pageClubs = sorted.slice(p * 9, p * 9 + 9);
+    const partnerBanners = [
+      { name: 'townshop.in', tag: 'WhatsApp Commerce', msg: 'Local stores, sweets & essentials on WhatsApp', c: 'var(--amber)' },
+      { name: 'Raihsoft Technologies', tag: 'Digital Engineering', msg: 'Enterprise software, websites & mobile apps', c: '#5ee0e6' },
+      { name: 'ILU Foundation', tag: 'Palada Challenge 2026', msg: 'Community festive distribution across Malabar', c: '#ff7ab8' },
+      { name: 'RaihSuite ERP', tag: 'Live Operations', msg: 'Real-time order management & cloud systems', c: 'var(--ok-fg)' },
+    ];
+    let rowsHTML = pageClubs.map((c, i) => {
       const s = statusOf(c);
       const pc = Math.round((c.delivered / Math.max(1, c.ordered)) * 100);
       const cls = quiet ? '' : mode === 'flip' ? 'page-flip' : 'si';
       const delay = mode === 'flip' ? i * 0.06 : i * 0.08 + 0.35;
       return `<div class="row ${cls}" style="animation-delay:${delay}s;height:66px;border-radius:18px;background:${i % 2 ? 'transparent' : 'rgba(255,253,247,.035)'}">
       <span class="num" style="font-size:30px;font-weight:800;color:var(--amber)">${p * 9 + i + 1}</span>
-      <div style="display:flex;flex-direction:column;min-width:0"><span class="ellip" style="font-size:23px;font-weight:800">${esc(c.name)}</span><span class="muted ellip" style="font-size:16px;font-weight:600">${esc([c.place, c.zone].filter(Boolean).join(' · '))}</span></div>
-      <span class="num" style="font-size:28px;font-weight:700;text-align:right">${fmt(c.ordered)} <span class="muted" style="font-size:16px">L</span></span>
+      <div style="display:flex;flex-direction:column;min-width:0"><span class="ellip" style="font-size:23px;font-weight:800">${esc(c.name)}</span><span class="muted ellip" style="font-size:16px;font-weight:600">${esc(c.place)}</span></div>
       <span class="num" style="font-size:28px;font-weight:700;text-align:right;color:var(--ok-fg)">${fmt(c.delivered)} <span class="muted" style="font-size:16px">L</span></span>
+      <span class="num" style="font-size:28px;font-weight:700;text-align:right">${fmt(c.ordered)} <span class="muted" style="font-size:16px">L</span></span>
       <div style="display:flex;align-items:center;gap:12px"><div style="flex:1;height:12px;border-radius:999px;background:rgba(255,253,247,.08);overflow:hidden"><div class="tw cb" data-p="${pc}" style="height:12px;border-radius:999px;width:${quiet ? pc : 0}%;background:${s[3]}"></div></div><span style="font-size:17px;font-weight:800;width:48px;text-align:right">${pc}%</span></div>
       <span class="badge" style="background:${s[1]};color:${s[2]}"><i></i>${s[0]}</span>
     </div>`;
     }).join('');
+
+    // Place Ads in blank boxes: fill any vacant row slots up to 9
+    const remainingSlots = 9 - pageClubs.length;
+    for (let k = 0; k < remainingSlots; k++) {
+      const pb = partnerBanners[(p * 9 + pageClubs.length + k) % partnerBanners.length];
+      const cls = quiet ? '' : mode === 'flip' ? 'page-flip' : 'si';
+      const delay = mode === 'flip' ? (pageClubs.length + k) * 0.06 : (pageClubs.length + k) * 0.08 + 0.35;
+      rowsHTML += `<div class="row ${cls}" style="animation-delay:${delay}s;height:66px;border-radius:18px;background:rgba(255,253,247,.02);border:1px dashed rgba(255,253,247,.1)">
+        <span style="font-size:12px;font-weight:800;letter-spacing:1px;padding:4px 8px;border-radius:6px;background:rgba(250,167,12,.18);color:var(--amber);text-align:center">AD</span>
+        <div style="display:flex;align-items:baseline;gap:12px;min-width:0"><span class="ellip" style="font-size:20px;font-weight:800;color:${pb.c}">${pb.name}</span><span class="muted ellip" style="font-size:15px;font-weight:600">${pb.msg}</span></div>
+        <span style="grid-column:3 / 6;text-align:right;font-size:15px;font-weight:700;color:var(--muted)">${pb.tag}</span>
+        <span class="badge" style="background:rgba(255,253,247,.06);color:var(--fg);border:1px solid rgba(255,253,247,.12)"><i></i>Partner</span>
+      </div>`;
+    }
+    box.innerHTML = rowsHTML;
     if (!quiet) later(() => box.querySelectorAll<HTMLElement>('.cb').forEach((b) => { b.style.width = `${b.dataset.p}%`; }), mode === 'flip' ? 300 : 800);
   }
 
   function renderLatest(el: HTMLElement, mode: 'all' | 'first') {
     const box = el.querySelector<HTMLElement>('[data-latest]');
     if (!box) return;
-    box.innerHTML = S.latest.slice(0, 10).map((r, i) => {
+    const items = S.latest.slice(0, 10);
+    const partnerDeliveries = [
+      { name: 'ILU Palada Challenge 2026', place: 'Calicut HQ', note: 'Kitchen dispatch in full progress', badge: 'ACTIVE' },
+      { name: 'townshop.in Commerce', place: 'Kerala Network', note: 'Order Onam delicacies on WhatsApp', badge: 'SPONSOR' },
+      { name: 'Raihsoft Technologies', place: 'Karaya, Malappuram', note: 'Official Engineering & Digital Solutions', badge: 'PARTNER' },
+      { name: 'Volunteer Dispatch Center', place: 'Distribution Hub', note: 'Hundreds of volunteers delivering fresh palada', badge: 'VOLUNTEER' },
+    ];
+    let html = items.map((r, i) => {
       const first = i === 0;
       const anim = mode === 'all' ? `di" style="--d:${i};` : first ? 'di" style="--d:-5;' : '" style="';
       return `<div class="${anim}display:flex;align-items:center;gap:20px;height:62px">
@@ -776,6 +868,22 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
         ${svgIcon(ICON.check, 30, '#34d399', 2.4)}
       </div></div>`;
     }).join('');
+
+    // Place Ads in blank boxes: fill remaining slots up to 8 if few deliveries
+    const remain = Math.max(0, 8 - items.length);
+    for (let k = 0; k < remain; k++) {
+      const pd = partnerDeliveries[k % partnerDeliveries.length];
+      html += `<div class="di" style="--d:${items.length + k};display:flex;align-items:center;gap:20px;height:62px;opacity:.85">
+        <span style="width:130px;flex-shrink:0;text-align:right;font-size:15px;font-weight:800;letter-spacing:1px;color:var(--amber)">CAMPAIGN</span>
+        <span style="width:24px;height:24px;flex-shrink:0;border-radius:50%;background:rgba(250,167,12,.4);border:4px solid var(--panel)"></span>
+        <div style="flex:1;min-width:0;height:62px;display:flex;align-items:center;gap:18px;padding:0 22px;border-radius:16px;background:rgba(255,253,247,.025);border:1px dashed rgba(255,253,247,.12)">
+          <span class="ellip" style="font-size:22px;font-weight:800">${pd.name}</span>
+          <span class="muted" style="font-size:16px;font-weight:600;white-space:nowrap">${pd.place} · ${pd.note}</span>
+          <span style="flex:1"></span>
+          <span style="font-size:13px;font-weight:800;letter-spacing:1px;padding:4px 10px;border-radius:999px;background:rgba(250,167,12,.18);color:var(--amber)">${pd.badge}</span>
+        </div></div>`;
+    }
+    box.innerHTML = html;
   }
 
   function renderChart(el: HTMLElement, entering: boolean) {
@@ -1185,7 +1293,7 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
   // waiting screen until the first snapshot arrives (show() transitions it away)
   layer = document.createElement('div');
   layer.className = 'layer';
-  layer.innerHTML = '<div class="main panel waiting"><div class="spin"></div><h2>Loading live Palada statistics…</h2><p>The display starts automatically as soon as the data arrives.</p></div>';
+  layer.innerHTML = '<div class="main panel waiting" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px"><div class="spin"></div><h2>Loading live Palada statistics…</h2><p>The display starts automatically as soon as the data arrives.</p></div>' + asideHTML(2);
   content.appendChild(layer);
   buildTicker();
   tickClock();
