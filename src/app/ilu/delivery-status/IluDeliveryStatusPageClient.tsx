@@ -7,8 +7,6 @@ import {
   RefreshCw,
   AlertTriangle,
   X,
-  Trophy,
-  Medal,
   Truck,
 } from 'lucide-react';
 
@@ -405,105 +403,55 @@ export default function IluDeliveryStatusPageClient() {
                     </td>
                   </tr>
                 ) : (
-                  filteredSummaries.map((summary) => {
-                    const isFirst = summary.rank === 1 && summary.totalDeliveredLiters > 0;
-                    const isSecond = summary.rank === 2 && summary.totalDeliveredLiters > 0;
-                    const isThird = summary.rank === 3 && summary.totalDeliveredLiters > 0;
+                  filteredSummaries.map((summary) => (
+                    <tr
+                      key={summary.clubId}
+                      className={`transition-colors ${
+                        summary.totalDeliveredLiters > 0
+                          ? 'hover:bg-emerald-50/30'
+                          : 'opacity-65 hover:bg-slate-50'
+                      }`}
+                    >
+                      {/* Rank # */}
+                      <td className="py-4 px-4 text-center">
+                        <span className="font-bold text-xs sm:text-sm text-slate-500 font-mono">
+                          {summary.rank}
+                        </span>
+                      </td>
 
-                    return (
-                      <tr
-                        key={summary.clubId}
-                        className={`transition-colors ${
-                          isFirst
-                            ? 'bg-gradient-to-r from-amber-500/15 via-amber-100/30 to-amber-50/10 border-l-4 border-l-amber-500 hover:bg-amber-100/40'
-                            : isSecond
-                            ? 'bg-gradient-to-r from-slate-200/50 via-slate-100/30 to-slate-50/10 border-l-4 border-l-slate-400 hover:bg-slate-100/60'
-                            : isThird
-                            ? 'bg-gradient-to-r from-orange-200/40 via-orange-100/20 to-orange-50/10 border-l-4 border-l-orange-500 hover:bg-orange-100/40'
-                            : summary.totalDeliveredLiters > 0
-                            ? 'hover:bg-emerald-50/30'
-                            : 'opacity-65 hover:bg-slate-50'
-                        }`}
-                      >
-                        {/* Rank # */}
-                        <td className="py-4 px-4 text-center">
-                          {isFirst ? (
-                            <div
-                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 mx-auto"
-                              title="1st Place"
-                            >
-                              <Trophy className="w-4 h-4 text-amber-950 fill-amber-950/20" />
-                            </div>
-                          ) : isSecond ? (
-                            <div
-                              className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs sm:text-sm flex items-center justify-center shadow-sm border border-slate-200 mx-auto"
-                              title="2nd Place"
-                            >
-                              <Medal className="w-4 h-4 text-slate-800" />
-                            </div>
-                          ) : isThird ? (
-                            <div
-                              className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-sm border border-orange-300 mx-auto"
-                              title="3rd Place"
-                            >
-                              <Medal className="w-4 h-4 text-amber-100" />
-                            </div>
-                          ) : (
-                            <span className="font-bold text-xs sm:text-sm text-slate-500">
-                              {summary.rank}
+                      {/* Club Name */}
+                      <td className="py-4 px-6 font-bold text-slate-900">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm sm:text-base font-bold text-slate-900">
+                            {summary.clubName}
+                          </span>
+                          {summary.location && (
+                            <span className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded font-normal">
+                              {summary.location}
                             </span>
                           )}
-                        </td>
+                        </div>
+                      </td>
 
-                        {/* Club Name */}
-                        <td className="py-4 px-6 font-bold text-slate-900">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={`text-sm sm:text-base ${isFirst ? 'font-black text-amber-950' : 'font-bold'}`}>
-                              {summary.clubName}
-                            </span>
-                            {isFirst && (
-                              <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 border border-amber-400 shadow-xs leading-none">
-                                1<sup className="text-[0.65em] font-bold lowercase ml-0.5">st</sup>
-                              </span>
-                            )}
-                            {isSecond && (
-                              <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-slate-200/90 text-slate-800 border border-slate-300 shadow-xs leading-none">
-                                2<sup className="text-[0.65em] font-bold lowercase ml-0.5">nd</sup>
-                              </span>
-                            )}
-                            {isThird && (
-                              <span className="inline-flex items-center text-[11px] font-black px-2 py-0.5 rounded-full bg-orange-200/90 text-orange-950 border border-orange-300 shadow-xs leading-none">
-                                3<sup className="text-[0.65em] font-bold lowercase ml-0.5">rd</sup>
-                              </span>
-                            )}
-                            {summary.location && (
-                              <span className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded font-normal">
-                                {summary.location}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Total Delivered in Litres */}
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-baseline justify-end gap-1.5">
-                            <span
-                              className={`text-base sm:text-lg font-black tracking-tight ${
-                                summary.totalDeliveredLiters > 0
-                                  ? 'text-emerald-700 font-mono font-black'
-                                  : 'text-slate-400 font-mono'
-                              }`}
-                            >
-                              {summary.totalDeliveredLiters.toLocaleString()}
-                            </span>
-                            <span className="text-xs font-bold text-slate-500">
-                              LTR
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
+                      {/* Total Delivered in Litres */}
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-baseline justify-end gap-1.5">
+                          <span
+                            className={`text-base sm:text-lg font-black tracking-tight ${
+                              summary.totalDeliveredLiters > 0
+                                ? 'text-emerald-700 font-mono font-black'
+                                : 'text-slate-400 font-mono'
+                            }`}
+                          >
+                            {summary.totalDeliveredLiters.toLocaleString()}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500">
+                            LTR
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -528,98 +476,48 @@ export default function IluDeliveryStatusPageClient() {
                   : 'No delivered orders recorded yet.'}
               </div>
             ) : (
-              filteredSummaries.map((summary) => {
-                const isFirst = summary.rank === 1 && summary.totalDeliveredLiters > 0;
-                const isSecond = summary.rank === 2 && summary.totalDeliveredLiters > 0;
-                const isThird = summary.rank === 3 && summary.totalDeliveredLiters > 0;
-
-                return (
-                  <div
-                    key={summary.clubId}
-                    className={`p-3.5 transition-colors ${
-                      isFirst
-                        ? 'bg-gradient-to-r from-amber-500/10 via-amber-50/20 to-transparent'
-                        : isSecond
-                        ? 'bg-gradient-to-r from-slate-200/40 via-slate-50/20 to-transparent'
-                        : isThird
-                        ? 'bg-gradient-to-r from-orange-200/30 via-orange-50/20 to-transparent'
-                        : summary.totalDeliveredLiters > 0
-                        ? 'hover:bg-slate-50/50'
-                        : 'opacity-65'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2.5">
-                      {/* Left: Rank + Name */}
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {isFirst ? (
-                          <div
-                            className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/30 border border-amber-200 shrink-0"
-                            title="1st Place"
-                          >
-                            <Trophy className="w-3.5 h-3.5 text-amber-950 fill-amber-950/20" />
-                          </div>
-                        ) : isSecond ? (
-                          <div
-                            className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-800 font-black text-xs flex items-center justify-center shadow-sm border border-slate-200 shrink-0"
-                            title="2nd Place"
-                          >
-                            <Medal className="w-3.5 h-3.5 text-slate-800" />
-                          </div>
-                        ) : isThird ? (
-                          <div
-                            className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 text-white font-black text-xs flex items-center justify-center shadow-sm border border-orange-300 shrink-0"
-                            title="3rd Place"
-                          >
-                            <Medal className="w-3.5 h-3.5 text-amber-100" />
-                          </div>
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/70">
-                            #{summary.rank}
-                          </div>
-                        )}
-
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`text-xs sm:text-sm truncate ${isFirst ? 'font-black text-amber-950' : 'font-bold text-slate-900'}`}>
-                              {summary.clubName}
-                            </span>
-                            {isFirst && (
-                              <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300 shrink-0 leading-none">
-                                1<sup className="text-[0.65em] font-bold lowercase ml-0.5">st</sup>
-                              </span>
-                            )}
-                            {isSecond && (
-                              <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 shrink-0 leading-none">
-                                2<sup className="text-[0.65em] font-bold lowercase ml-0.5">nd</sup>
-                              </span>
-                            )}
-                            {isThird && (
-                              <span className="inline-flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-full bg-orange-200 text-orange-950 border border-orange-300 shrink-0 leading-none">
-                                3<sup className="text-[0.65em] font-bold lowercase ml-0.5">rd</sup>
-                              </span>
-                            )}
-                          </div>
-                          {summary.location && (
-                            <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
-                              {summary.location}
-                            </p>
-                          )}
-                        </div>
+              filteredSummaries.map((summary) => (
+                <div
+                  key={summary.clubId}
+                  className={`p-3.5 transition-colors ${
+                    summary.totalDeliveredLiters > 0
+                      ? 'hover:bg-slate-50/50'
+                      : 'opacity-65'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2.5">
+                    {/* Left: Rank + Name */}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/70 font-mono">
+                        #{summary.rank}
                       </div>
 
-                      {/* Right: Quantity in Liters */}
-                      <div className="text-right shrink-0">
-                        <span className={`text-sm sm:text-base font-black font-mono ${summary.totalDeliveredLiters > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                          {summary.totalDeliveredLiters.toLocaleString()}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-500 ml-1">
-                          LTR
-                        </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                            {summary.clubName}
+                          </span>
+                        </div>
+                        {summary.location && (
+                          <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+                            {summary.location}
+                          </p>
+                        )}
                       </div>
                     </div>
+
+                    {/* Right: Quantity in Liters */}
+                    <div className="text-right shrink-0">
+                      <span className={`text-sm sm:text-base font-black font-mono ${summary.totalDeliveredLiters > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
+                        {summary.totalDeliveredLiters.toLocaleString()}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 ml-1">
+                        LTR
+                      </span>
+                    </div>
                   </div>
-                );
-              })
+                </div>
+              ))
             )}
           </div>
         </section>
