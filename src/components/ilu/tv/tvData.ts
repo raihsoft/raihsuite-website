@@ -16,12 +16,13 @@ export interface TvClub {
   id: string;
   name: string;
   place: string;
-  zone: string;
   ordered: number;
   delivered: number;
   approved: number; // approved, waiting for delivery
   pending: number; // placed, waiting for approval
-  orderCount: number;
+  initiated: number; // delivery initiated quantity
+  lastDeliveryTime: number; // timestamp in ms of latest delivery
+  lastOrderDate?: string;
 }
 
 export interface TvDelivery {
@@ -40,7 +41,7 @@ export interface TvAd {
   image?: string;
   house?: boolean;
   /** Built-in animated card instead of a text or image ad. */
-  kind?: 'townshop' | 'raihsoft-solutions' | 'raihsoft-services' | 'raihsoft-contact';
+  kind?: 'townshop' | 'raihsoft-solutions' | 'raihsoft-services' | 'raihsoft-contact' | 'ilu-foundation';
 }
 
 export interface TvTotals {
@@ -51,7 +52,8 @@ export interface TvTotals {
   stock: number;
   orgL: number;
   indL: number;
-  orderCount: number;
+  deliveryInitiatedCount: number;
+  deliveryInitiatedLiters: number;
 }
 
 export interface TvSnapshot {
@@ -97,6 +99,16 @@ export const RAIHSOFT_CONTACT_AD: TvAd = {
   house: true,
 };
 
+export const ILU_FOUNDATION_AD: TvAd = {
+  id: 'ilu-foundation',
+  kind: 'ilu-foundation',
+  title: 'ILU Foundation',
+  body: 'Integrate, Love & Uplift the Differently-abled. According to the World Health Organization (WHO), there are 1 billion disabled people in the world.',
+  contact: 'ILU Foundation',
+  image: '/ilu/tv/ilu-foundation-ad.png',
+  house: true,
+};
+
 export const RAIHSOFT_ADS: TvAd[] = [
   RAIHSOFT_SOLUTIONS_AD,
   RAIHSOFT_SERVICES_AD,
@@ -105,8 +117,23 @@ export const RAIHSOFT_ADS: TvAd[] = [
 
 /** Shown when the ads table is empty or cannot be reached. */
 export const HOUSE_ADS: TvAd[] = [
-  { id: 'house-sponsor', title: 'Your Ad Here', body: 'Reach thousands of supporters watching this screen. Sponsor the ILU Palada Challenge.', contact: 'Contact the ILU team', house: true },
-  { id: 'house-thanks', title: 'Thank you, volunteers', body: 'Hundreds of hands cooked and carried today’s palada. ILU Foundation thanks every one of you.', house: true },
+  ILU_FOUNDATION_AD,
+  {
+    id: 'house-ilu-banner',
+    kind: 'ilu-foundation',
+    image: '/ilu/tv/ilu-foundation-ad.png',
+    title: 'ILU Foundation',
+    body: 'Integration Love & Uplift The Differently-Abled',
+    contact: 'ILU Foundation',
+    house: true,
+  },
+  {
+    id: 'house-thanks',
+    title: 'Thank you, volunteers',
+    body: 'Hundreds of hands cooked and carried today’s palada. ILU Foundation thanks every one of you.',
+    contact: 'ILU Foundation',
+    house: true,
+  },
 ];
 
 const num = (v: unknown): number => {
@@ -265,6 +292,9 @@ export function createLiveSource(): TvSource {
       const orgInfo = new Map(orgs.map((o) => [String(o.id), o]));
 
       const apiDeliveries: TvDelivery[] = [];
+      let deliveryInitiatedCount = 0;
+      let deliveryInitiatedLiters = 0;
+
       const clubs: TvClub[] = byOrg
         .map((o) => {
           const id = str(o.organization_id);
@@ -274,30 +304,63 @@ export function createLiveSource(): TvSource {
           const confirmed = num(o.total_approved);
           const delivered = num(o.total_delivered);
           const approved = extra(o, 'total_pending_delivery') != null ? num(extra(o, 'total_pending_delivery')) : Math.max(0, confirmed - delivered);
-          const pending = num(o.total_initiated);
+          const initiated = num(o.total_initiated);
           const orders = (o.orders ?? []) as ApiOrder[];
           const name = str(o.organization_name) || str(info?.organization_name);
           const place = str(info?.place);
+
+          let orgLastDeliveryTime = 0;
+          let orgInitiatedCount = 0;
+
           for (const ord of orders) {
-            if (str(ord.status).toUpperCase() !== 'DELIVERED') continue;
-            const t = deliveredTime(ord);
-            if (t) apiDeliveries.push({ key: `${id}:${str(ord.order_number) || t}`, clubName: name, place, qty: num(ord.quantity), time: t });
+            const st = str(ord.status).toUpperCase();
+            if (st === 'INITIATED') {
+              orgInitiatedCount++;
+            }
+            if (st === 'DELIVERED') {
+              const t = deliveredTime(ord);
+              if (t) {
+                apiDeliveries.push({ key: `${id}:${str(ord.order_number) || t}`, clubName: name, place, qty: num(ord.quantity), time: t });
+                if (t > orgLastDeliveryTime) orgLastDeliveryTime = t;
+              }
+            }
           }
+
+          if (orgInitiatedCount > 0) {
+            deliveryInitiatedCount += orgInitiatedCount;
+          } else if (initiated > 0 || str(o.status).toUpperCase() === 'INITIATED') {
+            deliveryInitiatedCount += 1;
+          }
+          deliveryInitiatedLiters += initiated;
+
+          if (orgLastDeliveryTime === 0) {
+            orgLastDeliveryTime = Date.parse(str(o.last_ordered_at)) || 0;
+          }
+
           return {
             id,
             name,
             place,
-            zone: str(info?.zone_name) || str(info?.zone),
-            ordered: Math.max(confirmed, delivered) + pending,
+            ordered: Math.max(confirmed, delivered) + initiated,
             delivered,
             approved,
-            pending,
-            orderCount: orders.filter((x) => str(x.status).toUpperCase() !== 'CANCELLED').length,
+            pending: initiated,
+            initiated,
+            lastDeliveryTime: orgLastDeliveryTime,
+            lastOrderDate: str(o.last_ordered_at),
           };
         })
         .filter((c) => c.id && c.name && c.ordered > 0);
 
       tracker.observe(clubs);
+
+      // Backfill any tracker times if higher
+      for (const c of clubs) {
+        const tr = tracker.latest.find((d) => d.clubName === c.name);
+        if (tr && tr.time > c.lastDeliveryTime) {
+          c.lastDeliveryTime = tr.time;
+        }
+      }
 
       const clubOrdered = clubs.reduce((s, c) => s + c.ordered, 0);
       const indL = num(stats.individual_total);
@@ -339,7 +402,8 @@ export function createLiveSource(): TvSource {
           stock: num(stats.total_stock),
           orgL: num(stats.organization_total) || clubOrdered,
           indL,
-          orderCount: clubs.reduce((s, c) => s + c.orderCount, 0),
+          deliveryInitiatedCount,
+          deliveryInitiatedLiters,
         },
         clubs,
         latest: (useApiTimes ? apiDeliveries : tracker.latest).slice(0, 10),
@@ -382,16 +446,15 @@ const DEMO_CLUBS: [string, string][] = [
   ['Kaumudi Arts Club', 'Payyoli'], ['Harithasree Kudumbashree', 'Omassery'], ['Sargam Cultural Forum', 'Kuttiady'],
   ['Akshara Library', 'Narikkuni'],
 ];
-const DEMO_ZONES = ['North Zone', 'Central Zone', 'Coastal Zone', 'South Zone', 'East Zone', 'West Zone'];
 function samplePoster(a: string, b: string): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 842" preserveAspectRatio="xMidYMid slice"><rect width="440" height="842" fill="${a}"/><circle cx="380" cy="120" r="220" fill="${b}" opacity=".55"/><circle cx="40" cy="700" r="260" fill="${b}" opacity=".35"/><rect x="40" y="300" width="360" height="240" rx="24" fill="#fffdf7" opacity=".92"/><text x="220" y="400" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="${a}" text-anchor="middle">SAMPLE IMAGE AD</text><text x="220" y="450" font-family="Arial,sans-serif" font-size="18" fill="#555" text-anchor="middle">Full-card sponsor artwork</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 842" preserveAspectRatio="xMidYMid slice"><rect width="440" height="842" fill="${a}"/><circle cx="380" cy="120" r="220" fill="${b}" opacity=".55"/><circle cx="40" cy="700" r="260" fill="${b}" opacity=".35"/><rect x="40" y="300" width="360" height="240" rx="24" fill="#fffdf7" opacity=".92"/><text x="220" y="400" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="${a}" text-anchor="middle">PALADA SPONSOR</text><text x="220" y="450" font-family="Arial,sans-serif" font-size="18" fill="#555" text-anchor="middle">Official Campaign Partner</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 const DEMO_ADS: TvAd[] = [
-  { id: 'demo-1', image: samplePoster('#0f5a4a', '#f2c14e'), title: 'Sample image ad' },
-  { id: 'demo-2', title: '[Sponsor Name]', body: '[Sponsor message, up to about 120 characters, shown in large readable text.]', contact: '[Phone number]' },
+  { id: 'demo-1', image: samplePoster('#0f5a4a', '#f2c14e'), title: 'Palada Challenge Partner' },
+  { id: 'demo-2', title: 'Malabar Gold & Diamonds', body: 'Proud supporter of the ILU Foundation Palada Challenge 2026. Celebrating community sharing.', contact: '+91 98479 91099' },
   ...HOUSE_ADS,
-  { id: 'demo-5', title: 'Festive Offer', body: '[Sponsor offer text, about 100 characters, shown in big friendly type.]', contact: '[Phone number]' },
+  { id: 'demo-5', title: 'Townshop Grocery', body: 'Order fresh Onam delicacies, groceries and essentials straight on WhatsApp.', contact: 'townshop.in' },
 ];
 
 export function createDemoSource(): TvSource {
@@ -405,11 +468,18 @@ export function createDemoSource(): TvSource {
     const r = rnd();
     const delivered = r < 0.34 ? ordered : r < 0.7 ? Math.round((ordered * (0.3 + rnd() * 0.5)) / 5) * 5 : 0;
     const approvedFlag = delivered > 0 || rnd() < 0.6;
+    const initiatedQty = !approvedFlag || rnd() < 0.3 ? Math.round((ordered - delivered) * 0.5) : 0;
+    const lastDeliveryTime = delivered > 0 ? Date.now() - (i * 14 + 3) * 60000 : 0;
     return {
-      id: `demo-${i}`, name, place, zone: DEMO_ZONES[i % 6], ordered, delivered,
+      id: `demo-${i}`,
+      name,
+      place,
+      ordered,
+      delivered,
       approved: approvedFlag ? ordered - delivered : 0,
       pending: approvedFlag ? 0 : ordered - delivered,
-      orderCount: 1 + Math.floor(rnd() * 4),
+      initiated: initiatedQty,
+      lastDeliveryTime,
     };
   });
   const ind = { ordered: 2450, delivered: 1640, approved: 500 };
@@ -440,7 +510,11 @@ export function createDemoSource(): TvSource {
     if (!c) return;
     const qty = Math.min(c.approved, 5 * (2 + Math.floor(rnd() * 7)));
     if (stock < qty + 50) stock += 900;
-    c.delivered += qty; c.approved -= qty; stock -= qty; today += 1;
+    c.delivered += qty;
+    c.approved -= qty;
+    c.lastDeliveryTime = Date.now();
+    stock -= qty;
+    today += 1;
     const cur = new Date().getHours();
     if (hourly[hourly.length - 1].h !== cur) { hourly.shift(); hourly.push({ h: cur, v: 0 }); }
     hourly[hourly.length - 1].v += qty;
@@ -459,9 +533,22 @@ export function createDemoSource(): TvSource {
       const ordered = cO + ind.ordered;
       const delivered = cD + ind.delivered;
       const approved = cA + ind.approved;
+      const initiatedClubs = clubs.filter((c) => (c.initiated ?? 0) > 0 || c.pending > 0);
+      const deliveryInitiatedCount = Math.max(12, initiatedClubs.length);
+      const deliveryInitiatedLiters = clubs.reduce((s, c) => s + (c.initiated || c.pending), 0);
       return {
         fetchedAt: Date.now(),
-        totals: { ordered, delivered, approved, pending: Math.max(0, ordered - delivered - approved), stock, orgL: cO, indL: ind.ordered, orderCount: clubs.reduce((s, c) => s + c.orderCount, 0) },
+        totals: {
+          ordered,
+          delivered,
+          approved,
+          pending: Math.max(0, ordered - delivered - approved),
+          stock,
+          orgL: cO,
+          indL: ind.ordered,
+          deliveryInitiatedCount,
+          deliveryInitiatedLiters,
+        },
         clubs: clubs.map((c) => ({ ...c })),
         latest: latest.slice(),
         hourly: hourly.map((h) => ({ ...h })),

@@ -33,12 +33,13 @@ Polled every 15 s with the same tenant/fundraising config as the order pages (`g
 | Pending | ordered − delivered − ready |
 | Current stock | `order_status.total_stock` |
 | Clubs / individuals split | `organization_total` / `individual_total` |
-| Club rows | `order_by_organization`: `total_approved`, `total_delivered`, `total_initiated` |
-| Place / zone | `organizations`: `place`, `zone_name` |
+| Delivery initiated | count & litres from `order_by_organization`: `total_initiated` |
+| Organization delivery rows | `order_by_organization`: `total_approved`, `total_delivered`, `total_initiated` (LIFO sorted) |
+| Place | `organizations`: `place` |
 
 **Deliveries over time.** If delivered orders carry a timestamp (`delivered_at`, `delivery_date` or `updated_at` on `order_by_organization.orders[]`), the "Just delivered" list and the hourly chart use it. Without timestamps the display detects deliveries by comparing each poll with the previous one and keeps that log in `localStorage` for the day, so the list and chart fill up while the TV runs.
 
-Screens without data are skipped automatically (no zones → no zone screen, no deliveries yet → no "Just delivered" / hourly screens).
+Screens without data are skipped automatically (no deliveries yet → no "Just delivered" / hourly screens). Empty spaces and vacant slots in lists/grids are automatically filled with sponsor and partner ads.
 
 **Ads.** Fetched every 5 min from `NEXT_PUBLIC_ILU_TV_ADS_URL`, default `{BASE_API_URL}orders/advertisements/?tenant=…`. Accepted fields: `id`, `title`/`name`, `description`/`body`/`content`, `contact`/`phone`/`mobile`, `image`/`image_url`/`banner`/`file`, `is_active`, `sort_order`, `start_date`, `end_date`. A row with an image is shown as a full-card image only; otherwise as a coloured text card. When the endpoint is empty or unavailable, two ILU house ads are shown. Our own animated townshop.in card (`TOWNSHOP_AD` in `tvData.ts`, markup in `townshopAdHTML()` in `engine.ts`) is always added to the front of the rotation, in both the short and the tall ad slot. Every other tall ad slot shows a second townshop.in design aimed at shop owners (`townshopShopsHTML()`): three looping scenes, 15 s in total.
 
