@@ -31,7 +31,7 @@ Polled every 15 s with the same tenant/fundraising config as the order pages (`g
 | Delivered | `order_status.total_delivered` |
 | Ready to deliver | `order_status.total_approved` |
 | Pending | ordered − delivered − ready |
-| Current stock | `order_status.total_stock` |
+| Current stock | `order_status.total_stock - order_status.total_delivered` |
 | Clubs / individuals split | `organization_total` / `individual_total` |
 | Delivery initiated | count & litres from `order_by_organization`: `total_initiated` |
 | Organization delivery rows | `order_by_organization`: `total_approved`, `total_delivered`, `total_initiated` (LIFO sorted) |

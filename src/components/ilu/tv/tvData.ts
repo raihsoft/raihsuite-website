@@ -420,7 +420,7 @@ export function createLiveSource(): TvSource {
           delivered,
           approved,
           pending: Math.max(0, ordered - delivered - approved),
-          stock: num(stats.total_stock),
+          stock: Math.max(0, num(stats.total_stock) - delivered),
           orgL: num(stats.organization_total) || clubOrdered,
           indL,
           deliveryInitiatedCount,
