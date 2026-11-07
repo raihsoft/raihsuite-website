@@ -149,6 +149,8 @@ export interface BackendOrderByOrganization {
   total_delivered?: string | number;
   total_cancelled?: string | number;
   total_initiated?: string | number;
+  total_delivery_initiated?: string | number;
+  delivery_status?: string;
   status?: string;
   orders?: Array<{
     order_by_name?: string;
@@ -234,6 +236,8 @@ export interface BackendOrderStatus {
   individual_total: number;
   total_approved: number;
   total_delivered: number;
+  total_delivery_initiated?: number;
+  total_pending_delivery?: number;
   total_cancelled: number;
   total_stock: number;
   total_order: number;
