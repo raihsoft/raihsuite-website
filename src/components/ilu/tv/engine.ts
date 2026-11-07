@@ -748,7 +748,11 @@ export function startTvEngine(root: HTMLElement, opts: TvEngineOptions): () => v
       key: 'podium', name: 'Top Clubs', short: 'Top clubs', ads: 2,
       available: () => S.clubs.length >= 3,
       html: () => {
-        const top = sortedClubs();
+        const top = S.clubs.slice().sort((a, b) => {
+          if (b.ordered !== a.ordered) return (b.ordered || 0) - (a.ordered || 0);
+          if (b.delivered !== a.delivered) return (b.delivered || 0) - (a.delivered || 0);
+          return a.name.localeCompare(b.name);
+        });
         const ini = (n: string) => n.replace(/&/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
         type Cfg = { w: number; av: number; c: string; a: number; r: number; h: number; bg: string; fs: number; fc: string };
         const col = (c: TvClub, rank: number, cfg: Cfg) => `<div style="width:${cfg.w}px;display:flex;flex-direction:column;align-items:center;gap:12px">
